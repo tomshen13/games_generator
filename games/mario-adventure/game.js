@@ -360,12 +360,13 @@
     ctx.restore();
   }
 
-  function drawFlag(ctx, x, y, camX, camY) {
+  function drawFlag(ctx, x, y, camX, camY, gridH) {
     const px = x * T - camX;
     const py = y * T - camY;
+    const bottomRow = (gridH || 15) - 1;
     // Pole
     ctx.fillStyle = '#888';
-    ctx.fillRect(px + 14, py, 4, (14 - y) * T);
+    ctx.fillRect(px + 14, py, 4, (bottomRow - y) * T);
     // Ball on top
     ctx.fillStyle = '#FFD700';
     ctx.beginPath();
@@ -690,8 +691,9 @@
       const hud = document.getElementById('hudOverlay');
       const touchCtrl = document.getElementById('touchControls');
       const isGameplay = name === 'playing';
+      const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
       hud.style.display = isGameplay ? 'flex' : 'none';
-      touchCtrl.style.display = isGameplay ? 'flex' : 'none';
+      touchCtrl.style.display = (isGameplay && isTouchDevice) ? 'flex' : 'none';
 
       if (name === 'playing') this.state = 'playing';
     },
@@ -854,7 +856,7 @@
             this.state = 'gameover';
             sfxGameOver();
             this.showScreen('gameover');
-            document.getElementById('gameOverCoins').textContent = this.coinsCollected;
+            document.getElementById('gameOverCoins').textContent = 'Coins collected: ' + this.coinsCollected;
           } else {
             // Respawn
             p.x = this.levelData.playerStart.x * T;
@@ -1245,7 +1247,7 @@
 
       // --- FLAG / LEVEL COMPLETE ---
       const flag = this.levelData.flagPos;
-      const flagRect = { x: flag.x * T, y: flag.y * T, w: T, h: (14 - flag.y) * T };
+      const flagRect = { x: flag.x * T, y: flag.y * T, w: T, h: (this.gridH - 1 - flag.y) * T };
       if (this.overlap(p, flagRect)) {
         this.completeLevel();
       }
@@ -1257,15 +1259,18 @@
     // ==================== MOVEMENT AND COLLISION ====================
     moveAndCollide(entity) {
       const p = entity;
-      const giantW = p.giantScale ? p.w * p.giantScale : p.w;
-      const giantH = p.giantScale ? p.h * p.giantScale : p.h;
+      // Use giant-scaled hitbox when giant power-up is active
+      const hw = p.giantScale > 1 ? p.w * p.giantScale : p.w;
+      const hh = p.giantScale > 1 ? p.h * p.giantScale : p.h;
+      // Offset to keep feet on ground when giant
+      const oy = p.giantScale > 1 ? p.h * (p.giantScale - 1) : 0;
 
       // Horizontal
       p.x += p.vx;
       // Left wall
       if (p.vx < 0) {
         const tileL = Math.floor(p.x / T);
-        const tileT = Math.floor((p.y + 2) / T);
+        const tileT = Math.floor((p.y - oy + 2) / T);
         const tileB = Math.floor((p.y + p.h - 2) / T);
         for (let ty = tileT; ty <= tileB; ty++) {
           if (this.isSolid(tileL, ty)) {
@@ -1277,12 +1282,12 @@
       }
       // Right wall
       if (p.vx > 0) {
-        const tileR = Math.floor((p.x + p.w) / T);
-        const tileT = Math.floor((p.y + 2) / T);
+        const tileR = Math.floor((p.x + hw) / T);
+        const tileT = Math.floor((p.y - oy + 2) / T);
         const tileB = Math.floor((p.y + p.h - 2) / T);
         for (let ty = tileT; ty <= tileB; ty++) {
           if (this.isSolid(tileR, ty)) {
-            p.x = tileR * T - p.w;
+            p.x = tileR * T - hw;
             p.vx = 0;
             break;
           }
@@ -1527,7 +1532,7 @@
 
       // Flag
       if (this.levelData.flagPos) {
-        drawFlag(ctx, this.levelData.flagPos.x, this.levelData.flagPos.y, cam.x, cam.y);
+        drawFlag(ctx, this.levelData.flagPos.x, this.levelData.flagPos.y, cam.x, cam.y, this.gridH);
       }
 
       // Items (floating power-ups)
@@ -1615,12 +1620,12 @@
       const dt = Math.min((time - this.lastTime) / 1000, 1 / 30);
       this.lastTime = time;
 
-      if (this.state === 'playing' || (this.state === 'playing' && this.player && this.player.dead)) {
+      if (this.state === 'playing') {
         this.update(dt);
         this.render();
         // Update power-up HUD timer
         if (this.player && this.player.powerUp) this.updateHUD();
-      } else if (this.state === 'complete') {
+      } else if (this.state === 'complete' || this.state === 'gameover') {
         // Keep rendering the level in background
         this.render();
         updateParticles();
