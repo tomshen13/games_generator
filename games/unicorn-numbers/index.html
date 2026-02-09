@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Unicorn Numbers 🦄</title>
+
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="../../shared/css/reset.css">
+  <link rel="stylesheet" href="../../shared/css/base.css">
+  <link rel="stylesheet" href="../../shared/css/animations.css">
+  <link rel="stylesheet" href="../../shared/css/components.css">
+
+  <!-- Game CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="game-container" data-power="fire">
+    <!-- Particle overlay -->
+    <canvas class="particle-canvas"></canvas>
+
+    <!-- ===== TITLE SCREEN ===== -->
+    <div class="screen title-screen active">
+      <button class="btn-lang" title="Switch language">EN 🇬🇧</button>
+      <div class="title-unicorn">🦄</div>
+      <h1 class="title-text">Unicorn Numbers</h1>
+      <p class="title-subtitle">Learn numbers 1–20 with Sparky!</p>
+      <button class="btn btn-primary btn-large btn-play">▶ PLAY</button>
+      <div class="btn-continue-wrapper" style="display: none;">
+        <button class="btn btn-primary btn-continue">▶ Continue</button>
+        <span class="continue-info"></span>
+      </div>
+    </div>
+
+    <!-- ===== POWER SELECT SCREEN ===== -->
+    <div class="screen power-select-screen">
+      <a class="btn-back" href="#">←</a>
+      <h2 class="power-select-title">Choose Your Power!</h2>
+      <div class="power-cards">
+        <div class="card power-card fire" data-power="fire">
+          <div class="power-card-icon">🔥</div>
+          <div class="power-card-label">Fire</div>
+        </div>
+        <div class="card power-card water" data-power="water">
+          <div class="power-card-icon">💧</div>
+          <div class="power-card-label">Water</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== GAME SCREEN ===== -->
+    <div class="screen game-screen">
+      <!-- HUD -->
+      <div class="hud game-hud">
+        <div class="hud-group">
+          <a class="btn-back" href="#" style="position:static;width:36px;height:36px;">←</a>
+          <span class="level-label">Level 1</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 0%"></div>
+        </div>
+        <div class="hud-group">
+          <span class="star-counter">⭐ 0</span>
+          <button class="power-toggle" style="display: none;">🔥</button>
+          <button class="btn-lang btn-lang-hud" title="Switch language">EN</button>
+        </div>
+      </div>
+
+      <!-- Sparky -->
+      <div class="sparky-section">
+        <div class="sparky fire-glow">🦄</div>
+      </div>
+
+      <!-- Prompt -->
+      <div class="prompt fire">
+        Find number <span class="prompt-number">?</span>!
+      </div>
+
+      <!-- Target grid -->
+      <div class="target-grid"></div>
+    </div>
+
+    <!-- ===== LEVEL COMPLETE SCREEN ===== -->
+    <div class="screen level-complete-screen">
+      <div class="level-complete-unicorn">🦄</div>
+      <h2 class="level-complete-title">Level Complete!</h2>
+      <div class="level-stars"></div>
+      <button class="btn btn-primary btn-large btn-next-level">▶ Next Level!</button>
+    </div>
+
+    <!-- ===== GAME COMPLETE SCREEN ===== -->
+    <div class="screen game-complete-screen">
+      <div class="level-complete-unicorn">🦄</div>
+      <h2 class="game-complete-title">You're a Number Wizard!</h2>
+      <p class="game-complete-subtitle">You learned all numbers 1–20!</p>
+      <div class="number-rainbow"></div>
+      <p class="total-stars">⭐ 0 Stars Earned!</p>
+      <div style="display: flex; gap: var(--space-md); flex-wrap: wrap; justify-content: center;">
+        <button class="btn btn-primary btn-large btn-play-again">🔄 Play Again</button>
+        <button class="btn btn-primary btn-home">🏠 Home</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shared JS -->
+  <script src="../../shared/js/utils.js"></script>
+  <script src="../../shared/js/audio.js"></script>
+  <script src="../../shared/js/particles.js"></script>
+  <script src="../../shared/js/storage.js"></script>
+
+  <!-- Game JS -->
+  <script src="levels.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

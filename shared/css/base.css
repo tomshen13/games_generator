@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@600;700;800&display=swap');
+
+:root {
+  /* Core palette */
+  --color-bg: #1a1a2e;
+  --color-surface: #16213e;
+  --color-text: #ffffff;
+  --color-text-muted: #b8c5d6;
+
+  /* Fire theme */
+  --fire-primary: #ff6b35;
+  --fire-secondary: #ff9f1c;
+  --fire-glow: #ff4500;
+  --fire-bg-start: #1a0a00;
+  --fire-bg-end: #2d1810;
+
+  /* Water theme */
+  --water-primary: #00d4ff;
+  --water-secondary: #7b68ee;
+  --water-glow: #00ffff;
+  --water-bg-start: #000a1a;
+  --water-bg-end: #0d1b2a;
+
+  /* Rainbow theme */
+  --rainbow-glow: #ff69b4;
+
+  /* UI */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+  --radius-round: 50%;
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 20px currentColor;
+
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* Typography */
+  --font-display: 'Fredoka One', cursive;
+  --font-body: 'Nunito', sans-serif;
+
+  --text-xs: clamp(0.7rem, 1.5vw, 0.85rem);
+  --text-sm: clamp(0.85rem, 2vw, 1rem);
+  --text-md: clamp(1rem, 2.5vw, 1.25rem);
+  --text-lg: clamp(1.25rem, 3vw, 1.75rem);
+  --text-xl: clamp(1.75rem, 4vw, 2.5rem);
+  --text-2xl: clamp(2.5rem, 6vw, 4rem);
+  --text-3xl: clamp(3rem, 8vw, 5rem);
+
+  /* Transitions */
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 600ms;
+}
+
+html {
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-body);
+  font-weight: 700;
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  line-height: 1.2;
+}

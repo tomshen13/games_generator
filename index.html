@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Kids Games 🎮</title>
+  <link rel="stylesheet" href="shared/css/reset.css">
+  <link rel="stylesheet" href="shared/css/base.css">
+  <link rel="stylesheet" href="shared/css/animations.css">
+  <link rel="stylesheet" href="shared/css/components.css">
+  <style>
+    .launcher {
+      min-height: 100%;
+      background: linear-gradient(135deg, #1a0a2e, #16213e, #1a0a2e);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: var(--space-xl) var(--space-lg);
+      overflow-y: auto;
+    }
+
+    .launcher-title {
+      font-size: var(--text-2xl);
+      text-align: center;
+      margin-bottom: var(--space-xs);
+    }
+
+    .launcher-subtitle {
+      font-size: var(--text-md);
+      color: var(--color-text-muted);
+      text-align: center;
+      margin-bottom: var(--space-2xl);
+    }
+
+    .game-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: var(--space-xl);
+      max-width: 900px;
+      width: 100%;
+    }
+
+    .game-card {
+      text-align: center;
+      padding: var(--space-xl);
+      transition: all var(--duration-normal) var(--ease-bounce);
+    }
+
+    .game-card:hover {
+      transform: translateY(-6px) scale(1.02);
+    }
+
+    .game-card-icon {
+      font-size: clamp(60px, 12vw, 80px);
+      margin-bottom: var(--space-md);
+      display: block;
+    }
+
+    .game-card-title {
+      font-family: var(--font-display);
+      font-size: var(--text-lg);
+      margin-bottom: var(--space-xs);
+    }
+
+    .game-card-ages {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-md);
+    }
+
+    .game-card-desc {
+      font-size: var(--text-sm);
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-lg);
+      line-height: 1.5;
+    }
+
+    .game-card.coming-soon {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .game-card.coming-soon .game-card-icon {
+      filter: grayscale(1);
+    }
+
+    .coming-soon-badge {
+      display: inline-block;
+      padding: var(--space-xs) var(--space-md);
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: var(--radius-md);
+      font-size: var(--text-xs);
+      color: var(--color-text-muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="launcher">
+    <h1 class="launcher-title">🎮 Kids Games</h1>
+    <p class="launcher-subtitle">Fun learning adventures for ages 4–7!</p>
+    <div class="game-grid" id="gameGrid"></div>
+  </div>
+
+  <script>
+    const GAMES = [
+      {
+        id: 'unicorn-numbers',
+        title: 'Unicorn Numbers',
+        icon: '🦄',
+        ages: 'Ages 4+',
+        description: 'Learn numbers 1–20 with fire and water powers!',
+        path: 'games/unicorn-numbers/index.html',
+        available: true,
+      },
+      {
+        id: 'shape-explorer',
+        title: 'Shape Explorer',
+        icon: '🔷',
+        ages: 'Ages 4–5',
+        description: 'Discover circles, squares, triangles and more!',
+        path: null,
+        available: false,
+      },
+      {
+        id: 'letter-safari',
+        title: 'Letter Safari',
+        icon: '🦁',
+        ages: 'Ages 5–6',
+        description: 'Go on an alphabet adventure through the jungle!',
+        path: null,
+        available: false,
+      },
+      {
+        id: 'color-mixing',
+        title: 'Color Mixing Lab',
+        icon: '🎨',
+        ages: 'Ages 4–7',
+        description: 'Mix colors and create amazing art!',
+        path: null,
+        available: false,
+      },
+    ];
+
+    function renderGames() {
+      const grid = document.getElementById('gameGrid');
+      GAMES.forEach((game, i) => {
+        const card = document.createElement('div');
+        card.className = `card game-card ${game.available ? '' : 'coming-soon'}`;
+        card.style.animationDelay = `${i * 100}ms`;
+        card.classList.add('animate-fade-up');
+
+        if (game.available) {
+          card.innerHTML = `
+            <span class="game-card-icon">${game.icon}</span>
+            <h2 class="game-card-title">${game.title}</h2>
+            <p class="game-card-ages">${game.ages}</p>
+            <p class="game-card-desc">${game.description}</p>
+            <a class="btn btn-primary" href="${game.path}">▶ PLAY</a>
+          `;
+        } else {
+          card.innerHTML = `
+            <span class="game-card-icon">🔒</span>
+            <h2 class="game-card-title">${game.title}</h2>
+            <p class="game-card-ages">${game.ages}</p>
+            <p class="game-card-desc">${game.description}</p>
+            <span class="coming-soon-badge">Coming Soon</span>
+          `;
+        }
+
+        grid.appendChild(card);
+      });
+    }
+
+    renderGames();
+  </script>
+</body>
+</html>
