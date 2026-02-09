@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Mario Adventure - Kids Games</title>
+
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="../../shared/css/reset.css">
+  <link rel="stylesheet" href="../../shared/css/base.css">
+  <link rel="stylesheet" href="../../shared/css/animations.css">
+  <link rel="stylesheet" href="../../shared/css/components.css">
+
+  <!-- Game CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="game-container">
+    <!-- Canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- ===== TITLE SCREEN ===== -->
+    <div id="screen-title" class="game-screen title-bg active">
+      <div class="title-logo">Super Mario<br>& Luigi</div>
+      <div class="title-sub">Ice Adventure!</div>
+      <div class="title-characters">
+        <span>🍄</span>
+        <span>⭐</span>
+      </div>
+      <button id="btnPlay" class="btn btn-primary btn-large animate-pulse">▶ PLAY</button>
+      <div id="controlsHintKeyboard" class="controls-hint">
+        Arrow Keys / WASD: Move &amp; Jump · X / Z: Shoot Ice · ESC: Pause
+      </div>
+      <div id="controlsHintTouch" class="controls-hint" style="display:none;">
+        Tap controls appear during gameplay
+      </div>
+    </div>
+
+    <!-- ===== CHARACTER SELECT ===== -->
+    <div id="screen-characterSelect" class="game-screen char-select-bg">
+      <h2 class="char-title">Choose Your Hero!</h2>
+      <div class="char-grid">
+        <button id="btnMario" class="char-card char-card-mario">
+          <div class="char-avatar">🧑‍🔧</div>
+          <div class="char-name">Mario</div>
+          <div class="char-trait">Balanced &amp; Brave</div>
+        </button>
+        <button id="btnLuigi" class="char-card char-card-luigi">
+          <div class="char-avatar">🧑‍🔧</div>
+          <div class="char-name">Luigi</div>
+          <div class="char-trait">Jumps Higher!</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== LEVEL SELECT ===== -->
+    <div id="screen-levelSelect" class="game-screen level-select-bg">
+      <h2 class="level-select-title">Select a Level</h2>
+      <div id="levelGrid"></div>
+      <button id="btnBackToChars" class="btn-back-levels">← Back</button>
+    </div>
+
+    <!-- ===== PLAYING (empty - canvas renders the game) ===== -->
+    <div id="screen-playing" class="game-screen" style="background:transparent; pointer-events:none;">
+    </div>
+
+    <!-- ===== HUD OVERLAY ===== -->
+    <div id="hudOverlay" class="hud-overlay" style="display:none;">
+      <div class="hud-left">
+        <span id="hudLives">❤️❤️❤️</span>
+        <span id="hudCoins">🪙 0</span>
+      </div>
+      <div class="hud-center">
+        <span id="hudPower" style="display:none;"></span>
+      </div>
+      <div class="hud-right">
+        <button id="btnPause">⏸</button>
+        <span id="hudScore">Score: 0</span>
+      </div>
+    </div>
+
+    <!-- ===== TOUCH CONTROLS ===== -->
+    <div id="touchControls" class="touch-controls" style="display:none;">
+      <div class="touch-dpad">
+        <button id="touchLeft" class="touch-btn">◀</button>
+        <button id="touchRight" class="touch-btn">▶</button>
+      </div>
+      <div class="touch-buttons">
+        <button id="touchIce" class="touch-btn touch-btn-ice">❄</button>
+        <button id="touchJump" class="touch-btn touch-btn-jump">▲</button>
+      </div>
+    </div>
+
+    <!-- ===== PAUSED ===== -->
+    <div id="screen-paused" class="game-screen pause-screen">
+      <h2 class="pause-title">⏸ Paused</h2>
+      <div class="pause-buttons">
+        <button id="btnResume" class="btn btn-primary">▶ Resume</button>
+        <button id="btnQuitLevel" class="btn btn-water">← Quit to Levels</button>
+      </div>
+    </div>
+
+    <!-- ===== LEVEL COMPLETE ===== -->
+    <div id="screen-complete" class="game-screen result-screen">
+      <h2 id="completeTitle" class="result-title">Level Complete!</h2>
+      <div id="completeStars" class="result-stars">★★☆</div>
+      <div class="result-stats">
+        <span id="completeCoins">Coins: 0 / 0</span>
+        <span id="completeEnemies">Enemies: 0 / 0</span>
+        <span id="completeTime">Time: 0s</span>
+        <span id="completeScore">Score: 0</span>
+      </div>
+      <div class="result-buttons">
+        <button id="btnNextLevel" class="btn btn-primary">Next Level ▶</button>
+        <button id="btnBackToLevels" class="btn btn-water">← Levels</button>
+      </div>
+    </div>
+
+    <!-- ===== GAME OVER ===== -->
+    <div id="screen-gameover" class="game-screen result-screen">
+      <h2 class="result-title">Oh No!</h2>
+      <div style="font-size: 56px; margin-bottom: var(--space-lg);">😢</div>
+      <div class="result-stats">
+        <span>You can do it! Try again!</span>
+        <span id="gameOverCoins">Coins collected: 0</span>
+      </div>
+      <div class="result-buttons">
+        <button id="btnRetry" class="btn btn-primary btn-large">🔄 Try Again!</button>
+        <button id="btnGoToLevels" class="btn btn-water">← Levels</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shared JS -->
+  <script src="../../shared/js/utils.js"></script>
+  <script src="../../shared/js/audio.js"></script>
+  <script src="../../shared/js/storage.js"></script>
+
+  <!-- Game JS -->
+  <script src="levels.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
