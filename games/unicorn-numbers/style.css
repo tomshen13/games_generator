@@ -20,6 +20,84 @@
   background: linear-gradient(135deg, #1a0020, #0d001a, #001a10);
 }
 
+/* ===== MODE SELECT SCREEN ===== */
+.mode-select-screen {
+  gap: var(--space-lg);
+  text-align: center;
+  background: linear-gradient(135deg, #1a0a2e, #2d1052);
+}
+
+.mode-select-title {
+  font-size: var(--text-xl);
+}
+
+.mode-cards {
+  display: flex;
+  gap: var(--space-xl);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.mode-card {
+  width: clamp(140px, 35vw, 200px);
+  padding: var(--space-xl) var(--space-lg);
+  text-align: center;
+  cursor: pointer;
+  border: 3px solid rgba(196, 77, 255, 0.4);
+  box-shadow: 0 0 20px rgba(196, 77, 255, 0.2);
+  transition: all var(--duration-normal) var(--ease-bounce);
+}
+
+.mode-card:hover {
+  transform: translateY(-8px) scale(1.05);
+  border-color: rgba(196, 77, 255, 0.7);
+  box-shadow: 0 0 40px rgba(196, 77, 255, 0.4);
+}
+
+.mode-card-icon {
+  font-size: clamp(50px, 12vw, 80px);
+  margin-bottom: var(--space-md);
+}
+
+.mode-card-label {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+}
+
+/* Mode switch button on title screen */
+.btn-mode-switch {
+  position: absolute;
+  top: var(--space-md);
+  left: var(--space-md);
+  z-index: 20;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  color: white;
+  font-family: var(--font-body);
+  font-weight: 800;
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-bounce);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-mode-switch:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: scale(1.05);
+}
+
+.btn-mode-switch:active {
+  transform: scale(0.95);
+}
+
+/* Hebrew letter targets — larger font */
+.target-btn .target-letter {
+  font-size: var(--text-2xl);
+  line-height: 1;
+}
+
 /* ===== TITLE SCREEN ===== */
 .title-screen {
   gap: var(--space-lg);
@@ -222,6 +300,14 @@
   filter: drop-shadow(0 0 10px rgba(255, 105, 180, 0.5));
 }
 
+.prompt-speaker {
+  cursor: pointer;
+  animation: bounce-in 0.5s var(--ease-bounce), pulse 2s ease-in-out infinite;
+  -webkit-text-fill-color: initial;
+  background: none;
+  filter: none;
+}
+
 /* ===== TARGET GRID ===== */
 .target-grid {
   display: flex;
@@ -257,12 +343,19 @@
   transform: scale(0.92);
 }
 
-/* Fire target — ice block */
+/* Fire target — ice block with shimmer */
 .target-btn.fire {
-  background: linear-gradient(135deg, #a8d8ea, #cbe5f7, #e0f0ff);
+  background: linear-gradient(135deg, #a8d8ea, #cbe5f7, #e0f0ff, #cbe5f7);
+  background-size: 200% 200%;
+  animation: pop-in 0.4s var(--ease-bounce) both, ice-shimmer 3s ease-in-out infinite;
   color: #2c5f7c;
   border: 3px solid rgba(168, 216, 234, 0.6);
-  box-shadow: 0 0 15px rgba(168, 216, 234, 0.3), inset 0 0 20px rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 15px rgba(168, 216, 234, 0.3), 0 0 30px rgba(150, 200, 255, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.3);
+}
+
+@keyframes ice-shimmer {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 .target-btn.fire::before {
@@ -274,13 +367,35 @@
   pointer-events: none;
 }
 
-/* Water target — seed */
+/* Frost crack detail on ice */
+.target-btn.fire::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  width: 20px;
+  height: 20px;
+  border-top: 2px solid rgba(255, 255, 255, 0.5);
+  border-right: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 0 8px 0 0;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+/* Water target — seed with subtle sway */
 .target-btn.water {
   background: linear-gradient(180deg, #5d4037, #795548, #6d4c41);
   color: #c8e6c9;
   border: 3px solid rgba(93, 64, 55, 0.8);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4), 0 0 20px rgba(0, 200, 255, 0.1);
   border-radius: var(--radius-lg) var(--radius-lg) 50% 50%;
+  animation: pop-in 0.4s var(--ease-bounce) both, seed-sway 4s ease-in-out infinite;
+}
+
+@keyframes seed-sway {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(1.5deg); }
+  75% { transform: rotate(-1.5deg); }
 }
 
 /* Rainbow target */
@@ -297,20 +412,24 @@
 }
 
 .target-btn.correct.fire {
-  animation: melt 0.8s ease-in-out forwards;
+  animation: melt 1s ease-in-out forwards;
+  background: linear-gradient(135deg, #ffd4a8, #ffb070, #ff8c42) !important;
+  border-color: rgba(255, 140, 0, 0.8) !important;
+  box-shadow: 0 0 40px rgba(255, 100, 0, 0.7), 0 0 80px rgba(255, 69, 0, 0.3) !important;
 }
 
 .target-btn.correct.water {
-  animation: grow 0.8s var(--ease-bounce) forwards;
-  background: linear-gradient(180deg, #4caf50, #66bb6a, #81c784);
-  border-color: #4caf50;
+  animation: grow 1s var(--ease-bounce) forwards;
+  background: linear-gradient(180deg, #00c853, #69f0ae, #b9f6ca) !important;
+  border-color: #00e676 !important;
   border-radius: var(--radius-lg);
+  box-shadow: 0 0 40px rgba(0, 230, 118, 0.6), 0 0 80px rgba(0, 200, 255, 0.3) !important;
 }
 
 .target-btn.correct.rainbow {
   animation: bounce-in 0.6s var(--ease-bounce);
-  background: linear-gradient(135deg, #FFD700, #FFA500);
-  box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+  background: linear-gradient(135deg, #FFD700, #FFA500, #FF6B9D) !important;
+  box-shadow: 0 0 40px rgba(255, 215, 0, 0.7), 0 0 80px rgba(255, 105, 180, 0.4) !important;
 }
 
 /* Wrong state */
@@ -473,5 +592,7 @@
 @media (max-width: 400px) {
   .power-cards { gap: var(--space-md); }
   .power-card { width: clamp(120px, 40vw, 160px); padding: var(--space-lg) var(--space-md); }
+  .mode-cards { gap: var(--space-md); }
+  .mode-card { width: clamp(120px, 40vw, 160px); padding: var(--space-lg) var(--space-md); }
   .target-grid { gap: var(--space-sm); }
 }

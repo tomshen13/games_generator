@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Super Mario Bros 🍄</title>
+
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="../../shared/css/reset.css">
+  <link rel="stylesheet" href="../../shared/css/base.css">
+  <link rel="stylesheet" href="../../shared/css/animations.css">
+  <link rel="stylesheet" href="../../shared/css/components.css">
+
+  <!-- Game CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="game-container">
+    <!-- Main game canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Particle overlay -->
+    <canvas class="particle-canvas"></canvas>
+
+    <!-- ===== TITLE SCREEN ===== -->
+    <div class="screen title-screen active">
+      <div class="title-icon">🍄</div>
+      <h1 class="title-text mario-title">Super Mario Bros</h1>
+      <p class="title-subtitle">A platformer adventure!</p>
+      <div class="title-buttons">
+        <button class="btn btn-primary btn-large btn-1p">1 Player</button>
+        <button class="btn btn-primary btn-large btn-2p">2 Players</button>
+      </div>
+      <div class="continue-wrapper" style="display: none;">
+        <button class="btn btn-primary btn-continue">▶ Continue</button>
+        <span class="continue-info"></span>
+      </div>
+      <div class="controls-hint">
+        <p><strong>1P:</strong> Arrows / WASD = Move · Space = Jump · X = Shoot</p>
+        <p><strong>Co-op:</strong> P1: WASD+Space+E · P2: Arrows+Enter+Shift</p>
+      </div>
+    </div>
+
+    <!-- ===== CHARACTER SELECT ===== -->
+    <div class="screen char-select-screen">
+      <a class="btn-back" href="#">←</a>
+      <h2 class="char-select-title">Choose Your Character!</h2>
+      <div class="char-cards">
+        <button class="card char-card" data-char="mario">
+          <canvas class="char-preview" width="64" height="64"></canvas>
+          <span class="char-name">Mario</span>
+          <span class="char-stat">Balanced speed & jump</span>
+        </button>
+        <button class="card char-card" data-char="luigi">
+          <canvas class="char-preview" width="64" height="64"></canvas>
+          <span class="char-name">Luigi</span>
+          <span class="char-stat">Higher jump, slower run</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== LEVEL COMPLETE ===== -->
+    <div class="screen level-complete-screen">
+      <div class="lc-icon">🏁</div>
+      <h2 class="lc-title">Level Complete!</h2>
+      <p class="lc-stats"></p>
+      <p class="lc-powerup-preview"></p>
+      <button class="btn btn-primary btn-large btn-next-level">▶ Next Level</button>
+    </div>
+
+    <!-- ===== GAME OVER ===== -->
+    <div class="screen game-over-screen">
+      <div class="go-icon">💀</div>
+      <h2 class="go-title">Game Over</h2>
+      <p class="go-score"></p>
+      <div class="go-buttons">
+        <button class="btn btn-primary btn-large btn-retry">🔄 Try Again</button>
+        <button class="btn btn-primary btn-home">🏠 Home</button>
+      </div>
+    </div>
+
+    <!-- ===== VICTORY ===== -->
+    <div class="screen victory-screen">
+      <div class="vic-icon">🏆</div>
+      <h2 class="vic-title">You Won!</h2>
+      <p class="victory-stats"></p>
+      <div class="vic-buttons">
+        <button class="btn btn-primary btn-large btn-play-again">🔄 Play Again</button>
+        <button class="btn btn-primary btn-home">🏠 Home</button>
+      </div>
+    </div>
+
+    <!-- ===== HUD (visible during gameplay) ===== -->
+    <div class="hud game-hud" style="display: none;">
+      <div class="hud-group">
+        <span class="hud-lives">❤️❤️❤️</span>
+        <span class="hud-coins">🪙 0</span>
+      </div>
+      <span class="hud-level">Green Hills</span>
+      <div class="hud-group">
+        <span class="hud-score">Score: 0</span>
+        <span class="hud-powerup"></span>
+      </div>
+      <div class="hud-p2" style="display: none;">
+        <span class="hud-p2-lives">💚💚💚</span>
+        <span class="hud-p2-label">Luigi</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shared JS -->
+  <script src="../../shared/js/utils.js"></script>
+  <script src="../../shared/js/audio.js"></script>
+  <script src="../../shared/js/particles.js"></script>
+  <script src="../../shared/js/storage.js"></script>
+
+  <!-- Game JS -->
+  <script src="sprites.js"></script>
+  <script src="levels.js"></script>
+  <script src="engine.js"></script>
+  <script src="entities.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

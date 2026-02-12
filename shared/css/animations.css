@@ -85,19 +85,40 @@
   100% { filter: hue-rotate(360deg); }
 }
 
-/* Melt away (for ice blocks) */
+/* Melt away (for ice blocks) — dramatic sizzle */
 @keyframes melt {
-  0% { transform: scale(1); opacity: 1; border-radius: var(--radius-md); }
-  50% { transform: scale(1.05) translateY(5px); opacity: 0.7; border-radius: 40% 40% 50% 50%; }
-  100% { transform: scale(0.8) translateY(15px); opacity: 0; border-radius: 50%; }
+  0% { transform: scale(1); opacity: 1; border-radius: var(--radius-md); filter: brightness(1); }
+  15% { transform: scale(1.15); opacity: 1; filter: brightness(1.8); box-shadow: 0 0 30px rgba(255, 150, 0, 0.8); }
+  30% { transform: scale(1.1) translateY(3px); opacity: 0.9; filter: brightness(1.4); border-radius: 30% 30% 45% 45%; }
+  60% { transform: scale(0.9) translateY(10px); opacity: 0.5; filter: brightness(1); border-radius: 40% 40% 50% 50%; }
+  100% { transform: scale(0.3) translateY(25px); opacity: 0; border-radius: 50%; filter: brightness(0.5); }
 }
 
-/* Grow (for flowers) */
+/* Grow (for flowers) — dramatic bloom */
 @keyframes grow {
-  0% { transform: scale(0) translateY(20px); opacity: 0; }
-  60% { transform: scale(1.2) translateY(-5px); opacity: 1; }
-  100% { transform: scale(1) translateY(0); opacity: 1; }
+  0% { transform: scale(0) translateY(20px) rotate(-10deg); opacity: 0; }
+  30% { transform: scale(0.5) translateY(5px) rotate(5deg); opacity: 0.8; }
+  50% { transform: scale(1.3) translateY(-10px) rotate(-3deg); opacity: 1; filter: brightness(1.4); box-shadow: 0 0 25px rgba(0, 212, 255, 0.6); }
+  70% { transform: scale(0.95) translateY(2px) rotate(1deg); opacity: 1; }
+  85% { transform: scale(1.05) translateY(-2px) rotate(0deg); opacity: 1; }
+  100% { transform: scale(1) translateY(0) rotate(0deg); opacity: 1; filter: brightness(1); }
 }
+
+/* Screen shake for big effects */
+@keyframes screen-shake {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-4px, 2px); }
+  20% { transform: translate(4px, -2px); }
+  30% { transform: translate(-3px, -3px); }
+  40% { transform: translate(3px, 3px); }
+  50% { transform: translate(-2px, 1px); }
+  60% { transform: translate(2px, -1px); }
+  70% { transform: translate(-1px, 2px); }
+  80% { transform: translate(1px, -1px); }
+  90% { transform: translate(0, 1px); }
+}
+
+.animate-screen-shake { animation: screen-shake 0.4s ease-in-out; }
 
 /* Confetti fall */
 @keyframes confetti-fall {

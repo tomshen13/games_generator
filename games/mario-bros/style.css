@@ -1,0 +1,298 @@
+/* ===== GAME CONTAINER ===== */
+.game-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+}
+
+/* ===== GAME CANVAS ===== */
+#gameCanvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* ===== TITLE SCREEN ===== */
+.title-screen {
+  gap: var(--space-lg);
+  text-align: center;
+  background: linear-gradient(135deg, #1a0a2e, #16213e);
+}
+
+.title-icon {
+  font-size: clamp(80px, 20vw, 130px);
+  line-height: 1;
+  animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 30px rgba(255, 107, 53, 0.4));
+}
+
+.mario-title {
+  font-size: var(--text-2xl);
+  background: linear-gradient(135deg, #E52521, #FFD700, #3CB043);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.title-subtitle {
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
+  margin-top: calc(-1 * var(--space-sm));
+}
+
+.title-buttons {
+  display: flex;
+  gap: var(--space-lg);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.continue-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.continue-info {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.controls-hint {
+  margin-top: var(--space-lg);
+  text-align: center;
+  opacity: 0.5;
+  font-size: var(--text-xs);
+  line-height: 1.8;
+}
+
+/* ===== CHARACTER SELECT ===== */
+.char-select-screen {
+  gap: var(--space-xl);
+  background: linear-gradient(135deg, #1a0a2e, #16213e);
+}
+
+.char-select-title {
+  font-size: var(--text-xl);
+  text-align: center;
+}
+
+.char-cards {
+  display: flex;
+  gap: var(--space-xl);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.char-card {
+  width: clamp(140px, 35vw, 200px);
+  padding: var(--space-xl) var(--space-lg);
+  text-align: center;
+  cursor: pointer;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  transition: all var(--duration-normal) var(--ease-bounce);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.char-card:hover {
+  transform: translateY(-8px) scale(1.05);
+  border-color: rgba(255, 215, 0, 0.6);
+  box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+}
+
+.char-card[data-char="mario"]:hover {
+  border-color: rgba(229, 37, 33, 0.6);
+  box-shadow: 0 0 30px rgba(229, 37, 33, 0.3);
+}
+
+.char-card[data-char="luigi"]:hover {
+  border-color: rgba(60, 176, 67, 0.6);
+  box-shadow: 0 0 30px rgba(60, 176, 67, 0.3);
+}
+
+.char-preview {
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  border-radius: var(--radius-md);
+}
+
+.char-name {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+}
+
+.char-stat {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+/* ===== LEVEL COMPLETE ===== */
+.level-complete-screen {
+  gap: var(--space-lg);
+  text-align: center;
+  background: linear-gradient(135deg, #1a0a2e, #16213e);
+}
+
+.lc-icon {
+  font-size: clamp(60px, 15vw, 100px);
+  animation: victory-dance 1s ease-in-out infinite;
+}
+
+.lc-title {
+  font-size: var(--text-2xl);
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.lc-stats {
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
+}
+
+.lc-powerup-preview {
+  font-size: var(--text-md);
+  color: #FFD700;
+  font-family: var(--font-display);
+}
+
+/* ===== GAME OVER ===== */
+.game-over-screen {
+  gap: var(--space-lg);
+  text-align: center;
+  background: linear-gradient(135deg, #1a0000, #2d0000);
+}
+
+.go-icon {
+  font-size: clamp(60px, 15vw, 100px);
+}
+
+.go-title {
+  font-size: var(--text-2xl);
+  color: #FF4444;
+}
+
+.go-score {
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
+}
+
+.go-buttons {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ===== VICTORY ===== */
+.victory-screen {
+  gap: var(--space-lg);
+  text-align: center;
+  background: linear-gradient(135deg, #1a0a2e, #2d1052);
+}
+
+.vic-icon {
+  font-size: clamp(60px, 15vw, 100px);
+  animation: victory-dance 1s ease-in-out infinite;
+}
+
+.vic-title {
+  font-size: var(--text-2xl);
+  animation: rainbow 3s linear infinite;
+}
+
+.victory-stats {
+  font-size: var(--text-lg);
+  color: var(--color-text-muted);
+}
+
+.vic-buttons {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ===== HUD ===== */
+.game-hud {
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  padding: var(--space-sm) var(--space-lg);
+  flex-wrap: wrap;
+  z-index: 50;
+}
+
+.hud-lives {
+  font-size: var(--text-sm);
+  letter-spacing: 2px;
+}
+
+.hud-coins {
+  font-size: var(--text-sm);
+  font-family: var(--font-display);
+}
+
+.hud-level {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  color: #FFD700;
+}
+
+.hud-score {
+  font-size: var(--text-sm);
+  font-family: var(--font-display);
+}
+
+.hud-powerup {
+  font-size: var(--text-md);
+  min-width: 24px;
+  text-align: center;
+}
+
+.hud-p2 {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 100%;
+  justify-content: center;
+  padding-top: var(--space-xs);
+  border-top: 1px solid rgba(255,255,255,0.1);
+  margin-top: var(--space-xs);
+}
+
+.hud-p2-lives {
+  font-size: var(--text-sm);
+  letter-spacing: 2px;
+}
+
+.hud-p2-label {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  color: #3CB043;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-height: 600px) {
+  .title-icon { font-size: 60px; }
+  .controls-hint { display: none; }
+}
+
+@media (max-width: 400px) {
+  .title-buttons { flex-direction: column; align-items: center; }
+  .char-cards { gap: var(--space-md); }
+  .char-card { width: clamp(120px, 40vw, 160px); padding: var(--space-lg) var(--space-md); }
+  .game-hud { padding: var(--space-xs) var(--space-md); }
+}

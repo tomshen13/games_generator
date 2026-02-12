@@ -172,6 +172,88 @@ const Audio = (() => {
       osc.start(ctx.currentTime);
       osc.stop(ctx.currentTime + 0.4);
     },
+
+    /** Mario-style jump — rising square wave */
+    jump() {
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(250, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.15);
+    },
+
+    /** Coin collect — short rising chime */
+    coin() {
+      playMelody([
+        [988, 0.06],   // B5
+        [1319, 0.12],  // E6
+      ]);
+    },
+
+    /** Enemy stomp */
+    stomp() {
+      playTone(150, 0.1, 'square', 0.2);
+    },
+
+    /** Player hurt — descending square wave */
+    hurt() {
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(400, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(100, ctx.currentTime + 0.3);
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.3);
+    },
+
+    /** Player death — descending melody */
+    die() {
+      playMelody([
+        [400, 0.15, 'square'],
+        [350, 0.15, 'square'],
+        [300, 0.15, 'square'],
+        [200, 0.3, 'square'],
+      ]);
+    },
+
+    /** Power-up collect — ascending chime */
+    powerup() {
+      playMelody([
+        [523, 0.08],
+        [659, 0.08],
+        [784, 0.08],
+        [1047, 0.08],
+        [1319, 0.15],
+      ]);
+    },
+
+    /** Projectile shoot — descending triangle wave */
+    shoot() {
+      if (!ctx) return;
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(800, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.1);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.1);
+    },
   };
 
   /**

@@ -1,24 +1,27 @@
 /**
- * Unicorn Numbers — Core Game Logic
- * A state-machine-driven number learning game for ages 4+.
+ * Unicorn Numbers / Letters — Core Game Logic
+ * A state-machine-driven learning game for ages 4+.
+ * Supports multiple modes (numbers, Hebrew letters, etc.)
  */
 const Game = (() => {
-  const GAME_ID = 'unicorn-numbers';
 
   // State
   let state = {
-    screen: 'title',       // title | powerSelect | game | levelComplete | gameComplete
+    mode: null,            // current MODES entry
+    screen: 'modeSelect',  // modeSelect | title | powerSelect | game | levelComplete | gameComplete
     level: 0,              // current level index
     round: 0,              // current round within level
-    target: null,          // number the player needs to find
-    options: [],           // numbers displayed as targets
+    target: null,          // item the player needs to find
+    options: [],           // items displayed as targets
     power: 'fire',         // current power mode
     stars: 0,              // total stars earned
     levelStars: 0,         // stars earned this level
-    answered: [],          // numbers already answered correctly in this round
+    answered: [],          // items already answered correctly in this round
     wrongAttempts: 0,      // wrong attempts this round (for star calculation)
     inputLocked: false,    // prevents rapid tapping
   };
+
+  function gameId() { return state.mode.storageKey; }
 
   // DOM references
   let els = {};
@@ -26,24 +29,38 @@ const Game = (() => {
   function init() {
     Audio.init();
     cacheDOM();
-    loadProgress();
     bindEvents();
-    showScreen('title');
+
+    // Load saved mode
+    const savedModeId = Storage.load('unicorn-numbers', 'selectedMode', null);
+    if (savedModeId && MODES[savedModeId]) {
+      state.mode = MODES[savedModeId];
+      loadProgress();
+      showScreen('title');
+    } else {
+      showScreen('modeSelect');
+    }
   }
 
   function cacheDOM() {
     els.container = document.querySelector('.game-container');
     els.particleCanvas = document.querySelector('.particle-canvas');
     els.screens = {
+      modeSelect: document.querySelector('.mode-select-screen'),
       title: document.querySelector('.title-screen'),
       powerSelect: document.querySelector('.power-select-screen'),
       game: document.querySelector('.game-screen'),
       levelComplete: document.querySelector('.level-complete-screen'),
       gameComplete: document.querySelector('.game-complete-screen'),
     };
+    els.modeCards = document.querySelectorAll('.mode-card');
+    els.modeSelectTitle = document.querySelector('.mode-select-title');
+    els.modeSwitchBtn = document.querySelector('.btn-mode-switch');
     els.playBtn = document.querySelector('.btn-play');
     els.continueBtn = document.querySelector('.btn-continue');
     els.continueWrapper = document.querySelector('.btn-continue-wrapper');
+    els.titleText = document.querySelector('.title-text');
+    els.titleSubtitle = document.querySelector('.title-subtitle');
     els.sparky = document.querySelector('.sparky');
     els.prompt = document.querySelector('.prompt');
     els.targetGrid = document.querySelector('.target-grid');
@@ -54,6 +71,8 @@ const Game = (() => {
     els.lcTitle = document.querySelector('.level-complete-title');
     els.lcStars = document.querySelector('.level-stars');
     els.lcNextBtn = document.querySelector('.btn-next-level');
+    els.gcTitle = document.querySelector('.game-complete-title');
+    els.gcSubtitle = document.querySelector('.game-complete-subtitle');
     els.gcNumberRainbow = document.querySelector('.number-rainbow');
     els.gcTotalStars = document.querySelector('.total-stars');
     els.langBtns = document.querySelectorAll('.btn-lang');
@@ -64,6 +83,24 @@ const Game = (() => {
   function bindEvents() {
     // First interaction initializes audio
     document.addEventListener('click', () => Audio.init(), { once: true });
+
+    // Mode select cards
+    els.modeCards.forEach(card => {
+      card.addEventListener('click', () => {
+        Audio.SFX.tap();
+        const modeId = card.dataset.mode;
+        state.mode = MODES[modeId];
+        Storage.save('unicorn-numbers', 'selectedMode', modeId);
+        loadProgress();
+        showScreen('title');
+      });
+    });
+
+    // Mode switch button on title screen
+    els.modeSwitchBtn.addEventListener('click', () => {
+      Audio.SFX.tap();
+      showScreen('modeSelect');
+    });
 
     els.playBtn.addEventListener('click', () => {
       Audio.SFX.tap();
@@ -119,7 +156,7 @@ const Game = (() => {
     if (playAgainBtn) {
       playAgainBtn.addEventListener('click', () => {
         Audio.SFX.tap();
-        Storage.clearGame(GAME_ID);
+        Storage.clearGame(gameId());
         state.stars = 0;
         state.level = 0;
         startFromBeginning();
@@ -136,21 +173,25 @@ const Game = (() => {
     }
 
     // Language toggle buttons
-    const savedLang = Storage.load(GAME_ID, 'lang', 'en');
+    const savedLang = Storage.load('unicorn-numbers', 'lang', 'en');
     Audio.setLang(savedLang);
     updateLangButtons();
+    updateModeSelectLang();
 
     els.langBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         Audio.SFX.tap();
         const newLang = Audio.getLang() === 'en' ? 'he' : 'en';
         Audio.setLang(newLang);
-        Storage.save(GAME_ID, 'lang', newLang);
+        Storage.save('unicorn-numbers', 'lang', newLang);
         updateLangButtons();
+        updateModeSelectLang();
+        // Update title screen text if mode is set
+        if (state.mode) updateTitleScreen();
         // Re-render prompt if in game
         if (state.screen === 'game' && state.target != null) {
           renderPrompt(state.target);
-          Audio.speakNumber(state.target);
+          speakItem(state.target);
         }
       });
     });
@@ -168,6 +209,20 @@ const Game = (() => {
     if (hudBtn) hudBtn.textContent = isHe ? 'עב' : 'EN';
   }
 
+  function updateModeSelectLang() {
+    const lang = Audio.getLang();
+    if (els.modeSelectTitle) {
+      els.modeSelectTitle.textContent = lang === 'he' ? '?מה רוצים ללמוד' : 'What do you want to learn?';
+    }
+    els.modeCards.forEach(card => {
+      const modeId = card.dataset.mode;
+      const mode = MODES[modeId];
+      if (mode) {
+        card.querySelector('.mode-card-label').textContent = mode.label[lang];
+      }
+    });
+  }
+
   // ===== SCREEN MANAGEMENT =====
 
   function showScreen(name) {
@@ -180,17 +235,49 @@ const Game = (() => {
     if (name === 'title') {
       updateTitleScreen();
     }
+    if (name === 'modeSelect') {
+      updateModeSelectLang();
+    }
   }
 
   function updateTitleScreen() {
-    const savedLevel = Storage.load(GAME_ID, 'level', 0);
-    if (savedLevel > 0 && savedLevel < LEVELS.length && els.continueWrapper) {
+    if (!state.mode) return;
+    const lang = Audio.getLang();
+    const mode = state.mode;
+    const levels = mode.levels;
+
+    // Update title and subtitle
+    els.titleText.textContent = mode.titleText[lang];
+    els.titleSubtitle.textContent = mode.subtitle[lang];
+
+    // Update mode switch button
+    els.modeSwitchBtn.textContent = `${mode.icon} ${mode.label[lang]}`;
+
+    // Continue button
+    const savedLevel = Storage.load(gameId(), 'level', 0);
+    if (savedLevel > 0 && savedLevel < levels.length && els.continueWrapper) {
       els.continueWrapper.style.display = 'flex';
       els.continueWrapper.querySelector('.continue-info').textContent =
-        `Level ${savedLevel + 1} of ${LEVELS.length}`;
+        `Level ${savedLevel + 1} of ${levels.length}`;
     } else if (els.continueWrapper) {
       els.continueWrapper.style.display = 'none';
     }
+  }
+
+  // ===== SPEECH =====
+
+  function speakItem(item) {
+    if (state.mode.id === 'hebrew-letters') {
+      const lang = Audio.getLang();
+      const names = HEBREW_LETTER_NAMES[item];
+      if (!names) return Audio.speak(String(item), 0.8);
+      if (lang === 'he') {
+        return Audio.speak(names.he, 0.8, 'he-IL');
+      }
+      return Audio.speak(names.en, 0.8, 'en-US');
+    }
+    // Default: numbers
+    return Audio.speakNumber(item);
   }
 
   // ===== GAME FLOW =====
@@ -202,13 +289,13 @@ const Game = (() => {
   }
 
   function continueGame() {
-    state.level = Storage.load(GAME_ID, 'level', 0);
-    state.stars = Storage.load(GAME_ID, 'stars', 0);
+    state.level = Storage.load(gameId(), 'level', 0);
+    state.stars = Storage.load(gameId(), 'stars', 0);
     showPowerSelectOrStart();
   }
 
   function showPowerSelectOrStart() {
-    const levelDef = LEVELS[state.level];
+    const levelDef = state.mode.levels[state.level];
     if (levelDef.power === 'choice') {
       showScreen('powerSelect');
     } else {
@@ -225,23 +312,23 @@ const Game = (() => {
     updateHUD();
 
     // Show/hide power toggle (only for 'choice' levels)
-    const levelDef = LEVELS[state.level];
+    const levelDef = state.mode.levels[state.level];
     els.powerToggle.style.display = levelDef.power === 'choice' ? 'flex' : 'none';
 
     startRound();
   }
 
   async function startRound() {
-    const levelDef = LEVELS[state.level];
+    const levelDef = state.mode.levels[state.level];
     state.wrongAttempts = 0;
     state.answered = [];
 
     // Pick target and distractors
-    const target = levelDef.numbers[Utils.randInt(0, levelDef.numbers.length - 1)];
+    const target = levelDef.items[Utils.randInt(0, levelDef.items.length - 1)];
     state.target = target;
 
     // Build options: target + random distractors
-    const distractors = levelDef.numbers.filter(n => n !== target);
+    const distractors = levelDef.items.filter(n => n !== target);
     const picked = Utils.pickRandom(distractors, levelDef.targetsPerRound - 1);
     state.options = Utils.shuffle([target, ...picked]);
 
@@ -249,51 +336,67 @@ const Game = (() => {
     renderPrompt(target);
     updateHUD();
 
-    // Speak the number
+    // Speak the item
     await Utils.wait(300);
-    Audio.speakNumber(target);
+    speakItem(target);
   }
 
-  function renderPrompt(number) {
+  function renderPrompt(item) {
+    const lang = Audio.getLang();
+    const promptText = state.mode.promptText[lang];
     els.prompt.className = `prompt ${state.power}`;
-    if (Audio.getLang() === 'he') {
-      els.prompt.innerHTML = `!מצאו את המספר <span class="prompt-number">${number}</span>`;
+
+    if (lang === 'he') {
+      els.prompt.innerHTML = `<span class="prompt-number prompt-speaker">🔊</span> ${promptText}`;
       els.prompt.dir = 'rtl';
     } else {
-      els.prompt.innerHTML = `Find number <span class="prompt-number">${number}</span>!`;
+      els.prompt.innerHTML = `${promptText} <span class="prompt-number prompt-speaker">🔊</span>`;
       els.prompt.dir = 'ltr';
+    }
+    // Tap speaker to hear item again
+    const speaker = els.prompt.querySelector('.prompt-speaker');
+    if (speaker) {
+      speaker.addEventListener('click', () => {
+        speakItem(state.target);
+      });
     }
   }
 
   function renderTargets() {
-    const levelDef = LEVELS[state.level];
+    const levelDef = state.mode.levels[state.level];
     els.targetGrid.innerHTML = '';
 
-    state.options.forEach((num, i) => {
+    state.options.forEach((item, i) => {
       const btn = document.createElement('button');
       btn.className = `target-btn ${state.power}`;
       btn.style.animationDelay = `${i * 80}ms`;
-      btn.dataset.number = num;
+      btn.dataset.item = item;
 
       // Inner content
-      let content = `<span class="target-number">${num}</span>`;
-      if (levelDef.showDots === true) {
-        content += Utils.dotPattern(num);
-      } else if (levelDef.showDots === 'hint') {
-        content += `<div class="dot-hint">${Utils.dotPattern(num)}</div>`;
+      const displayText = state.mode.displayItem(item);
+      const isLetter = state.mode.id !== 'numbers';
+      const spanClass = isLetter ? 'target-number target-letter' : 'target-number';
+      let content = `<span class="${spanClass}">${displayText}</span>`;
+
+      if (state.mode.supportsDots) {
+        if (levelDef.showDots === true) {
+          content += Utils.dotPattern(item);
+        } else if (levelDef.showDots === 'hint') {
+          content += `<div class="dot-hint">${Utils.dotPattern(item)}</div>`;
+        }
       }
       btn.innerHTML = content;
 
-      btn.addEventListener('click', () => handleTargetClick(btn, num));
+      btn.addEventListener('click', () => handleTargetClick(btn, item));
       els.targetGrid.appendChild(btn);
     });
   }
 
-  async function handleTargetClick(btn, number) {
+  async function handleTargetClick(btn, item) {
     if (state.inputLocked) return;
     state.inputLocked = true;
 
-    if (number === state.target) {
+    if (item === state.target) {
       await handleCorrect(btn);
     } else {
       await handleWrong(btn);
@@ -312,14 +415,18 @@ const Game = (() => {
     const cy = rect.top + rect.height / 2;
 
     if (state.power === 'fire') {
-      Particles.fireBurst(cx, cy, 25);
+      Particles.fireBurst(cx, cy, 35);
       Audio.SFX.fire();
     } else if (state.power === 'water') {
-      Particles.waterSplash(cx, cy, 25);
+      Particles.waterSplash(cx, cy, 35);
       Audio.SFX.water();
     } else {
       Particles.rainbowExplosion(cx, cy);
     }
+
+    // Screen shake on correct answer
+    els.container.classList.add('animate-screen-shake');
+    setTimeout(() => els.container.classList.remove('animate-screen-shake'), 400);
 
     Audio.SFX.correct();
 
@@ -333,12 +440,12 @@ const Game = (() => {
     updateHUD();
 
     await Utils.wait(800);
-    Particles.sparkle(cx, cy, 15, '#FFD700');
+    Particles.sparkle(cx, cy, 25, '#FFD700');
     await Utils.wait(400);
 
     // Next round or level complete
     state.round++;
-    const levelDef = LEVELS[state.level];
+    const levelDef = state.mode.levels[state.level];
     if (state.round >= levelDef.rounds) {
       completedLevel();
     } else {
@@ -355,15 +462,15 @@ const Game = (() => {
     await Utils.wait(600);
     btn.classList.remove('wrong');
 
-    // Re-speak the number
-    Audio.speakNumber(state.target);
+    // Re-speak the item
+    speakItem(state.target);
   }
 
   async function completedLevel() {
     saveProgress();
 
     // Show level complete screen
-    const levelDef = LEVELS[state.level];
+    const levelDef = state.mode.levels[state.level];
     els.lcTitle.textContent = levelDef.title;
 
     // Stars display (up to 3 based on performance)
@@ -377,7 +484,8 @@ const Game = (() => {
     }
 
     // Button text
-    const isLast = state.level >= LEVELS.length - 1;
+    const levels = state.mode.levels;
+    const isLast = state.level >= levels.length - 1;
     els.lcNextBtn.textContent = isLast ? '🎉 See Results!' : '▶ Next Level!';
 
     showScreen('levelComplete');
@@ -386,17 +494,20 @@ const Game = (() => {
     Particles.confetti(80);
 
     // Speak congratulations
+    const lang = Audio.getLang();
+    const congratsText = state.mode.congratsSpeech[lang];
     await Utils.wait(1000);
-    if (Audio.getLang() === 'he') {
-      Audio.speak('כל הכבוד!', 0.9, 'he-IL');
+    if (lang === 'he') {
+      Audio.speak(congratsText, 0.9, 'he-IL');
     } else {
-      Audio.speak('Great job!');
+      Audio.speak(congratsText);
     }
   }
 
   function advanceLevel() {
     state.level++;
-    if (state.level >= LEVELS.length) {
+    const levels = state.mode.levels;
+    if (state.level >= levels.length) {
       showGameComplete();
     } else {
       saveProgress();
@@ -405,22 +516,28 @@ const Game = (() => {
   }
 
   async function showGameComplete() {
-    // Build number rainbow
+    const lang = Audio.getLang();
+    const mode = state.mode;
+
+    // Set localized text
+    els.gcTitle.textContent = mode.completeTitle[lang];
+    els.gcSubtitle.textContent = mode.completeSubtitle[lang];
+
+    // Build item rainbow
     els.gcNumberRainbow.innerHTML = '';
     const rainbowColors = [
       '#ff6b6b', '#ff8e53', '#ffd93d', '#6bcf7f', '#4ecdc4',
       '#45b7d1', '#7b68ee', '#c44dff', '#ff6b9d', '#ff9f1c',
-      '#ff6b6b', '#ff8e53', '#ffd93d', '#6bcf7f', '#4ecdc4',
-      '#45b7d1', '#7b68ee', '#c44dff', '#ff6b9d', '#ff9f1c',
     ];
-    for (let i = 1; i <= 20; i++) {
-      const item = document.createElement('div');
-      item.className = 'number-rainbow-item';
-      item.textContent = i;
-      item.style.background = rainbowColors[i - 1];
-      item.style.animationDelay = `${i * 100}ms`;
-      els.gcNumberRainbow.appendChild(item);
-    }
+    const allItems = mode.allItems;
+    allItems.forEach((item, idx) => {
+      const el = document.createElement('div');
+      el.className = 'number-rainbow-item';
+      el.textContent = mode.displayItem(item);
+      el.style.background = rainbowColors[idx % rainbowColors.length];
+      el.style.animationDelay = `${(idx + 1) * 100}ms`;
+      els.gcNumberRainbow.appendChild(el);
+    });
 
     els.gcTotalStars.textContent = `⭐ ${state.stars} Stars Earned!`;
 
@@ -431,14 +548,14 @@ const Game = (() => {
     await Utils.wait(1500);
     Particles.confetti(60);
 
-    if (Audio.getLang() === 'he') {
-      Audio.speak('!את קוסמת של מספרים', 0.9, 'he-IL');
+    if (lang === 'he') {
+      Audio.speak(mode.completeSpeech.he, 0.9, 'he-IL');
     } else {
-      Audio.speak('You are a Number Wizard!');
+      Audio.speak(mode.completeSpeech.en);
     }
 
     // Clear saved progress (game is complete)
-    Storage.clearGame(GAME_ID);
+    Storage.clearGame(gameId());
   }
 
   // ===== THEME & HUD =====
@@ -459,7 +576,7 @@ const Game = (() => {
   }
 
   function updateHUD() {
-    const levelDef = LEVELS[state.level];
+    const levelDef = state.mode.levels[state.level];
     if (!levelDef) return;
     els.levelLabel.textContent = `Level ${state.level + 1}`;
     els.starCounter.textContent = `⭐ ${state.stars}`;
@@ -472,14 +589,14 @@ const Game = (() => {
   // ===== PERSISTENCE =====
 
   function saveProgress() {
-    Storage.save(GAME_ID, 'level', state.level);
-    Storage.save(GAME_ID, 'stars', state.stars);
+    Storage.save(gameId(), 'level', state.level);
+    Storage.save(gameId(), 'stars', state.stars);
   }
 
   function loadProgress() {
     // Just check if there's saved progress for the continue button
-    const savedLevel = Storage.load(GAME_ID, 'level', 0);
-    const savedStars = Storage.load(GAME_ID, 'stars', 0);
+    const savedLevel = Storage.load(gameId(), 'level', 0);
+    const savedStars = Storage.load(gameId(), 'stars', 0);
     return { level: savedLevel, stars: savedStars };
   }
 

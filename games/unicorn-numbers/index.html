@@ -19,9 +19,27 @@
     <!-- Particle overlay -->
     <canvas class="particle-canvas"></canvas>
 
+    <!-- ===== MODE SELECT SCREEN ===== -->
+    <div class="screen mode-select-screen active">
+      <button class="btn-lang btn-lang-mode" title="Switch language">EN 🇬🇧</button>
+      <div class="title-unicorn">🦄</div>
+      <h2 class="mode-select-title">What do you want to learn?</h2>
+      <div class="mode-cards">
+        <div class="card mode-card" data-mode="numbers">
+          <div class="mode-card-icon">🔢</div>
+          <div class="mode-card-label">Numbers</div>
+        </div>
+        <div class="card mode-card" data-mode="hebrew-letters">
+          <div class="mode-card-icon">אב</div>
+          <div class="mode-card-label">Letters</div>
+        </div>
+      </div>
+    </div>
+
     <!-- ===== TITLE SCREEN ===== -->
-    <div class="screen title-screen active">
+    <div class="screen title-screen">
       <button class="btn-lang" title="Switch language">EN 🇬🇧</button>
+      <button class="btn-mode-switch" title="Switch mode">🔢 Numbers</button>
       <div class="title-unicorn">🦄</div>
       <h1 class="title-text">Unicorn Numbers</h1>
       <p class="title-subtitle">Learn numbers 1–20 with Sparky!</p>
@@ -91,8 +109,8 @@
     <!-- ===== GAME COMPLETE SCREEN ===== -->
     <div class="screen game-complete-screen">
       <div class="level-complete-unicorn">🦄</div>
-      <h2 class="game-complete-title">You're a Number Wizard!</h2>
-      <p class="game-complete-subtitle">You learned all numbers 1–20!</p>
+      <h2 class="game-complete-title"></h2>
+      <p class="game-complete-subtitle"></p>
       <div class="number-rainbow"></div>
       <p class="total-stars">⭐ 0 Stars Earned!</p>
       <div style="display: flex; gap: var(--space-md); flex-wrap: wrap; justify-content: center;">
@@ -109,6 +127,7 @@
   <script src="../../shared/js/storage.js"></script>
 
   <!-- Game JS -->
+  <script src="modes.js"></script>
   <script src="levels.js"></script>
   <script src="game.js"></script>
 </body>

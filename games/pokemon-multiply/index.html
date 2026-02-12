@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Pokemon Multiply ⚡</title>
+
+  <link rel="stylesheet" href="../../shared/css/reset.css">
+  <link rel="stylesheet" href="../../shared/css/base.css">
+  <link rel="stylesheet" href="../../shared/css/animations.css">
+  <link rel="stylesheet" href="../../shared/css/components.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="game-container" data-type="grass">
+    <canvas class="particle-canvas"></canvas>
+
+    <!-- SCREEN 1: Title -->
+    <div class="screen title-screen active">
+      <div class="title-pokemon">
+        <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png"
+             alt="Pikachu" class="title-sprite">
+      </div>
+      <h1 class="title-text">Pokemon<br>Multiply</h1>
+      <p class="title-subtitle">Catch 'em all with multiplication!</p>
+      <button class="btn btn-primary btn-large btn-play">⚡ START</button>
+      <div class="continue-wrapper" style="display: none;">
+        <button class="btn btn-primary btn-continue">⚡ CONTINUE</button>
+        <span class="continue-info"></span>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: Starter Select -->
+    <div class="screen starter-screen">
+      <h2 class="starter-title">Choose Your Partner!</h2>
+      <p class="starter-subtitle">Pick your first Pokemon</p>
+      <div class="starter-grid">
+        <button class="card starter-card" data-starter="1">
+          <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png"
+               alt="Bulbasaur" class="starter-sprite">
+          <span class="starter-name">Bulbasaur</span>
+          <span class="starter-type type-grass">grass</span>
+        </button>
+        <button class="card starter-card" data-starter="4">
+          <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png"
+               alt="Charmander" class="starter-sprite">
+          <span class="starter-name">Charmander</span>
+          <span class="starter-type type-fire">fire</span>
+        </button>
+        <button class="card starter-card" data-starter="7">
+          <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png"
+               alt="Squirtle" class="starter-sprite">
+          <span class="starter-name">Squirtle</span>
+          <span class="starter-type type-water">water</span>
+        </button>
+        <button class="card starter-card" data-starter="25">
+          <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png"
+               alt="Pikachu" class="starter-sprite">
+          <span class="starter-name">Pikachu</span>
+          <span class="starter-type type-electric">electric</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: Level Select / Map -->
+    <div class="screen level-select-screen">
+      <div class="level-select-header">
+        <h2 class="level-select-title">Choose Your Route!</h2>
+        <div class="coin-display">
+          <span class="coin-icon">🪙</span>
+          <span class="coin-count">0</span>
+        </div>
+      </div>
+      <div class="level-map"></div>
+      <div class="level-select-actions">
+        <button class="btn btn-battle-nav">⚔️ Battle</button>
+        <button class="btn btn-shop-nav">🏪 Shop</button>
+        <button class="btn btn-collection-nav">📦 Collection</button>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: Game Screen -->
+    <div class="screen game-screen">
+      <div class="hud game-hud">
+        <div class="hud-left">
+          <button class="btn-back game-back">←</button>
+          <span class="level-label">Level 1</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 0%"></div>
+        </div>
+        <div class="hud-right">
+          <span class="hud-coins">🪙 <span class="hud-coin-count">0</span></span>
+          <span class="hud-streak">🔥 <span class="hud-streak-count">0</span></span>
+        </div>
+      </div>
+
+      <div class="partner-section">
+        <img class="partner-sprite" src="" alt="Partner Pokemon">
+        <div class="partner-bubble" style="display: none;"></div>
+      </div>
+
+      <div class="problem-display">
+        <span class="problem-num1">?</span>
+        <span class="problem-op">×</span>
+        <span class="problem-num2">?</span>
+        <span class="problem-eq">=</span>
+        <span class="problem-answer">?</span>
+      </div>
+
+      <div class="answer-grid"></div>
+    </div>
+
+    <!-- SCREEN 5: Battle Screen -->
+    <div class="screen battle-screen">
+      <div class="battle-top">
+        <div class="battle-opponent-info">
+          <span class="opponent-name">Wild Pokemon</span>
+          <div class="hp-bar opponent-hp">
+            <div class="hp-fill" style="width: 100%"></div>
+          </div>
+          <span class="hp-text opponent-hp-text">HP</span>
+        </div>
+        <div class="battle-opponent-sprite-wrap">
+          <img class="opponent-sprite" src="" alt="Wild Pokemon">
+        </div>
+      </div>
+
+      <div class="battle-bottom">
+        <div class="battle-player-sprite-wrap">
+          <img class="player-battle-sprite" src="" alt="Your Pokemon">
+        </div>
+        <div class="battle-player-info">
+          <span class="player-pokemon-name">Your Pokemon</span>
+          <div class="hp-bar player-hp">
+            <div class="hp-fill" style="width: 100%"></div>
+          </div>
+          <span class="hp-text player-hp-text">HP</span>
+        </div>
+      </div>
+
+      <div class="battle-problem">
+        <p class="battle-prompt">Solve to attack!</p>
+        <div class="battle-equation">
+          <span class="battle-num1">?</span>
+          <span class="battle-op">×</span>
+          <span class="battle-num2">?</span>
+          <span class="battle-eq">=</span>
+          <span class="battle-answer-q">?</span>
+        </div>
+        <div class="battle-answers"></div>
+      </div>
+
+      <div class="battle-message" style="display: none;">
+        <p class="battle-message-text"></p>
+      </div>
+    </div>
+
+    <!-- SCREEN 6: Shop -->
+    <div class="screen shop-screen">
+      <div class="shop-header">
+        <button class="btn-back shop-back">←</button>
+        <h2 class="shop-title">Pokemon Shop</h2>
+        <div class="coin-display shop-coins">
+          <span class="coin-icon">🪙</span>
+          <span class="shop-coin-count">0</span>
+        </div>
+      </div>
+      <div class="shop-grid"></div>
+    </div>
+
+    <!-- SCREEN 7: Collection -->
+    <div class="screen collection-screen">
+      <div class="collection-header">
+        <button class="btn-back collection-back">←</button>
+        <h2 class="collection-title">My Pokemon</h2>
+        <span class="collection-count">0 / 0</span>
+      </div>
+      <div class="collection-grid"></div>
+    </div>
+
+    <!-- SCREEN 8: Level Complete -->
+    <div class="screen level-complete-screen">
+      <div class="lc-pokemon-wrap">
+        <img class="lc-pokemon-sprite" src="" alt="Pokemon">
+      </div>
+      <h2 class="lc-title">Level Complete!</h2>
+      <div class="lc-stars">
+        <span class="lc-star" data-i="0">☆</span>
+        <span class="lc-star" data-i="1">☆</span>
+        <span class="lc-star" data-i="2">☆</span>
+      </div>
+      <div class="lc-rewards">
+        <span class="lc-coins-earned">🪙 +0</span>
+      </div>
+      <button class="btn btn-primary btn-large btn-next-level">Next Level ⚡</button>
+    </div>
+
+    <!-- SCREEN 9: Game Complete -->
+    <div class="screen game-complete-screen">
+      <h2 class="gc-title">Pokemon Master!</h2>
+      <p class="gc-subtitle">You conquered all multiplication routes!</p>
+      <div class="gc-pokemon-parade"></div>
+      <p class="gc-stats"></p>
+      <div class="gc-actions">
+        <button class="btn btn-primary btn-large btn-play-again">🔄 Play Again</button>
+        <button class="btn btn-primary btn-home">🏠 Home</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="../../shared/js/utils.js"></script>
+  <script src="../../shared/js/audio.js"></script>
+  <script src="../../shared/js/particles.js"></script>
+  <script src="../../shared/js/storage.js"></script>
+
+  <script src="pokemon-data.js"></script>
+  <script src="levels.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

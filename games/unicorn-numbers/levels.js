@@ -84,3 +84,6 @@ const LEVELS = [
     description: 'ALL numbers 1–20!',
   },
 ];
+
+LEVELS.forEach(l => { if (!l.items) l.items = l.numbers; });
+MODES.numbers.levels = LEVELS;
