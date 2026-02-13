@@ -89,7 +89,7 @@ const Dashboard = (() => {
       'unicorn-comparison': '🦄 Unicorn Compare',
       'unicorn-addition': '🦄 Unicorn Addition',
       'unicorn-hebrew': '🦄 Unicorn Hebrew',
-      'pokemon-multiply': '⚡ Pokemon Multiply',
+      'pokemon-multiply': '⚡ Pokemon Math',
     };
     return titles[gameId] || gameId;
   }

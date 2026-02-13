@@ -24,6 +24,11 @@ const Adaptive = (() => {
       return records[key];
     },
 
+    /** Read-only access to all records (no side effects) */
+    getRecords() {
+      return records;
+    },
+
     recordAnswer(key, correct) {
       const r = this.getRecord(key);
       if (correct) {

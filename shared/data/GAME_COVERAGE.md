@@ -225,8 +225,8 @@ Overview of which curriculum levels have games and which need development.
 | unicorn-numbers | comparison | K Math L4 (Relationships) |
 | unicorn-numbers | addition | K Math L5 (Decomposition), G1 Math L2 (Addition to 10) |
 | unicorn-hebrew | hebrew | G1 Hebrew L1 (Letter Identification) |
-| pokemon-multiply | multiply | G2 Math L4, G3 Math L2-L4 |
-| pokemon-multiply | add | G1 Math L3-L4, G2 Math L2-L3 |
-| pokemon-multiply | subtract | G2 Math L5 |
-| pokemon-multiply | divide | G3 Math L5, G4 Math L2-L3 |
+| pokemon-math | multiply | G2 Math L4, G3 Math L2-L4 |
+| pokemon-math | add | G1 Math L3-L4, G2 Math L2-L3 |
+| pokemon-math | subtract | G2 Math L5 |
+| pokemon-math | divide | G3 Math L5, G4 Math L2-L3 |
 | mario-bros | — | (not curriculum-mapped, standalone platformer) |

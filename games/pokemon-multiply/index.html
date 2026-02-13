@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Pokemon Multiply ⚡</title>
+  <title>Pokemon Math ⚡</title>
 
   <link rel="stylesheet" href="../../shared/css/reset.css">
   <link rel="stylesheet" href="../../shared/css/base.css">
@@ -21,8 +21,8 @@
         <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png"
              alt="Pikachu" class="title-sprite">
       </div>
-      <h1 class="title-text">Pokemon<br>Multiply</h1>
-      <p class="title-subtitle">Catch 'em all with multiplication!</p>
+      <h1 class="title-text">Pokemon<br>Math</h1>
+      <p class="title-subtitle">Catch 'em all with math!</p>
       <button class="btn btn-primary btn-large btn-play">⚡ START</button>
       <div class="continue-wrapper" style="display: none;">
         <button class="btn btn-primary btn-continue">⚡ CONTINUE</button>
@@ -62,20 +62,26 @@
       </div>
     </div>
 
-    <!-- SCREEN 3: Level Select / Map -->
-    <div class="screen level-select-screen">
-      <div class="level-select-header">
-        <h2 class="level-select-title">Choose Your Route!</h2>
-        <div class="coin-display">
-          <span class="coin-icon">🪙</span>
-          <span class="coin-count">0</span>
-        </div>
-      </div>
-      <div class="level-map"></div>
-      <div class="level-select-actions">
-        <button class="btn btn-battle-nav">⚔️ Battle</button>
-        <button class="btn btn-shop-nav">🏪 Shop</button>
-        <button class="btn btn-collection-nav">📦 Collection</button>
+    <!-- SCREEN 3: Mode Select -->
+    <div class="screen mode-select-screen">
+      <h2 class="mode-select-title">Choose Your Mode!</h2>
+      <div class="mode-cards">
+        <button class="card mode-card" data-mode="add">
+          <span class="mode-card-icon">➕</span>
+          <span class="mode-card-label">Addition</span>
+        </button>
+        <button class="card mode-card" data-mode="subtract">
+          <span class="mode-card-icon">➖</span>
+          <span class="mode-card-label">Subtraction</span>
+        </button>
+        <button class="card mode-card" data-mode="multiply">
+          <span class="mode-card-icon">✖️</span>
+          <span class="mode-card-label">Multiply</span>
+        </button>
+        <button class="card mode-card" data-mode="divide">
+          <span class="mode-card-icon">➗</span>
+          <span class="mode-card-label">Division</span>
+        </button>
       </div>
     </div>
 
@@ -179,12 +185,12 @@
       <div class="collection-grid"></div>
     </div>
 
-    <!-- SCREEN 8: Level Complete -->
-    <div class="screen level-complete-screen">
+    <!-- SCREEN 8: Session Complete -->
+    <div class="screen session-complete-screen">
       <div class="lc-pokemon-wrap">
         <img class="lc-pokemon-sprite" src="" alt="Pokemon">
       </div>
-      <h2 class="lc-title">Level Complete!</h2>
+      <h2 class="lc-title">Session Complete!</h2>
       <div class="lc-stars">
         <span class="lc-star" data-i="0">☆</span>
         <span class="lc-star" data-i="1">☆</span>
@@ -193,7 +199,14 @@
       <div class="lc-rewards">
         <span class="lc-coins-earned">🪙 +0</span>
       </div>
-      <button class="btn btn-primary btn-large btn-next-level">Next Level ⚡</button>
+      <div class="session-complete-actions">
+        <button class="btn btn-primary btn-large btn-play-again-session">⚡ Play Again</button>
+        <div class="session-complete-row">
+          <button class="btn btn-session-shop">🏪 Shop</button>
+          <button class="btn btn-session-collection">📦 Collection</button>
+          <button class="btn btn-session-home">🏠 Home</button>
+        </div>
+      </div>
     </div>
 
     <!-- SCREEN 9: Game Complete -->

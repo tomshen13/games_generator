@@ -84,23 +84,6 @@
       line-height: 1.5;
     }
 
-    .game-card.coming-soon {
-      opacity: 0.5;
-      pointer-events: none;
-    }
-
-    .game-card.coming-soon .game-card-icon {
-      filter: grayscale(1);
-    }
-
-    .coming-soon-badge {
-      display: inline-block;
-      padding: var(--space-xs) var(--space-md);
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: var(--radius-md);
-      font-size: var(--text-xs);
-      color: var(--color-text-muted);
-    }
   </style>
 </head>
 <body>
@@ -213,16 +196,14 @@
         ages: 'Ages 4+',
         description: 'Learn numbers 1–20 with fire and water powers!',
         path: 'games/unicorn-numbers/index.html',
-        available: true,
       },
       {
         id: 'pokemon-multiply',
-        title: 'Pokemon Multiply',
+        title: 'Pokemon Math',
         icon: '⚡',
         ages: 'Ages 6+',
-        description: 'Master multiplication with Pokemon battles!',
+        description: 'Master math with Pokemon battles!',
         path: 'games/pokemon-multiply/index.html',
-        available: true,
       },
       {
         id: 'mario-bros',
@@ -231,7 +212,6 @@
         ages: 'Ages 6+',
         description: 'A classic platformer adventure with Mario & Luigi!',
         path: 'games/mario-bros/index.html',
-        available: true,
       },
       {
         id: 'voice-tutor',
@@ -240,34 +220,6 @@
         ages: 'Ages 6+',
         description: 'Practice English speaking with an AI tutor!',
         path: 'games/voice-tutor/index.html',
-        available: true,
-      },
-      {
-        id: 'shape-explorer',
-        title: 'Shape Explorer',
-        icon: '🔷',
-        ages: 'Ages 4–5',
-        description: 'Discover circles, squares, triangles and more!',
-        path: null,
-        available: false,
-      },
-      {
-        id: 'letter-safari',
-        title: 'Letter Safari',
-        icon: '🦁',
-        ages: 'Ages 5–6',
-        description: 'Go on an alphabet adventure through the jungle!',
-        path: null,
-        available: false,
-      },
-      {
-        id: 'color-mixing',
-        title: 'Color Mixing Lab',
-        icon: '🎨',
-        ages: 'Ages 4–7',
-        description: 'Mix colors and create amazing art!',
-        path: null,
-        available: false,
       },
     ];
 
@@ -276,28 +228,15 @@
       grid.innerHTML = '';
       GAMES.forEach((game, i) => {
         const card = document.createElement('div');
-        card.className = `card game-card ${game.available ? '' : 'coming-soon'}`;
+        card.className = 'card game-card animate-fade-up';
         card.style.animationDelay = `${i * 100}ms`;
-        card.classList.add('animate-fade-up');
-
-        if (game.available) {
-          card.innerHTML = `
-            <span class="game-card-icon">${game.icon}</span>
-            <h2 class="game-card-title">${game.title}</h2>
-            <p class="game-card-ages">${game.ages}</p>
-            <p class="game-card-desc">${game.description}</p>
-            <a class="btn btn-primary" href="${game.path}">▶ PLAY</a>
-          `;
-        } else {
-          card.innerHTML = `
-            <span class="game-card-icon">🔒</span>
-            <h2 class="game-card-title">${game.title}</h2>
-            <p class="game-card-ages">${game.ages}</p>
-            <p class="game-card-desc">${game.description}</p>
-            <span class="coming-soon-badge">Coming Soon</span>
-          `;
-        }
-
+        card.innerHTML = `
+          <span class="game-card-icon">${game.icon}</span>
+          <h2 class="game-card-title">${game.title}</h2>
+          <p class="game-card-ages">${game.ages}</p>
+          <p class="game-card-desc">${game.description}</p>
+          <a class="btn btn-primary" href="${game.path}">▶ PLAY</a>
+        `;
         grid.appendChild(card);
       });
     }

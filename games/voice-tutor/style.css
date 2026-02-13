@@ -29,6 +29,13 @@
 }
 
 /* ===== SETUP SCREEN ===== */
+.setup-screen {
+  overflow-y: auto;
+  justify-content: flex-start;
+  padding-top: var(--space-2xl);
+  padding-bottom: var(--space-2xl);
+}
+
 .setup-title {
   font-size: var(--text-xl);
   margin-bottom: var(--space-lg);

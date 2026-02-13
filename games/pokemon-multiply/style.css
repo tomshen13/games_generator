@@ -156,27 +156,56 @@
 .type-dragon   { background: #7038F8; color: #fff; }
 
 /* ================================================
-   Level Select Screen
+   Mode Select Screen
    ================================================ */
-.level-select-screen {
+.mode-select-screen {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: var(--space-lg) var(--space-md);
-  gap: var(--space-md);
+  justify-content: center;
+  gap: var(--space-lg);
+  padding: var(--space-xl);
+  text-align: center;
 }
 
-.level-select-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  max-width: 400px;
-}
-
-.level-select-title {
+.mode-select-title {
   font-family: var(--font-display);
-  font-size: var(--text-xl);
+  font-size: var(--text-2xl);
+}
+
+.mode-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+  max-width: 360px;
+  width: 100%;
+}
+
+.mode-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-lg) var(--space-md);
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--ease-bounce);
+  border: 2px solid transparent;
+}
+
+.mode-card:hover,
+.mode-card:active {
+  transform: scale(1.08);
+  border-color: #FFD700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.mode-card-icon {
+  font-size: clamp(2.5rem, 8vw, 3.5rem);
+}
+
+.mode-card-label {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
 }
 
 .coin-display {
@@ -192,117 +221,6 @@
 }
 
 .coin-icon { font-size: 1.2em; }
-
-.level-map {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-  overflow-y: auto;
-  max-height: 55vh;
-  padding: var(--space-sm) var(--space-md);
-  width: 100%;
-  max-width: 300px;
-}
-
-.level-path {
-  width: 4px;
-  height: 24px;
-  border-radius: 2px;
-  background: rgba(255, 255, 255, 0.15);
-  transition: background 0.3s ease;
-}
-
-.level-path.completed { background: #4ade80; }
-
-.level-node {
-  width: 72px;
-  height: 72px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-display);
-  font-size: var(--text-lg);
-  cursor: pointer;
-  position: relative;
-  transition: all var(--duration-normal) var(--ease-bounce);
-  border: 3px solid transparent;
-  flex-shrink: 0;
-}
-
-.level-node.completed {
-  background: linear-gradient(135deg, #4ade80, #22c55e);
-  border-color: #16a34a;
-  box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);
-  color: #fff;
-}
-
-.level-node.current {
-  background: linear-gradient(135deg, #F8D030, #FFD700);
-  border-color: #F59E0B;
-  animation: pulse 2s ease-in-out infinite;
-  box-shadow: 0 0 25px rgba(248, 208, 48, 0.5);
-  color: #333;
-  transform: scale(1.1);
-}
-
-.level-node.locked {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.3);
-  cursor: default;
-}
-
-.level-node-label {
-  position: absolute;
-  left: calc(100% + 12px);
-  white-space: nowrap;
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-  pointer-events: none;
-}
-
-.level-node.current .level-node-label { color: #FFD700; font-weight: 700; }
-.level-node.completed .level-node-label { color: #4ade80; }
-
-.level-node-stars {
-  position: absolute;
-  bottom: -18px;
-  font-size: 12px;
-  white-space: nowrap;
-}
-
-.level-select-actions {
-  display: flex;
-  gap: var(--space-md);
-}
-
-.btn-battle-nav,
-.btn-shop-nav,
-.btn-collection-nav {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
-  padding: var(--space-sm) var(--space-lg);
-  border-radius: var(--radius-lg);
-  font-family: var(--font-display);
-  font-size: var(--text-md);
-  cursor: pointer;
-  transition: all var(--duration-fast) ease;
-}
-
-.btn-battle-nav {
-  background: rgba(255, 70, 70, 0.2) !important;
-  border-color: rgba(255, 70, 70, 0.35) !important;
-}
-
-.btn-battle-nav:hover,
-.btn-shop-nav:hover,
-.btn-collection-nav:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-2px);
-}
 
 /* ================================================
    Game Screen
@@ -926,9 +844,9 @@
 }
 
 /* ================================================
-   Level Complete Screen
+   Session Complete Screen
    ================================================ */
-.level-complete-screen {
+.session-complete-screen {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -978,6 +896,41 @@
   font-size: var(--text-lg);
   color: #FFD700;
   animation: bounce-in 0.5s var(--ease-bounce) 1.2s both;
+}
+
+.session-complete-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.session-complete-row {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.btn-session-shop,
+.btn-session-collection,
+.btn-session-home {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  padding: var(--space-sm) var(--space-lg);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  cursor: pointer;
+  transition: all var(--duration-fast) ease;
+}
+
+.btn-session-shop:hover,
+.btn-session-collection:hover,
+.btn-session-home:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
 }
 
 /* ================================================
