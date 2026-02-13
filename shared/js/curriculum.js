@@ -105,18 +105,23 @@ const Curriculum = (() => {
 
     let mastered = 0, learning = 0, struggling = 0, notStarted = 0;
     const strugglingItems = [];
+    const allItems = [];
 
     for (const key of keys) {
       const rec = adaptive[key];
       if (!rec || (rec.correct === 0 && rec.wrong === 0)) {
         notStarted++;
+        allItems.push({ key, status: 'not-started', record: rec || null });
       } else if (rec.box >= 3) {
         mastered++;
+        allItems.push({ key, status: 'mastered', record: rec });
       } else if (rec.box >= 1) {
         learning++;
+        allItems.push({ key, status: 'learning', record: rec });
       } else {
         struggling++;
         strugglingItems.push({ key, record: rec });
+        allItems.push({ key, status: 'struggling', record: rec });
       }
     }
 
@@ -135,7 +140,7 @@ const Curriculum = (() => {
       return aAcc - bAcc;
     });
 
-    return { mastered, learning, struggling, notStarted, total, pct, stars, strugglingItems, hasGame: true };
+    return { mastered, learning, struggling, notStarted, total, pct, stars, strugglingItems, allItems, hasGame: true };
   }
 
   /**
