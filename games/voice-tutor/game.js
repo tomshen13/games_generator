@@ -23,6 +23,8 @@
     focusCards:      $$('.focus-card'),
     themeSelector:  $('.theme-selector'),
     themeChips:     $$('.theme-chips .chip'),
+    topicSelector:  $('.topic-selector'),
+    topicChips:     $$('.topic-chips .chip'),
     durationPicker: $('.duration-picker'),
     durationChips:  $$('.duration-chip'),
     beginBtn:       $('.begin-btn'),
@@ -56,6 +58,7 @@
   // ===== STATE =====
   let selectedFocus = null;
   let selectedTheme = null;
+  let selectedTopic = null;
   let selectedDuration = 10; // minutes
   let session = null;        // GeminiLive session
   let timerInterval = null;
@@ -124,58 +127,97 @@ RULES:
     switch (selectedFocus) {
       case 'vocabulary': {
         const themeWords = {
-          animals: 'dog, cat, bird, fish, lion, elephant, rabbit, horse, cow, duck',
-          food: 'apple, banana, bread, milk, water, egg, rice, pizza, ice cream, cookie',
-          colors: 'red, blue, green, yellow, orange, purple, pink, white, black, brown',
-          body: 'head, hand, foot, eye, nose, mouth, ear, arm, leg, finger',
-          family: 'mom, dad, brother, sister, baby, grandma, grandpa, friend, family, love',
-          school: 'book, pencil, teacher, table, chair, school, bag, paper, color, draw',
+          nouns: 'bag, pen, desk, book, chair, table, pencil, ruler, eraser, board, door, window, teacher, school, paper, color, clock, cup, plate, ball',
+          verbs: 'jump, sit, clap, stand, run, walk, open, close, draw, write, read, eat, drink, sleep, sing, dance, stop, go, give, take',
+          adjectives: 'big, small, red, blue, green, yellow, tall, short, happy, sad, hot, cold, fast, slow, old, new, long, round, soft, hard',
+          phrases: 'good morning, good night, how are you, thank you, please, sit down, stand up, open the book, close the door, come here, look at me, well done, my name is, I like, I want',
         };
-        const words = themeWords[selectedTheme] || themeWords.animals;
+        const themeLabels = { nouns: 'Classroom Objects', verbs: 'Actions (TPR)', adjectives: 'Colors & Sizes', phrases: 'Set Phrases' };
+        const words = themeWords[selectedTheme] || themeWords.nouns;
+        const label = themeLabels[selectedTheme] || 'Classroom Objects';
         focusInstructions = `
-FOCUS: VOCABULARY — Theme: ${selectedTheme || 'animals'}
-Words to teach: ${words}
+FOCUS: VOCABULARY — Theme: ${label}
+Words/phrases to teach: ${words}
+
+GOAL: The child should be able to identify and say these words/phrases when prompted.
 
 METHOD:
 1. Introduce one word at a time: "Let's learn a new word! Listen: [word]"
 2. Ask the child to repeat: "Can you say [word]?"
 3. Praise their attempt enthusiastically
-4. Use the word in a very simple sentence: "The [word] is big!"
+4. Use the word in a very simple sentence: "The [word] is on the table!"
 5. Ask them to try the sentence
-6. After 2-3 words, do a quick fun review: "Do you remember? What animal says woof?"
+6. After 2-3 words, do a quick fun review: "Point to the [word]! What is this?"
 7. Move to the next word
-
-Keep it playful — use animal sounds, make it a game!`;
+${selectedTheme === 'verbs' ? '\nFor actions: demonstrate with voice! "Jump! Can you jump? Jump jump jump!"' : ''}
+${selectedTheme === 'phrases' ? '\nFor phrases: use them in mini role-plays. "Pretend you see me in the morning. What do you say?"' : ''}
+Keep it playful and interactive!`;
         break;
       }
 
-      case 'conversation':
+      case 'conversation': {
+        const topicPrompts = {
+          ai: `\nTOPIC: DISCOVER THE CHILD'S INTEREST
+Start by asking what the child likes: "What do you like? Do you like cartoons? Games? Animals?"
+Try different topics until you find what excites them. When they light up about something, stay on that topic!
+Use their interest to practice all the conversation goals below.`,
+          pokemons: `\nTOPIC: POKEMONS
+The child loves Pokemons! Talk about favorite Pokemon, their powers and types (fire, water, electric).
+Ask: "What is your favorite Pokemon?", "Is Pikachu strong?", "What type is Charizard?"
+Use Pokemon as context for adjectives: "Is Snorlax big or small?", "Pikachu is a yellow Pokemon!"`,
+          ninjago: `\nTOPIC: NINJAGO
+The child loves Ninjago! Talk about ninjas, elements (fire, ice, lightning, earth), and characters.
+Ask: "Who is your favorite ninja?", "What color is Kai?", "Can Lloyd fly?"
+Use Ninjago as context: "Kai is a red ninja. He has fire power!"`,
+          space: `\nTOPIC: SPACE
+The child loves space! Talk about planets, rockets, astronauts, stars, and the moon.
+Ask: "Do you want to go to space?", "What planet do you like?", "Is the sun big or small?"
+Use space as context: "The moon is big and white!", "Astronauts fly in a rocket!"`,
+          robots: `\nTOPIC: ROBOTS
+The child loves robots! Talk about what robots can do, building robots, robot friends.
+Ask: "Do you like robots?", "What can your robot do?", "Is your robot big or small?"
+Use robots as context: "My robot is tall and blue!", "The robot can jump and dance!"`,
+        };
+        const topicText = topicPrompts[selectedTopic] || topicPrompts.ai;
         focusInstructions = `
 FOCUS: CONVERSATION PRACTICE
+${topicText}
+
+GOALS:
+- Child can state their name, age, and where they live in full sentences
+- Child can answer simple questions with "Yes, I do" / "No, I don't" (not just "yes"/"no")
+- Child uses correct adjective placement: "big dog" not "dog big"
 
 METHOD:
-1. Start with simple personal questions: "What is your name?", "How old are you?"
-2. Ask about favorites: "What is your favorite color?", "Do you like pizza?"
-3. Ask about daily life: "What did you do today?", "Do you have a pet?"
-4. If they answer in Hebrew, help translate: "In English we say [word]!"
-5. Build on their answers: If they say "I like blue", ask "Blue is nice! What else is blue?"
-6. Use yes/no questions when they struggle: "Do you like ice cream? Yes or no?"
+1. Start with "My Self" questions: "What is your name?", "How old are you?", "Where do you live?"
+2. Help them answer in full sentences: "Say: My name is..."
+3. Ask about the topic using simple questions
+4. Guide full answers: Not just "yes" — "Yes, I like Pikachu!"
+5. Practice descriptions using the topic: "Is it big or small?", "What color is it?"
+6. Help with adjective order: "We say 'big red robot', not 'red big robot'"
+7. If they answer in Hebrew, help translate: "In English we say [word]!"
 
-Keep the conversation flowing naturally — follow the child's interests!`;
+Keep the conversation flowing naturally — stay on the topic the child enjoys!`;
         break;
+      }
 
       case 'storytelling':
         focusInstructions = `
-FOCUS: INTERACTIVE STORYTELLING
+FOCUS: INTERACTIVE STORYTELLING & DIALOGUE
+
+GOALS:
+- Practice 3-turn exchanges (Greeting → Question → Farewell)
+- Use vocabulary in context with correct adjective placement
+- Build confidence in connected speech
 
 METHOD:
-1. Start a simple story: "Let's tell a story together! Once upon a time, there was a little [animal]..."
+1. Start a simple story: "Once upon a time, there was a little [animal]..."
 2. Ask the child to choose: "Was it a cat or a dog?"
 3. Continue based on their choice with simple vocabulary
 4. Ask what happens next: "The cat was hungry. What did the cat eat?"
-5. Accept any answer and build on it enthusiastically
-6. Use repetitive patterns kids love: "The cat walked and walked and walked..."
-7. Keep sentences very simple and the story short (aim for a beginning, middle, and end)
+5. Weave in dialogue practice: Have characters greet each other, ask questions, say goodbye
+6. Use repetitive patterns: "The cat walked and walked and walked..."
+7. Practice descriptions in context: "Was it a BIG cat or a SMALL cat? What COLOR was it?"
 
 Make the story fun and silly — kids love funny things happening!`;
         break;
@@ -184,21 +226,22 @@ Make the story fun and silly — kids love funny things happening!`;
         focusInstructions = `
 FOCUS: PRONUNCIATION PRACTICE
 
-Hebrew speakers often struggle with these English sounds:
-- "th" (as in "the", "think") — Hebrew doesn't have this sound
-- "w" vs "v" — Hebrew speakers often say "v" instead of "w"
-- Short vowels (a in "cat" vs "cut")
-- Word-final "r" sounds
-- "ch" as in "chair" (different from Hebrew "ch")
+TARGET SOUNDS (Israeli Ministry of Education English curriculum):
+- "th" (as in "the", "think", "three") — Hebrew has no "th" sound. Say: "Tree" vs "Three" — can you hear the difference?
+- "w" vs "v" — Hebrew speakers say "v" for "w". Practice: "wine" not "vine", "wet" not "vet", "water" not "vater"
+- Word-final "r" — practice "car", "door", "tiger"
+- Short vowels — "cat" vs "cut", "bed" vs "bad"
+
+GOAL: Child distinguishes /th/ from /s/ and /w/ from /v/, and produces "Three" differently from "Tree".
 
 METHOD:
-1. Start with fun tongue twisters: "The three thin things"
-2. Practice one tricky sound at a time
-3. Use minimal pairs: "vine/wine", "vet/wet", "sink/think"
-4. Say the word clearly and slowly, then ask child to repeat
-5. Use words in silly sentences to make it fun
+1. Start with minimal pairs: "vine/wine", "vet/wet", "sink/think", "tree/three"
+2. Say both words clearly, ask which one you said: "Did I say 'three' or 'tree'?"
+3. Have the child try both: "Now you say 'three'. Stick out your tongue a tiny bit!"
+4. Use words in silly sentences: "Three thin things think!"
+5. Practice one tricky sound per round, then mix
 6. Celebrate attempts — don't demand perfection
-7. Make it a game: "Can you make the 'th' sound? Stick out your tongue a tiny bit!"
+7. Make it a game: "Can you make the 'th' sound? Like a snake — thhhh!"
 
 Be extra patient — pronunciation takes time and repetition!`;
         break;
@@ -606,6 +649,7 @@ registerProcessor('pcm-processor', PCMProcessor);
         date: new Date().toISOString(),
         focus: selectedFocus,
         theme: selectedTheme,
+        topic: selectedTopic,
         durationMin: displayMin,
       });
       Storage.save('voice-tutor', 'sessions', history);
@@ -647,23 +691,35 @@ registerProcessor('pcm-processor', PCMProcessor);
       card.classList.add('selected');
       selectedFocus = card.dataset.focus;
 
-      // Show/hide theme selector for vocabulary
+      // Show/hide sub-selectors based on focus
       if (selectedFocus === 'vocabulary') {
         els.themeSelector.classList.remove('hidden');
-        // Don't show begin until a theme is picked (unless one was already selected)
+        els.topicSelector.classList.add('hidden');
+        selectedTopic = null;
         if (!selectedTheme) {
+          els.beginBtn.classList.add('hidden');
+        }
+      } else if (selectedFocus === 'conversation') {
+        els.topicSelector.classList.remove('hidden');
+        els.themeSelector.classList.add('hidden');
+        selectedTheme = null;
+        if (!selectedTopic) {
           els.beginBtn.classList.add('hidden');
         }
       } else {
         els.themeSelector.classList.add('hidden');
+        els.topicSelector.classList.add('hidden');
         selectedTheme = null;
+        selectedTopic = null;
       }
 
       // Show duration picker
       els.durationPicker.classList.remove('hidden');
 
-      // Show begin button (unless vocabulary without theme)
-      if (selectedFocus !== 'vocabulary' || selectedTheme) {
+      // Show begin button (unless sub-selection needed)
+      const needsSub = (selectedFocus === 'vocabulary' && !selectedTheme) ||
+                       (selectedFocus === 'conversation' && !selectedTopic);
+      if (!needsSub) {
         els.beginBtn.classList.remove('hidden');
       }
 
@@ -679,6 +735,20 @@ registerProcessor('pcm-processor', PCMProcessor);
       els.themeChips.forEach(c => c.classList.remove('active'));
       chip.classList.add('active');
       selectedTheme = chip.dataset.theme;
+      els.beginBtn.classList.remove('hidden');
+
+      if (typeof Audio !== 'undefined' && Audio.SFX) {
+        try { Audio.SFX.tap(); } catch {}
+      }
+    });
+  });
+
+  // Topic chip selection
+  els.topicChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      els.topicChips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      selectedTopic = chip.dataset.topic;
       els.beginBtn.classList.remove('hidden');
 
       if (typeof Audio !== 'undefined' && Audio.SFX) {
@@ -737,12 +807,15 @@ registerProcessor('pcm-processor', PCMProcessor);
     // Reset state
     selectedFocus = null;
     selectedTheme = null;
+    selectedTopic = null;
     selectedDuration = 10;
     els.focusCards.forEach(c => c.classList.remove('selected'));
     els.themeChips.forEach(c => c.classList.remove('active'));
+    els.topicChips.forEach(c => c.classList.remove('active'));
     els.durationChips.forEach(c => c.classList.remove('active'));
     $$('.duration-chip[data-duration="10"]').forEach(c => c.classList.add('active'));
     els.themeSelector.classList.add('hidden');
+    els.topicSelector.classList.add('hidden');
     els.durationPicker.classList.add('hidden');
     els.beginBtn.classList.add('hidden');
     els.timer.classList.remove('warning');
