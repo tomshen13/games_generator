@@ -1,11 +1,10 @@
 /**
  * Parent Dashboard — shows per-kid mastery stats behind a PIN gate.
+ * Organized by curriculum skills with per-level breakdowns.
  */
 const Dashboard = (() => {
   const GAME_META = {
-    'unicorn-numbers': { title: 'Unicorn Numbers', icon: '\uD83E\uDD84', type: 'unicorn' },
-    'pokemon-multiply': { title: 'Pokemon Multiply', icon: '\u26A1', type: 'pokemon' },
-    'mario-bros': { title: 'Super Mario Bros', icon: '\uD83C\uDF44', type: 'mario' },
+    'mario-bros': { title: 'Super Mario Bros', icon: '🍄', type: 'mario' },
   };
 
   let activeTab = 'Dan';
@@ -45,142 +44,149 @@ const Dashboard = (() => {
       </div>`;
   }
 
-  function formatStrugglingItem(key, record, gameType) {
-    const total = record.correct + record.wrong;
-    if (gameType === 'pokemon') {
-      return `<span class="chip-problem">${key.replace('*', '\u00D7')}</span><span class="chip-accuracy">(${record.correct}/${total})</span>`;
-    }
-    return `<span class="chip-problem">${key}</span><span class="chip-accuracy">(${record.correct}/${total})</span>`;
+  function formatKey(key, gameId) {
+    if (gameId === 'pokemon-multiply') return key.replace('x', ' × ');
+    return key;
   }
 
-  function renderGameCard(gameId, data) {
-    const meta = GAME_META[gameId];
-    if (!meta) return '';
+  // ── Curriculum-based skill card ──
 
-    const adaptive = data.adaptive || {};
-    const keys = Object.keys(adaptive);
+  function renderSkillCard(skill, skillStats, allGameData) {
+    const subjects = Curriculum.getSubjects();
+    const subj = subjects[skill.subject] || {};
 
-    // Skip games with no adaptive data (mario-bros has no adaptive system)
-    if (meta.type === 'mario') {
-      const level = data.level || 1;
-      const coins = data.coins || 0;
-      const score = data.score || 0;
-      return `
-        <div class="game-stat-card">
-          <div class="game-stat-header">
-            <span class="game-stat-icon">${meta.icon}</span>
-            <span class="game-stat-title">${meta.title}</span>
-          </div>
-          <div class="stat-row">
-            <span class="stat-label">Level</span>
-            <div class="stat-bar"><div class="stat-bar-fill" style="width: ${(level / 5) * 100}%; background: #4ade80;"></div></div>
-            <span class="stat-value">${level} / 5</span>
-          </div>
-          <div class="stat-row">
-            <span class="stat-label">Coins</span>
-            <span class="stat-value">\uD83E\uDE99 ${coins}</span>
-          </div>
-          <div class="stat-row">
-            <span class="stat-label">High Score</span>
-            <span class="stat-value">${score}</span>
-          </div>
-        </div>`;
-    }
+    // Separate mapped levels from locked ones
+    const mappedLevels = skillStats.levelStats.filter(ls => ls.stats.hasGame);
+    const lockedCount = skillStats.levelStats.filter(ls => !ls.stats.hasGame).length;
 
-    // For educational games with adaptive data
-    let mastered = 0, learning = 0, struggling = 0;
-    const strugglingItems = [];
+    const levelRows = mappedLevels.map(({ level, stats }) => {
+      const total = stats.mastered + stats.learning + stats.struggling;
+      const barHtml = total > 0 ? `
+        <div class="dashboard-tier-bar">
+          <div class="mastery-segment mastery-mastered" style="width: ${(stats.mastered / stats.total * 100)}%"></div>
+          <div class="mastery-segment mastery-learning" style="width: ${(stats.learning / stats.total * 100)}%"></div>
+          <div class="mastery-segment mastery-struggling" style="width: ${(stats.struggling / stats.total * 100)}%"></div>
+        </div>` : '<div class="dashboard-tier-bar"></div>';
 
-    keys.forEach(k => {
-      const rec = adaptive[k];
-      if (rec.box >= 3) mastered++;
-      else if (rec.box >= 1) learning++;
-      else {
-        struggling++;
-        strugglingItems.push({ key: k, record: rec });
+      // Struggling items for this level
+      let strugglingHtml = '';
+      if (stats.strugglingItems.length) {
+        const gameId = level.gameMapping.gameId;
+        const chips = stats.strugglingItems.slice(0, 8).map(s => {
+          const t = s.record.correct + s.record.wrong;
+          return `<span class="struggling-chip"><span class="chip-problem">${formatKey(s.key, gameId)}</span><span class="chip-accuracy">(${s.record.correct}/${t})</span></span>`;
+        }).join('');
+        strugglingHtml = `<div class="struggling-section"><div class="struggling-title">Needs practice:</div><div class="struggling-chips">${chips}</div></div>`;
       }
-    });
 
-    const total = mastered + learning + struggling;
-    const masteryPct = total > 0 ? (mastered / total * 100) : 0;
+      const stars = '★'.repeat(stats.stars) + '☆'.repeat(3 - stats.stars);
+      return `
+        <div class="dashboard-level-row">
+          <span class="dashboard-level-num">${level.level}</span>
+          <span class="dashboard-level-name">${level.name}</span>
+          ${barHtml}
+          <span class="dashboard-level-pct">${Math.round(stats.pct)}%</span>
+          <span class="dashboard-level-stars">${stars}</span>
+        </div>
+        ${strugglingHtml}`;
+    }).join('');
 
-    // Game-specific stats
-    let extraStats = '';
-    if (meta.type === 'pokemon') {
-      const level = data.level || 1;
-      const coins = data.coins || 0;
-      const collection = data.collection ? (Array.isArray(data.collection) ? data.collection.length : 0) : 0;
-      extraStats = `
-        <div class="stat-row">
-          <span class="stat-label">Level</span>
-          <div class="stat-bar"><div class="stat-bar-fill" style="width: ${(level / 10) * 100}%; background: #4a9eff;"></div></div>
-          <span class="stat-value">${level} / 10</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">Coins</span>
-          <span class="stat-value">\uD83E\uDE99 ${coins}</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">Pokemon</span>
-          <span class="stat-value">${collection} caught</span>
-        </div>`;
-    } else if (meta.type === 'unicorn') {
-      const level = data.level || 1;
-      const stars = data.stars || 0;
-      extraStats = `
-        <div class="stat-row">
-          <span class="stat-label">Level</span>
-          <div class="stat-bar"><div class="stat-bar-fill" style="width: ${(level / 20) * 100}%; background: #d946ef;"></div></div>
-          <span class="stat-value">${level} / 20</span>
-        </div>
-        <div class="stat-row">
-          <span class="stat-label">Stars</span>
-          <span class="stat-value">\u2B50 ${stars}</span>
-        </div>`;
-    }
-
-    let strugglingHTML = '';
-    if (strugglingItems.length) {
-      const chips = strugglingItems
-        .sort((a, b) => (a.record.correct / Math.max(1, a.record.correct + a.record.wrong)) -
-                        (b.record.correct / Math.max(1, b.record.correct + b.record.wrong)))
-        .slice(0, 12)
-        .map(s => `<span class="struggling-chip">${formatStrugglingItem(s.key, s.record, meta.type)}</span>`)
-        .join('');
-      strugglingHTML = `
-        <div class="struggling-section">
-          <div class="struggling-title">Needs Practice (${strugglingItems.length})</div>
-          <div class="struggling-chips">${chips}</div>
-        </div>`;
-    }
+    // Collapsed locked levels summary
+    const lockedHtml = lockedCount > 0
+      ? `<div class="dashboard-locked-summary">🔒 ${lockedCount} more level${lockedCount > 1 ? 's' : ''} coming soon</div>`
+      : '';
 
     return `
       <div class="game-stat-card">
         <div class="game-stat-header">
-          <span class="game-stat-icon">${meta.icon}</span>
-          <span class="game-stat-title">${meta.title}</span>
-          ${renderDonut(masteryPct)}
+          <span class="game-stat-icon">${skill.icon}</span>
+          <div style="flex: 1">
+            <span class="game-stat-title">${skill.name}</span>
+            <div style="display:flex; gap: var(--space-sm); align-items: center; margin-top: 2px;">
+              <span class="dashboard-subject-tag" style="background: ${subj.color}22; color: ${subj.color}; border: 1px solid ${subj.color}44">${subj.name}</span>
+              <span style="font-size: var(--text-xs); color: var(--color-text-muted)">${skill.phase.name}</span>
+            </div>
+          </div>
+          ${skillStats.hasAnyGame ? renderDonut(skillStats.overallPct) : ''}
         </div>
-        ${extraStats}
-        ${total > 0 ? renderMasteryBar(mastered, learning, struggling) : ''}
-        ${strugglingHTML}
+        <div class="dashboard-levels">
+          ${levelRows}
+          ${lockedHtml}
+        </div>
       </div>`;
   }
 
+  // ── Mario card (non-curriculum) ──
+
+  function renderMarioCard(data) {
+    const level = data.level || 1;
+    const coins = data.coins || 0;
+    const score = data.score || 0;
+    return `
+      <div class="game-stat-card">
+        <div class="game-stat-header">
+          <span class="game-stat-icon">🍄</span>
+          <span class="game-stat-title">Super Mario Bros</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Level</span>
+          <div class="stat-bar"><div class="stat-bar-fill" style="width: ${(level / 5) * 100}%; background: #4ade80;"></div></div>
+          <span class="stat-value">${level} / 5</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Coins</span>
+          <span class="stat-value">🪙 ${coins}</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">High Score</span>
+          <span class="stat-value">${score}</span>
+        </div>
+      </div>`;
+  }
+
+  // ── Render tab ──
+
   function renderTab(profileName) {
     const content = document.querySelector('.dashboard-content');
-    const data = Storage.getAllForProfile(profileName);
+    const allGameData = Storage.getAllForProfile(profileName);
 
-    const gameIds = Object.keys(GAME_META);
     let html = '';
     let hasData = false;
 
-    gameIds.forEach(gid => {
-      if (data[gid]) {
+    // Curriculum skills grouped by subject
+    const tracks = Curriculum.getSubjectTracks();
+    const subjects = Curriculum.getSubjects();
+
+    for (const [subjKey, subjMeta] of Object.entries(subjects)) {
+      const skills = tracks[subjKey] || [];
+      let subjectHtml = '';
+      let subjectHasData = false;
+
+      for (const skill of skills) {
+        const skillStats = Curriculum.computeSkillStats(allGameData, skill);
+        if (!skillStats.hasAnyGame) continue; // Skip fully locked skills in dashboard
+
+        subjectHasData = true;
         hasData = true;
-        html += renderGameCard(gid, data[gid]);
+        subjectHtml += renderSkillCard(skill, skillStats, allGameData);
       }
-    });
+
+      if (subjectHasData) {
+        html += `<div class="dashboard-subject-section">
+          <h3 class="dashboard-subject-heading" style="color: ${subjMeta.color}">${subjMeta.icon} ${subjMeta.name}</h3>
+          ${subjectHtml}
+        </div>`;
+      }
+    }
+
+    // Mario (non-curriculum)
+    if (allGameData['mario-bros']) {
+      hasData = true;
+      html += `<div class="dashboard-subject-section">
+        <h3 class="dashboard-subject-heading" style="color: #4ade80">🎮 Fun Games</h3>
+        ${renderMarioCard(allGameData['mario-bros'])}
+      </div>`;
+    }
 
     if (!hasData) {
       html = '<div class="no-data">No game data yet for ' + profileName + '. Time to play!</div>';
@@ -205,7 +211,7 @@ const Dashboard = (() => {
     },
 
     show() {
-      document.querySelector('.launcher').style.display = 'none';
+      document.getElementById('launcherScreen').style.display = 'none';
       const screen = document.querySelector('.dashboard-screen');
       screen.classList.add('active');
 
@@ -225,7 +231,7 @@ const Dashboard = (() => {
 
     hide() {
       document.querySelector('.dashboard-screen').classList.remove('active');
-      document.querySelector('.launcher').style.display = '';
+      document.getElementById('launcherScreen').style.display = '';
     },
   };
 })();
