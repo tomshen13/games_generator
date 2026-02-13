@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Voice Tutor 👩‍🏫</title>
+
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="../../shared/css/reset.css">
+  <link rel="stylesheet" href="../../shared/css/base.css">
+  <link rel="stylesheet" href="../../shared/css/animations.css">
+  <link rel="stylesheet" href="../../shared/css/components.css">
+
+  <!-- Game CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="game-container">
+    <!-- Particle overlay -->
+    <canvas class="particle-canvas"></canvas>
+
+    <!-- ===== WELCOME SCREEN ===== -->
+    <div class="screen welcome-screen active">
+      <button class="btn-back" onclick="window.location.href='../../index.html'" title="Home">🏠</button>
+      <div class="tutor-emoji animate-float">👩‍🏫</div>
+      <h1 class="welcome-title">Voice Tutor</h1>
+      <p class="welcome-subtitle">Practice English with your AI tutor!</p>
+      <button class="btn btn-primary btn-large start-btn animate-bounce-in" style="animation-delay: 0.3s">
+        ▶ START
+      </button>
+    </div>
+
+    <!-- ===== SETUP SCREEN (for parent) ===== -->
+    <div class="screen setup-screen">
+      <button class="btn-back setup-back-btn" title="Back">←</button>
+      <h2 class="setup-title">Choose a Focus</h2>
+
+      <div class="focus-grid">
+        <div class="card focus-card" data-focus="vocabulary">
+          <div class="focus-icon">📚</div>
+          <div class="focus-label">Vocabulary</div>
+          <div class="focus-desc">Learn new words by theme</div>
+        </div>
+        <div class="card focus-card" data-focus="conversation">
+          <div class="focus-icon">💬</div>
+          <div class="focus-label">Conversation</div>
+          <div class="focus-desc">Practice everyday talking</div>
+        </div>
+        <div class="card focus-card" data-focus="storytelling">
+          <div class="focus-icon">📖</div>
+          <div class="focus-label">Storytelling</div>
+          <div class="focus-desc">Create stories together</div>
+        </div>
+        <div class="card focus-card" data-focus="pronunciation">
+          <div class="focus-icon">🗣️</div>
+          <div class="focus-label">Pronunciation</div>
+          <div class="focus-desc">Practice tricky sounds</div>
+        </div>
+      </div>
+
+      <!-- Vocabulary theme sub-selector (hidden until vocabulary is chosen) -->
+      <div class="theme-selector hidden">
+        <h3 class="theme-title">Pick a Theme</h3>
+        <div class="theme-chips">
+          <button class="chip" data-theme="animals">🐾 Animals</button>
+          <button class="chip" data-theme="food">🍎 Food</button>
+          <button class="chip" data-theme="colors">🎨 Colors</button>
+          <button class="chip" data-theme="body">🦶 Body</button>
+          <button class="chip" data-theme="family">👨‍👩‍👧 Family</button>
+          <button class="chip" data-theme="school">🏫 School</button>
+        </div>
+      </div>
+
+      <!-- Duration picker -->
+      <div class="duration-picker hidden">
+        <h3 class="duration-title">Session Length</h3>
+        <div class="duration-chips">
+          <button class="chip duration-chip" data-duration="5">5 min</button>
+          <button class="chip duration-chip active" data-duration="10">10 min</button>
+          <button class="chip duration-chip" data-duration="15">15 min</button>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-large begin-btn hidden">
+        🎤 Begin Session
+      </button>
+    </div>
+
+    <!-- ===== CONNECTING SCREEN ===== -->
+    <div class="screen connecting-screen">
+      <div class="connecting-spinner animate-spin"></div>
+      <p class="connecting-text">Connecting to your tutor...</p>
+      <p class="connecting-subtext">Please allow microphone access</p>
+
+      <!-- Mic denied state (hidden by default) -->
+      <div class="mic-denied hidden">
+        <div class="mic-denied-icon">🎤</div>
+        <p class="mic-denied-text">We need your microphone to talk!</p>
+        <button class="btn btn-primary retry-mic-btn">Try Again</button>
+      </div>
+
+      <!-- Connection error state (hidden by default) -->
+      <div class="connect-error hidden">
+        <div class="connect-error-icon">📡</div>
+        <p class="connect-error-text">Couldn't connect. Check your internet.</p>
+        <div class="connect-error-actions">
+          <button class="btn btn-primary retry-connect-btn">Retry</button>
+          <button class="btn btn-secondary home-btn">Home</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CONVERSATION SCREEN ===== -->
+    <div class="screen conversation-screen">
+      <!-- HUD -->
+      <div class="hud">
+        <div class="hud-group">
+          <button class="btn-icon end-session-btn" title="End session">✕</button>
+        </div>
+        <div class="hud-group">
+          <span class="timer">10:00</span>
+        </div>
+        <div class="hud-group">
+          <button class="btn-icon mute-btn" title="Mute">🎤</button>
+        </div>
+      </div>
+
+      <!-- Tutor avatar -->
+      <div class="tutor-avatar-area">
+        <div class="tutor-avatar">
+          <div class="avatar-ring"></div>
+          <div class="avatar-face">👩‍🏫</div>
+        </div>
+        <p class="tutor-status">Ready</p>
+      </div>
+
+      <!-- Text prompt area (for vocab words etc) -->
+      <div class="prompt-area">
+        <p class="prompt-text"></p>
+      </div>
+
+      <!-- Mic indicator -->
+      <div class="mic-area">
+        <div class="mic-indicator">
+          <div class="mic-ripple"></div>
+          <div class="mic-icon">🎤</div>
+        </div>
+        <p class="mic-status">Tap to talk</p>
+      </div>
+    </div>
+
+    <!-- ===== COMPLETE SCREEN ===== -->
+    <div class="screen complete-screen">
+      <div class="complete-emoji animate-victory">🎉</div>
+      <h2 class="complete-title">Great Job!</h2>
+      <div class="session-stats">
+        <div class="stat">
+          <span class="stat-value session-duration-stat">0</span>
+          <span class="stat-label">Minutes</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value session-focus-stat">—</span>
+          <span class="stat-label">Focus</span>
+        </div>
+      </div>
+      <div class="complete-actions">
+        <button class="btn btn-primary btn-large play-again-btn">🔄 Play Again</button>
+        <button class="btn btn-secondary home-btn-complete">🏠 Home</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shared JS -->
+  <script src="../../shared/js/utils.js"></script>
+  <script src="../../shared/js/audio.js"></script>
+  <script src="../../shared/js/particles.js"></script>
+  <script src="../../shared/js/storage.js"></script>
+
+  <!-- Game JS -->
+  <script src="gemini-live.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
