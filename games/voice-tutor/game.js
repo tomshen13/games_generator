@@ -179,25 +179,32 @@ Ask: "Do you like robots?", "What can your robot do?", "Is your robot big or sma
 Use robots as context: "My robot is tall and blue!", "The robot can jump and dance!"`,
         };
         const topicText = topicPrompts[selectedTopic] || topicPrompts.ai;
+        const isSpecificTopic = selectedTopic && selectedTopic !== 'ai';
         focusInstructions = `
 FOCUS: CONVERSATION PRACTICE
 ${topicText}
 
-GOALS:
-- Child can state their name, age, and where they live in full sentences
-- Child can answer simple questions with "Yes, I do" / "No, I don't" (not just "yes"/"no")
-- Child uses correct adjective placement: "big dog" not "dog big"
+GOALS (weave these into the conversation naturally):
+- Child answers in full sentences, not single words
+- Child uses "Yes, I do" / "No, I don't" (not just "yes"/"no")
+- Child uses correct adjective placement: "big yellow Pokemon" not "Pokemon yellow big"
 
 METHOD:
-1. Start with "My Self" questions: "What is your name?", "How old are you?", "Where do you live?"
-2. Help them answer in full sentences: "Say: My name is..."
-3. Ask about the topic using simple questions
-4. Guide full answers: Not just "yes" — "Yes, I like Pikachu!"
-5. Practice descriptions using the topic: "Is it big or small?", "What color is it?"
-6. Help with adjective order: "We say 'big red robot', not 'red big robot'"
-7. If they answer in Hebrew, help translate: "In English we say [word]!"
+${isSpecificTopic ? `1. Start with an excited greeting about the topic RIGHT AWAY! Example: "Hi! I love ${selectedTopic}! Do you like ${selectedTopic} too?"
+2. Jump straight into topic questions — this is what the child wants to talk about!
+3. Guide full sentence answers: Not just "Pikachu" — "I like Pikachu!" or "My favorite is Pikachu!"
+4. Practice descriptions using the topic: "Is it big or small?", "What color is it?"
+5. Help with adjective order naturally: "We say 'big red robot', not 'red big robot'"
+6. You can ask their name if it comes up naturally, but do NOT start with boring intro questions
+7. If they answer in Hebrew, help translate: "In English we say [word]!"` :
+`1. Start by asking what the child likes: "What do you like? Cartoons? Games? Animals?"
+2. When you find their interest, stay on that topic!
+3. Guide full sentence answers: Not just "yes" — "Yes, I like it!"
+4. Practice descriptions: "Is it big or small?", "What color is it?"
+5. Help with adjective order: "We say 'big red ball', not 'red big ball'"
+6. If they answer in Hebrew, help translate: "In English we say [word]!"`}
 
-Keep the conversation flowing naturally — stay on the topic the child enjoys!`;
+IMPORTANT: The child chose this topic because they're excited about it. Lead with the topic from your very first sentence!`;
         break;
       }
 
