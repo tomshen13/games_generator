@@ -11,7 +11,7 @@ const Game = (() => {
     screen: 'modeSelect',  // modeSelect | title | powerSelect | game | levelComplete | gameComplete
     level: 0,              // current level index
     round: 0,              // current round within level
-    target: null,          // item the player needs to find
+    target: null,          // item the player needs to find (number for recognition/counting, bigger number for comparison, sum for addition)
     options: [],           // items displayed as targets
     power: 'fire',         // current power mode
     stars: 0,              // total stars earned
@@ -19,6 +19,7 @@ const Game = (() => {
     answered: [],          // items already answered correctly in this round
     wrongAttempts: 0,      // wrong attempts this round (for star calculation)
     inputLocked: false,    // prevents rapid tapping
+    problem: null,         // current problem for comparison/addition {a, b, answer} or {bigger, smaller}
   };
 
   function gameId() { return state.mode.storageKey; }
@@ -30,6 +31,16 @@ const Game = (() => {
     Audio.init();
     cacheDOM();
     bindEvents();
+
+    // URL steering: ?mode=counting skips mode select and goes straight to that mode
+    const urlMode = new URLSearchParams(window.location.search).get('mode');
+    if (urlMode && MODES[urlMode]) {
+      state.mode = MODES[urlMode];
+      Adaptive.load(state.mode.storageKey);
+      loadProgress();
+      showScreen('title');
+      return;
+    }
 
     // Load saved mode
     const savedModeId = Storage.load('unicorn-numbers', 'selectedMode', null);
@@ -192,8 +203,8 @@ const Game = (() => {
         if (state.mode) updateTitleScreen();
         // Re-render prompt if in game
         if (state.screen === 'game' && state.target != null) {
-          renderPrompt(state.target);
-          speakItem(state.target);
+          renderPrompt();
+          speakPrompt();
         }
       });
     });
@@ -282,6 +293,40 @@ const Game = (() => {
     return Audio.speakNumber(item);
   }
 
+  function speakPrompt() {
+    const questionType = state.mode.questionType;
+    const lang = Audio.getLang();
+
+    if (questionType === 'counting') {
+      // "How many dots?"
+      if (lang === 'he') {
+        Audio.speak('כמה נקודות?', 0.8, 'he-IL');
+      } else {
+        Audio.speak('How many dots?', 0.8, 'en-US');
+      }
+    } else if (questionType === 'comparison') {
+      // Speak both numbers: "3 or 7, which is bigger?"
+      const { bigger, smaller } = state.problem;
+      if (lang === 'he') {
+        const heNums = Audio.HEBREW_NUMBERS;
+        Audio.speak(`${heNums[smaller] || smaller} או ${heNums[bigger] || bigger}, מי גדול יותר?`, 0.8, 'he-IL');
+      } else {
+        Audio.speak(`${smaller} or ${bigger}, which is bigger?`, 0.8, 'en-US');
+      }
+    } else if (questionType === 'addition') {
+      const { a, b } = state.problem;
+      if (lang === 'he') {
+        const heNums = Audio.HEBREW_NUMBERS;
+        Audio.speak(`כמה זה ${heNums[a] || a} ועוד ${heNums[b] || b}?`, 0.8, 'he-IL');
+      } else {
+        Audio.speak(`What is ${a} plus ${b}?`, 0.8, 'en-US');
+      }
+    } else {
+      // recognition
+      speakItem(state.target);
+    }
+  }
+
   // ===== GAME FLOW =====
 
   function startFromBeginning() {
@@ -322,66 +367,154 @@ const Game = (() => {
 
   async function startRound() {
     const levelDef = state.mode.levels[state.level];
+    const questionType = state.mode.questionType;
     state.wrongAttempts = 0;
     state.answered = [];
+    state.problem = null;
 
-    // Pick target using adaptive difficulty
+    if (questionType === 'comparison') {
+      startComparisonRound(levelDef);
+    } else if (questionType === 'addition') {
+      startAdditionRound(levelDef);
+    } else if (questionType === 'counting') {
+      startCountingRound(levelDef);
+    } else {
+      // recognition (numbers, hebrew-letters)
+      startRecognitionRound(levelDef);
+    }
+
+    renderTargets();
+    renderPrompt();
+    updateHUD();
+
+    await Utils.wait(300);
+    speakPrompt();
+  }
+
+  function startRecognitionRound(levelDef) {
     const pool = levelDef.items.map(String);
     const pickedKey = Adaptive.pickItem(pool);
     const target = state.mode.id === 'numbers' ? Number(pickedKey) : pickedKey;
     state.target = target;
 
-    // Build options: target + random distractors
     const distractors = levelDef.items.filter(n => n !== target);
     const picked = Utils.pickRandom(distractors, levelDef.targetsPerRound - 1);
     state.options = Utils.shuffle([target, ...picked]);
-
-    renderTargets();
-    renderPrompt(target);
-    updateHUD();
-
-    // Speak the item
-    await Utils.wait(300);
-    speakItem(target);
   }
 
-  function renderPrompt(item) {
+  function startCountingRound(levelDef) {
+    // Pick a number to show as dots, kid taps the number
+    const pool = levelDef.items.map(String);
+    const pickedKey = Adaptive.pickItem(pool);
+    const target = Number(pickedKey);
+    state.target = target;
+    state.problem = { dotCount: target };
+
+    const distractors = levelDef.items.filter(n => n !== target);
+    const picked = Utils.pickRandom(distractors, levelDef.targetsPerRound - 1);
+    state.options = Utils.shuffle([target, ...picked]);
+  }
+
+  function startComparisonRound(levelDef) {
+    // Pick 2 different numbers, kid taps the bigger one
+    const pool = levelDef.items;
+    const pair = Utils.pickRandom(pool, 2);
+    const bigger = Math.max(pair[0], pair[1]);
+    const smaller = Math.min(pair[0], pair[1]);
+    state.target = bigger;
+    state.problem = { bigger, smaller };
+    state.options = Utils.shuffle([bigger, smaller]);
+
+    // Adaptive key: "smaller<bigger" (e.g. "3<7")
+    Adaptive.getRecord(`${smaller}<${bigger}`);
+  }
+
+  function startAdditionRound(levelDef) {
+    // Pick an a+b problem, kid taps the sum
+    const pool = levelDef.adaptiveKeys; // ["1+1", "1+2", ...]
+    const pickedKey = Adaptive.pickItem(pool);
+    const [a, b] = pickedKey.split('+').map(Number);
+    const sum = a + b;
+    state.target = sum;
+    state.problem = { a, b, sum, key: pickedKey };
+
+    // Build answer options: correct sum + distractors (nearby numbers)
+    const possibleAnswers = levelDef.items.filter(n => n !== sum);
+    const distractorCount = (levelDef.targetsPerRound || 4) - 1;
+    const picked = Utils.pickRandom(possibleAnswers, distractorCount);
+    state.options = Utils.shuffle([sum, ...picked]);
+  }
+
+  function renderPrompt() {
     const lang = Audio.getLang();
-    const promptText = state.mode.promptText[lang];
+    const questionType = state.mode.questionType;
     els.prompt.className = `prompt ${state.power}`;
 
-    if (lang === 'he') {
-      els.prompt.innerHTML = `<span class="prompt-number prompt-speaker">🔊</span> ${promptText}`;
-      els.prompt.dir = 'rtl';
+    if (questionType === 'counting') {
+      // Show dots + "How many dots?"
+      const dotHtml = Utils.dotPattern(state.problem.dotCount);
+      const promptText = state.mode.promptText[lang];
+      els.prompt.innerHTML = `<div class="counting-dots">${dotHtml}</div><div>${promptText}</div>`;
+      els.prompt.dir = lang === 'he' ? 'rtl' : 'ltr';
+    } else if (questionType === 'comparison') {
+      const promptText = state.mode.promptText[lang];
+      els.prompt.innerHTML = `<div>${promptText}</div>`;
+      els.prompt.dir = lang === 'he' ? 'rtl' : 'ltr';
+    } else if (questionType === 'addition') {
+      const { a, b } = state.problem;
+      const promptText = state.mode.promptText[lang];
+      if (lang === 'he') {
+        els.prompt.innerHTML = `?${a} + ${b} = <span class="prompt-number prompt-speaker">🔊</span>`;
+        els.prompt.dir = 'rtl';
+      } else {
+        els.prompt.innerHTML = `<span class="prompt-number prompt-speaker">🔊</span> ${a} + ${b} = ?`;
+        els.prompt.dir = 'ltr';
+      }
     } else {
-      els.prompt.innerHTML = `${promptText} <span class="prompt-number prompt-speaker">🔊</span>`;
-      els.prompt.dir = 'ltr';
+      // recognition (numbers, hebrew-letters)
+      const promptText = state.mode.promptText[lang];
+      if (lang === 'he') {
+        els.prompt.innerHTML = `<span class="prompt-number prompt-speaker">🔊</span> ${promptText}`;
+        els.prompt.dir = 'rtl';
+      } else {
+        els.prompt.innerHTML = `${promptText} <span class="prompt-number prompt-speaker">🔊</span>`;
+        els.prompt.dir = 'ltr';
+      }
     }
-    // Tap speaker to hear item again
+
+    // Tap speaker to hear prompt again
     const speaker = els.prompt.querySelector('.prompt-speaker');
     if (speaker) {
-      speaker.addEventListener('click', () => {
-        speakItem(state.target);
-      });
+      speaker.addEventListener('click', () => speakPrompt());
     }
   }
 
   function renderTargets() {
     const levelDef = state.mode.levels[state.level];
+    const questionType = state.mode.questionType;
     els.targetGrid.innerHTML = '';
+
+    // Comparison mode: show 2 large buttons
+    if (questionType === 'comparison') {
+      els.targetGrid.classList.add('comparison-layout');
+    } else {
+      els.targetGrid.classList.remove('comparison-layout');
+    }
 
     state.options.forEach((item, i) => {
       const btn = document.createElement('button');
       btn.className = `target-btn ${state.power}`;
+      if (questionType === 'comparison') btn.classList.add('comparison-btn');
       btn.style.animationDelay = `${i * 80}ms`;
       btn.dataset.item = item;
 
       // Inner content
       const displayText = state.mode.displayItem(item);
-      const isLetter = state.mode.id !== 'numbers';
+      const isLetter = state.mode.id === 'hebrew-letters';
       const spanClass = isLetter ? 'target-number target-letter' : 'target-number';
       let content = `<span class="${spanClass}">${displayText}</span>`;
 
+      // Show dots on number buttons only in numbers mode
       if (state.mode.supportsDots) {
         if (levelDef.showDots === true) {
           content += Utils.dotPattern(item);
@@ -389,8 +522,13 @@ const Game = (() => {
           content += `<div class="dot-hint">${Utils.dotPattern(item)}</div>`;
         }
       }
-      btn.innerHTML = content;
 
+      // Comparison: show dot patterns under each number for visual help
+      if (questionType === 'comparison') {
+        content += Utils.dotPattern(item);
+      }
+
+      btn.innerHTML = content;
       btn.addEventListener('click', () => handleTargetClick(btn, item));
       els.targetGrid.appendChild(btn);
     });
@@ -409,8 +547,20 @@ const Game = (() => {
     state.inputLocked = false;
   }
 
+  function getAdaptiveKey() {
+    const questionType = state.mode.questionType;
+    if (questionType === 'comparison') {
+      return `${state.problem.smaller}<${state.problem.bigger}`;
+    }
+    if (questionType === 'addition') {
+      return state.problem.key;
+    }
+    // recognition, counting
+    return String(state.target);
+  }
+
   async function handleCorrect(btn) {
-    Adaptive.recordAnswer(String(state.target), true);
+    Adaptive.recordAnswer(getAdaptiveKey(), true);
     // Visual effect on button
     btn.classList.add('correct');
 
@@ -460,7 +610,7 @@ const Game = (() => {
 
   async function handleWrong(btn) {
     state.wrongAttempts++;
-    Adaptive.recordAnswer(String(state.target), false);
+    Adaptive.recordAnswer(getAdaptiveKey(), false);
     btn.classList.add('wrong');
     Audio.SFX.wrong();
 
@@ -468,8 +618,8 @@ const Game = (() => {
     await Utils.wait(600);
     btn.classList.remove('wrong');
 
-    // Re-speak the item
-    speakItem(state.target);
+    // Re-speak the prompt
+    speakPrompt();
   }
 
   async function completedLevel() {

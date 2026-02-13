@@ -1,9 +1,11 @@
 /**
  * Kid-facing skills screen.
  * Shows curriculum organized by subject tracks with level nodes.
+ * Each subject has a grade stepper to navigate between grades.
  */
 const KidSkills = (() => {
   let activeSubject = 'math';
+  let activeGrades = {}; // { subject: phaseId }
 
   function renderStars(count, max) {
     max = max || 3;
@@ -41,8 +43,12 @@ const KidSkills = (() => {
       starsHtml = `<div class="level-stars">${renderStars(stats.stars)}</div>`;
     }
 
+    const gameAttrs = level.gameMapping
+      ? `data-game="${level.gameMapping.gameId}" data-mode="${level.gameMapping.mode || ''}"`
+      : '';
+
     return `
-      <div class="level-node ${state}" ${level.gameMapping ? `data-game="${level.gameMapping.gameId}"` : ''}>
+      <div class="level-node ${state}" ${gameAttrs}>
         <div class="level-dot">${dot}</div>
         <div class="level-label">${level.name}</div>
         ${starsHtml}
@@ -64,7 +70,6 @@ const KidSkills = (() => {
         <div class="skill-card-header">
           <span class="skill-card-icon">${skill.icon}</span>
           <span class="skill-card-title">${skill.name}</span>
-          <span class="skill-card-phase">${skill.phase.name}</span>
           <span class="skill-card-stars">${starsText}</span>
         </div>
         <div class="level-path">
@@ -73,13 +78,54 @@ const KidSkills = (() => {
       </div>`;
   }
 
+  function renderGradeStepper(subject) {
+    const grades = Curriculum.getSubjectGrades(subject);
+    if (!grades.length) return '';
+
+    const currentId = activeGrades[subject];
+    const idx = grades.findIndex(g => g.id === currentId);
+    const grade = grades[idx] || grades[0];
+    const atStart = idx <= 0;
+    const atEnd = idx >= grades.length - 1;
+
+    return `
+      <div class="grade-stepper" data-subject="${subject}">
+        <button class="grade-arrow grade-prev" ${atStart ? 'disabled' : ''}>◀</button>
+        <span class="grade-label">${grade.name} (${grade.hebrewName})</span>
+        <button class="grade-arrow grade-next" ${atEnd ? 'disabled' : ''}>▶</button>
+      </div>`;
+  }
+
+  function initDefaultGrade(subject, allGameData) {
+    if (activeGrades[subject]) return;
+    const grades = Curriculum.getSubjectGrades(subject);
+    if (!grades.length) return;
+
+    // Default to first grade with game data, or first grade
+    for (const grade of grades) {
+      const skills = Curriculum.getSkillsForSubjectGrade(subject, grade.id);
+      for (const skill of skills) {
+        const stats = Curriculum.computeSkillStats(allGameData, skill);
+        if (stats.hasAnyGame) {
+          activeGrades[subject] = grade.id;
+          return;
+        }
+      }
+    }
+    activeGrades[subject] = grades[0].id;
+  }
+
   function render() {
     const profileName = Storage.getProfile();
     if (!profileName) return;
 
     const allGameData = Storage.getAllForProfile(profileName);
     const subjects = Curriculum.getSubjects();
-    const tracks = Curriculum.getSubjectTracks();
+
+    // Init default grades
+    for (const subj of Object.keys(subjects)) {
+      initDefaultGrade(subj, allGameData);
+    }
 
     // Render subject tabs
     const tabsEl = document.getElementById('subjectTabs');
@@ -100,12 +146,12 @@ const KidSkills = (() => {
       });
     });
 
-    // Render skill cards for active subject
+    // Render grade stepper + skill cards for active subject
     const content = document.getElementById('skillsContent');
-    const skills = tracks[activeSubject] || [];
+    const grades = Curriculum.getSubjectGrades(activeSubject);
     const subjectColor = subjects[activeSubject].color;
 
-    if (!skills.length) {
+    if (!grades.length) {
       content.innerHTML = `
         <div class="skills-empty">
           <span class="skills-empty-icon">🌟</span>
@@ -114,7 +160,11 @@ const KidSkills = (() => {
       return;
     }
 
-    let html = '';
+    const gradeId = activeGrades[activeSubject] || grades[0].id;
+    const skills = Curriculum.getSkillsForSubjectGrade(activeSubject, gradeId);
+
+    let html = renderGradeStepper(activeSubject);
+
     for (const skill of skills) {
       const skillStats = Curriculum.computeSkillStats(allGameData, skill);
       html += renderSkillCard(skill, skillStats, subjectColor);
@@ -122,15 +172,38 @@ const KidSkills = (() => {
 
     content.innerHTML = html;
 
+    // Grade stepper click handlers
+    const stepper = content.querySelector('.grade-stepper');
+    if (stepper) {
+      const prevBtn = stepper.querySelector('.grade-prev');
+      const nextBtn = stepper.querySelector('.grade-next');
+      const idx = grades.findIndex(g => g.id === gradeId);
+
+      prevBtn.addEventListener('click', () => {
+        if (idx > 0) {
+          activeGrades[activeSubject] = grades[idx - 1].id;
+          render();
+        }
+      });
+      nextBtn.addEventListener('click', () => {
+        if (idx < grades.length - 1) {
+          activeGrades[activeSubject] = grades[idx + 1].id;
+          render();
+        }
+      });
+    }
+
     // Add click handlers for available level nodes
     content.querySelectorAll('.level-node.available, .level-node.in-progress').forEach(node => {
       const gameId = node.dataset.game;
       if (!gameId) return;
+      const mode = node.dataset.mode;
       const path = Curriculum.getGamePath(gameId);
       if (!path) return;
+      const url = mode ? `${path}?mode=${encodeURIComponent(mode)}` : path;
       node.style.cursor = 'pointer';
       node.addEventListener('click', () => {
-        window.location.href = path;
+        window.location.href = url;
       });
     });
   }

@@ -1,0 +1,217 @@
+/**
+ * Israeli Ministry of Education Curriculum Data
+ * Phase: Grade 1 (Kita Aleph)
+ */
+
+const GRADE_1_DATA = {
+  subjects: {
+    math:    { name: 'Math',    hebrewName: 'חשבון',  icon: '🔢', color: '#4ade80' },
+    hebrew:  { name: 'Hebrew',  hebrewName: 'עברית',  icon: '🔤', color: '#4a9eff' },
+    english: { name: 'English', hebrewName: 'אנגלית', icon: '🌎', color: '#a855f7' },
+    logic:   { name: 'Logic',   hebrewName: 'חשיבה',  icon: '🧠', color: '#f97316' },
+  },
+
+  phase: {
+    id: 'grade-1',
+    name: '1st Grade',
+    hebrewName: 'כיתה א׳',
+    shortName: 'Aleph',
+    grade: 1,
+    ageRange: [6, 7],
+    icon: '🎒',
+    skills: [
+      {
+        id: 'g1-math-arithmetic',
+        name: 'Arithmetic & Place Value',
+        hebrewName: 'חשבון ומבנה עשרוני',
+        subject: 'math',
+        icon: '➕',
+        levels: [
+          {
+            level: 1,
+            name: 'Concrete Counting',
+            description: 'Reliance on finger counting',
+            kpi: 'Counts to 20 but loses track; Writes 0–9 with reversals; Cannot solve 3+2 without counters',
+            gameMapping: null,
+          },
+          {
+            level: 2,
+            name: 'Addition to 10',
+            description: 'Basic addition using objects',
+            kpi: 'Solves 2+3 with manipulatives; Compares numbers to 20 (<, >, =); Completes number line to 20',
+            gameMapping: {
+              gameId: 'unicorn-numbers',
+              mode: 'addition',
+              storageKey: 'unicorn-addition',
+              additionRule: { maxOperand: 5, maxSum: 10 },
+            },
+          },
+          {
+            level: 3,
+            name: 'The Ten Unit',
+            description: 'Addition/Subtraction within 20 and Place Value',
+            kpi: 'Fluency in "friends of 10"; Identifies tens/ones in teens; Names basic 2D shapes',
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'add',
+              additionRule: { maxOperand: 10, maxSum: 20 },
+            },
+          },
+          {
+            level: 4,
+            name: 'Mental Strategies',
+            description: 'Sums within 20 and Time',
+            kpi: 'Solves missing addend (3+?=10); Adds tens (20+30); Reads analog clock to the hour',
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'add',
+              additionRule: { minOperand: 10, maxOperand: 30, maxSum: 60 },
+            },
+          },
+          {
+            level: 5,
+            name: 'Word Problems',
+            description: 'Logical translation of text to math',
+            kpi: 'Explains commutativity (3+5=5+3); Solves money problems; Finds multiple ways to make 15',
+            gameMapping: null,
+          },
+        ],
+      },
+      {
+        id: 'g1-hebrew-code',
+        name: 'Acquisition of the Code',
+        hebrewName: 'רכישת הקוד',
+        subject: 'hebrew',
+        icon: '📜',
+        levels: [
+          {
+            level: 1,
+            name: 'Letter Identification',
+            description: 'Identifying letters with sound confusion',
+            kpi: 'Matches sound to letter (50%); Writes name clearly; Reads letter-by-letter without blending',
+            gameMapping: {
+              gameId: 'unicorn-hebrew',
+              adaptiveKeys: ['א','ב','ג','ד','ה','ו','ז','ח','ט','י','כ','ל','מ','נ','ס','ע','פ','צ','ק','ר','ש','ת'],
+            },
+          },
+          {
+            level: 2,
+            name: 'Basic Decoding',
+            description: 'Slow decoding with simple vowels',
+            kpi: 'Decodes CVC with Kamatz/Patach; Copies short sentences accurately; Understands single words',
+            gameMapping: null,
+          },
+          {
+            level: 3,
+            name: 'Vocalized Accuracy',
+            description: 'Accurate reading of vocalized text (MoE Standard)',
+            kpi: 'Reads standard text with 90% accuracy; Writes simple S-V-O sentences; Forms cursive letters',
+            gameMapping: null,
+          },
+          {
+            level: 4,
+            name: 'Emergent Fluency',
+            description: 'Reading short texts with self-correction',
+            kpi: 'Reads 30–40 WPM; Answers Who/What questions; Writes 2-3 connected sentences',
+            gameMapping: null,
+          },
+          {
+            level: 5,
+            name: 'Unvocalized Roots',
+            description: 'Reading sight words and unvocalized text',
+            kpi: 'Retells story with sequence; Spells high-frequency words; Reads with prosody',
+            gameMapping: null,
+          },
+        ],
+      },
+      {
+        id: 'g1-english-oral',
+        name: 'Aural/Oral Foundations',
+        hebrewName: 'יסודות שמיעתיים',
+        subject: 'english',
+        icon: '🎧',
+        levels: [
+          {
+            level: 1,
+            name: 'Minimal Reaction',
+            description: 'Overwhelmed by L2 input',
+            kpi: 'Points to object only with heavy prompting; Silence or L1 use during English time',
+            gameMapping: { gameId: 'voice-tutor', focus: 'pronunciation', adaptiveKeys: ['phonemes'] },
+          },
+          {
+            level: 2,
+            name: 'Categorization',
+            description: 'Colors, numbers, and mimicking',
+            kpi: 'Counts 1–10; Identifies primary colors; Repeats words with approximate pronunciation',
+            gameMapping: { gameId: 'voice-tutor', focus: 'vocabulary', theme: 'adjectives', adaptiveKeys: ['adjectives'] },
+          },
+          {
+            level: 3,
+            name: 'Pre-A1 Interaction',
+            description: 'Simple instructions and objects',
+            kpi: 'Responds to "Stand up/Sit down"; Names 20 objects; Says "Hello/Goodbye" appropriately',
+            gameMapping: { gameId: 'voice-tutor', focus: 'vocabulary', theme: 'nouns', adaptiveKeys: ['nouns'] },
+          },
+          {
+            level: 4,
+            name: 'Formulaic Speech',
+            description: 'Set expressions and alphabet recognition',
+            kpi: 'Introduces self ("I am Dan"); Matches Upper/Lower case letters; Follows 2-step commands',
+            gameMapping: { gameId: 'voice-tutor', focus: 'vocabulary', theme: 'phrases', adaptiveKeys: ['phrases'] },
+          },
+          {
+            level: 5,
+            name: 'Readiness',
+            description: 'Simple Q&A and sight reading',
+            kpi: 'Answers "How are you?"; Identifies words like STOP/CAT globally; Identifies initial sounds',
+            gameMapping: { gameId: 'voice-tutor', focus: 'conversation', adaptiveKeys: ['qa'] },
+          },
+        ],
+      },
+      {
+        id: 'g1-logic-sequencing',
+        name: 'Algorithms & Sequencing',
+        hebrewName: 'אלגוריתמים ורצף',
+        subject: 'logic',
+        icon: '🔄',
+        levels: [
+          {
+            level: 1,
+            name: 'Disorder',
+            description: 'Struggles with chronological order',
+            kpi: 'Fails to order 3 pictures of daily routine; Cannot follow linear path on grid',
+            gameMapping: null,
+          },
+          {
+            level: 2,
+            name: 'Storyboarding',
+            description: 'Ordering pictures logically',
+            kpi: 'Arranges "Wake up -> Brush -> School"; Distinguishes Left/Right',
+            gameMapping: null,
+          },
+          {
+            level: 3,
+            name: 'Algorithmic Basics',
+            description: 'Following precise instructions',
+            kpi: 'Follows arrows to navigate grid; Sorts by "Red AND Square"; Decomposes tasks',
+            gameMapping: null,
+          },
+          {
+            level: 4,
+            name: 'Algorithm Design',
+            description: 'Creating instructions',
+            kpi: 'Commands peer to move/turn; Identifies numeric patterns (+2); Predicts robot path',
+            gameMapping: null,
+          },
+          {
+            level: 5,
+            name: 'Efficiency',
+            description: 'Debugging and Loops',
+            kpi: 'Identifies why instructions failed; Uses "Repeat" concept; Invents grid game rules',
+            gameMapping: null,
+          },
+        ],
+      },
+    ],
+  },
+};

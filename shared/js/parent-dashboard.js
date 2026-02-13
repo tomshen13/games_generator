@@ -8,6 +8,34 @@ const Dashboard = (() => {
   };
 
   let activeTab = 'Dan';
+  let activeGrades = {}; // { subject: phaseId }
+
+  function initDefaultGrade(subject, allGameData) {
+    if (activeGrades[subject]) return;
+    const grades = Curriculum.getSubjectGrades(subject);
+    if (!grades.length) return;
+    for (const grade of grades) {
+      const skills = Curriculum.getSkillsForSubjectGrade(subject, grade.id);
+      for (const skill of skills) {
+        const stats = Curriculum.computeSkillStats(allGameData, skill);
+        if (stats.hasAnyGame) { activeGrades[subject] = grade.id; return; }
+      }
+    }
+    activeGrades[subject] = grades[0].id;
+  }
+
+  function renderDashboardGradeStepper(subject, grades) {
+    const currentId = activeGrades[subject];
+    const idx = grades.findIndex(g => g.id === currentId);
+    const grade = grades[idx] || grades[0];
+    const atStart = idx <= 0;
+    const atEnd = idx >= grades.length - 1;
+    return `<span class="dashboard-grade-stepper" data-subject="${subject}">
+      <button class="grade-arrow grade-prev" ${atStart ? 'disabled' : ''}>◀</button>
+      <span class="grade-label">${grade.name}</span>
+      <button class="grade-arrow grade-next" ${atEnd ? 'disabled' : ''}>▶</button>
+    </span>`;
+  }
 
   function renderDonut(pct) {
     const r = 32;
@@ -45,8 +73,11 @@ const Dashboard = (() => {
   }
 
   function formatKeyReadable(key, gameId) {
-    if (gameId === 'pokemon-multiply') return key.replace('x', ' × ');
-    if (gameId === 'unicorn-numbers') return `Number "${key}"`;
+    if (key.includes('x')) return key.replace('x', ' \u00d7 ');
+    if (key.includes('+')) return key.replace('+', ' + ');
+    if (key.includes('-')) return key.replace('-', ' \u2212 ');
+    if (key.includes('<')) return key.replace('<', ' vs ');
+    if (gameId === 'unicorn-numbers' || gameId === 'unicorn-counting') return `Number "${key}"`;
     if (gameId === 'unicorn-hebrew') return `Letter "${key}"`;
     return key;
   }
@@ -54,13 +85,25 @@ const Dashboard = (() => {
   function getGameTitle(gameId) {
     const titles = {
       'unicorn-numbers': '🦄 Unicorn Numbers',
+      'unicorn-counting': '🦄 Unicorn Counting',
+      'unicorn-comparison': '🦄 Unicorn Compare',
+      'unicorn-addition': '🦄 Unicorn Addition',
       'unicorn-hebrew': '🦄 Unicorn Hebrew',
       'pokemon-multiply': '⚡ Pokemon Multiply',
     };
     return titles[gameId] || gameId;
   }
 
-  function getItemWord(gameId, count) {
+  function getItemWord(gameId, count, mode) {
+    if (mode === 'add' || mode === 'subtract' || mode === 'addition') {
+      return count === 1 ? 'problem' : 'problems';
+    }
+    if (mode === 'comparison') {
+      return count === 1 ? 'pair' : 'pairs';
+    }
+    if (mode === 'counting') {
+      return count === 1 ? 'number' : 'numbers';
+    }
     const labels = {
       'unicorn-numbers': ['number', 'numbers'],
       'unicorn-hebrew': ['letter', 'letters'],
@@ -74,6 +117,7 @@ const Dashboard = (() => {
 
   function renderLevelGroup(level, stats) {
     const gameId = level.gameMapping ? level.gameMapping.gameId : null;
+    const mode = level.gameMapping ? level.gameMapping.mode : null;
     const total = stats.mastered + stats.learning + stats.struggling;
     const stars = '★'.repeat(stats.stars) + '☆'.repeat(3 - stats.stars);
 
@@ -87,7 +131,7 @@ const Dashboard = (() => {
 
     // Compact legend (always visible)
     const legendParts = [];
-    if (stats.mastered > 0) legendParts.push(`<span><span class="legend-dot" style="background:#4ade80"></span> ${stats.mastered} ${getItemWord(gameId, stats.mastered)} mastered</span>`);
+    if (stats.mastered > 0) legendParts.push(`<span><span class="legend-dot" style="background:#4ade80"></span> ${stats.mastered} ${getItemWord(gameId, stats.mastered, mode)} mastered</span>`);
     if (stats.learning > 0) legendParts.push(`<span><span class="legend-dot" style="background:#facc15"></span> ${stats.learning} still learning</span>`);
     if (stats.struggling > 0) legendParts.push(`<span><span class="legend-dot" style="background:#f87171"></span> ${stats.struggling} needs practice</span>`);
     if (stats.notStarted > 0) legendParts.push(`<span>${stats.notStarted} not tried yet</span>`);
@@ -107,7 +151,7 @@ const Dashboard = (() => {
       const itemGridHtml = stats.allItems.length ? `
         <div class="dashboard-item-grid">
           ${stats.allItems.map(item => {
-            const label = gameId === 'pokemon-multiply' ? item.key.replace('x', '×') : item.key;
+            const label = item.key.includes('x') ? item.key.replace('x', '\u00d7') : item.key.includes('-') ? item.key.replace('-', '\u2212') : item.key;
             const acc = item.record ? `${item.record.correct}/${item.record.correct + item.record.wrong}` : '';
             const tooltip = `${statusTitles[item.status]}${acc ? ' (' + acc + ')' : ''}`;
             return `<span class="item-badge item-${item.status}" title="${tooltip}">${label}</span>`;
@@ -121,10 +165,10 @@ const Dashboard = (() => {
         </div>` : '';
 
       // Game link
-      const gamePath = Curriculum.getGamePath(gameId);
+      const gameUrl = Curriculum.getGameURL(level.gameMapping);
       const gameTitle = getGameTitle(gameId);
-      const gameLinkHtml = gamePath
-        ? `<div class="dashboard-level-game"><span class="dashboard-game-name">${gameTitle}</span><a class="dashboard-play-link" data-href="${gamePath}">▶ Play</a></div>`
+      const gameLinkHtml = gameUrl
+        ? `<div class="dashboard-level-game"><span class="dashboard-game-name">${gameTitle}</span><a class="dashboard-play-link" data-href="${gameUrl}">▶ Play</a></div>`
         : '';
 
       detailHtml = `<div class="dashboard-level-detail">${kpiHtml}${itemGridHtml}${gameLinkHtml}</div>`;
@@ -156,9 +200,9 @@ const Dashboard = (() => {
       .map(({ level, stats }) => renderLevelGroup(level, stats))
       .join('');
 
-    // Collapsed locked levels summary
+    // Locked levels summary
     const lockedHtml = lockedCount > 0
-      ? `<div class="dashboard-locked-summary">🔒 ${lockedCount} more level${lockedCount > 1 ? 's' : ''} coming soon</div>`
+      ? `<div class="dashboard-locked-summary">🔒 ${mappedLevels.length === 0 ? `All ${lockedCount} levels` : `${lockedCount} more level${lockedCount > 1 ? 's' : ''}`} — no games yet</div>`
       : '';
 
     // Skill summary line
@@ -229,30 +273,30 @@ const Dashboard = (() => {
     let html = '';
     let hasData = false;
 
-    // Curriculum skills grouped by subject
-    const tracks = Curriculum.getSubjectTracks();
+    // Curriculum skills grouped by subject, filtered by selected grade
     const subjects = Curriculum.getSubjects();
 
     for (const [subjKey, subjMeta] of Object.entries(subjects)) {
-      const skills = tracks[subjKey] || [];
-      let subjectHtml = '';
-      let subjectHasData = false;
+      const grades = Curriculum.getSubjectGrades(subjKey);
+      if (!grades.length) continue;
 
+      initDefaultGrade(subjKey, allGameData);
+      const gradeId = activeGrades[subjKey] || grades[0].id;
+      const skills = Curriculum.getSkillsForSubjectGrade(subjKey, gradeId);
+
+      let subjectHtml = '';
       for (const skill of skills) {
         const skillStats = Curriculum.computeSkillStats(allGameData, skill);
-        if (!skillStats.hasAnyGame) continue; // Skip fully locked skills in dashboard
-
-        subjectHasData = true;
         hasData = true;
         subjectHtml += renderSkillCard(skill, skillStats, allGameData);
       }
 
-      if (subjectHasData) {
-        html += `<div class="dashboard-subject-section">
-          <h3 class="dashboard-subject-heading" style="color: ${subjMeta.color}">${subjMeta.icon} ${subjMeta.name}</h3>
-          ${subjectHtml}
-        </div>`;
-      }
+      const stepperHtml = grades.length > 1 ? renderDashboardGradeStepper(subjKey, grades) : `<span style="font-size: var(--text-sm); color: var(--color-text-muted); margin-left: var(--space-md)">${grades[0].name}</span>`;
+
+      html += `<div class="dashboard-subject-section">
+        <h3 class="dashboard-subject-heading" style="color: ${subjMeta.color}">${subjMeta.icon} ${subjMeta.name} ${stepperHtml}</h3>
+        ${subjectHtml}
+      </div>`;
     }
 
     // Mario (non-curriculum)
@@ -283,6 +327,20 @@ const Dashboard = (() => {
         e.stopPropagation();
         const href = link.dataset.href;
         if (href) window.location.href = href;
+      });
+    });
+
+    // Grade stepper click handlers
+    content.querySelectorAll('.dashboard-grade-stepper').forEach(stepper => {
+      const subj = stepper.dataset.subject;
+      const grades = Curriculum.getSubjectGrades(subj);
+      const idx = grades.findIndex(g => g.id === activeGrades[subj]);
+
+      stepper.querySelector('.grade-prev').addEventListener('click', () => {
+        if (idx > 0) { activeGrades[subj] = grades[idx - 1].id; renderTab(profileName); }
+      });
+      stepper.querySelector('.grade-next').addEventListener('click', () => {
+        if (idx < grades.length - 1) { activeGrades[subj] = grades[idx + 1].id; renderTab(profileName); }
       });
     });
   }

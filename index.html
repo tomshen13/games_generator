@@ -19,7 +19,7 @@
     }
 
     .launcher {
-      min-height: 100%;
+      height: 100%;
       background: linear-gradient(135deg, #1a0a2e, #16213e, #1a0a2e);
       display: flex;
       flex-direction: column;
@@ -194,6 +194,11 @@
   <script src="shared/js/storage.js"></script>
   <script src="shared/js/supabase-sync.js"></script>
   <script src="shared/js/profile.js"></script>
+  <script src="shared/data/kindergarden.js"></script>
+  <script src="shared/data/grade1_data.js"></script>
+  <script src="shared/data/grade2_data.js"></script>
+  <script src="shared/data/grade3_data.js"></script>
+  <script src="shared/data/grade4_data.js"></script>
   <script src="shared/data/curriculum.js"></script>
   <script src="shared/js/curriculum.js"></script>
   <script src="shared/js/kid-skills.js"></script>
@@ -226,6 +231,15 @@
         ages: 'Ages 6+',
         description: 'A classic platformer adventure with Mario & Luigi!',
         path: 'games/mario-bros/index.html',
+        available: true,
+      },
+      {
+        id: 'voice-tutor',
+        title: 'Voice Tutor',
+        icon: '👩‍🏫',
+        ages: 'Ages 6+',
+        description: 'Practice English speaking with an AI tutor!',
+        path: 'games/voice-tutor/index.html',
         available: true,
       },
       {

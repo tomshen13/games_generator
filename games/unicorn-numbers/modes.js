@@ -100,6 +100,7 @@ const HEBREW_LETTER_LEVELS = [
 const MODES = {
   numbers: {
     id: 'numbers',
+    questionType: 'recognition',
     storageKey: 'unicorn-numbers',
     icon: '🔢',
     label: { en: 'Numbers', he: 'מספרים' },
@@ -118,6 +119,7 @@ const MODES = {
 
   'hebrew-letters': {
     id: 'hebrew-letters',
+    questionType: 'recognition',
     storageKey: 'unicorn-hebrew',
     icon: 'אב',
     label: { en: 'Letters', he: 'אותיות' },
@@ -132,5 +134,62 @@ const MODES = {
     supportsDots: false,
     allItems: ALL_HEBREW_LETTERS,
     levels: HEBREW_LETTER_LEVELS,
+  },
+
+  counting: {
+    id: 'counting',
+    questionType: 'counting',
+    storageKey: 'unicorn-counting',
+    icon: '🔵',
+    label: { en: 'Counting', he: 'ספירה' },
+    titleText: { en: 'Unicorn Counting', he: 'ספירת חד-קרן' },
+    subtitle: { en: 'Count the dots with Sparky!', he: '!ספרו את הנקודות עם ספארקי' },
+    promptText: { en: 'How many dots?', he: '?כמה נקודות' },
+    completeTitle: { en: "You're a Counting Star!", he: '!את כוכבת הספירה' },
+    completeSpeech: { en: 'You can count everything!', he: '!את יודעת לספור הכל' },
+    completeSubtitle: { en: 'You can count up to 10!', he: '!את יודעת לספור עד 10' },
+    congratsSpeech: { en: 'Great counting!', he: '!ספירה מצוינת' },
+    displayItem(item) { return String(item); },
+    supportsDots: false,
+    allItems: Array.from({ length: 10 }, (_, i) => i + 1),
+    levels: [], // filled by levels.js
+  },
+
+  comparison: {
+    id: 'comparison',
+    questionType: 'comparison',
+    storageKey: 'unicorn-comparison',
+    icon: '⚖️',
+    label: { en: 'Bigger/Smaller', he: 'גדול/קטן' },
+    titleText: { en: 'Unicorn Compare', he: 'השוואת חד-קרן' },
+    subtitle: { en: 'Which number is bigger?', he: '?איזה מספר גדול יותר' },
+    promptText: { en: 'Which is bigger?', he: '?מי גדול יותר' },
+    completeTitle: { en: "You're a Comparison Champion!", he: '!את אלופת ההשוואה' },
+    completeSpeech: { en: 'You know which number is bigger!', he: '!את יודעת מי גדול יותר' },
+    completeSubtitle: { en: 'You can compare all the numbers!', he: '!את יודעת להשוות מספרים' },
+    congratsSpeech: { en: 'Awesome!', he: '!מדהים' },
+    displayItem(item) { return String(item); },
+    supportsDots: false,
+    allItems: Array.from({ length: 10 }, (_, i) => i + 1),
+    levels: [], // filled by levels.js
+  },
+
+  addition: {
+    id: 'addition',
+    questionType: 'addition',
+    storageKey: 'unicorn-addition',
+    icon: '➕',
+    label: { en: 'Addition', he: 'חיבור' },
+    titleText: { en: 'Unicorn Addition', he: 'חיבור חד-קרן' },
+    subtitle: { en: 'Add numbers with Sparky!', he: '!חברו מספרים עם ספארקי' },
+    promptText: { en: 'What is', he: 'כמה זה' },
+    completeTitle: { en: "You're an Addition Master!", he: '!את אלופת החיבור' },
+    completeSpeech: { en: 'You can add numbers!', he: '!את יודעת לחבר מספרים' },
+    completeSubtitle: { en: 'You learned to add!', he: '!למדת לחבר' },
+    congratsSpeech: { en: 'Great adding!', he: '!חיבור מצוין' },
+    displayItem(item) { return String(item); },
+    supportsDots: false,
+    allItems: Array.from({ length: 10 }, (_, i) => i + 1),
+    levels: [], // filled by levels.js
   },
 };
