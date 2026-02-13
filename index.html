@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="shared/css/base.css">
   <link rel="stylesheet" href="shared/css/animations.css">
   <link rel="stylesheet" href="shared/css/components.css">
+  <link rel="stylesheet" href="shared/css/profile.css">
+  <link rel="stylesheet" href="shared/css/dashboard.css">
   <style>
     .launcher {
       min-height: 100%;
@@ -29,7 +31,7 @@
       font-size: var(--text-md);
       color: var(--color-text-muted);
       text-align: center;
-      margin-bottom: var(--space-2xl);
+      margin-bottom: var(--space-lg);
     }
 
     .game-grid {
@@ -95,11 +97,89 @@
   </style>
 </head>
 <body>
-  <div class="launcher">
+  <!-- ===== Profile Selector Screen ===== -->
+  <div class="launcher profile-screen active" id="profileScreen"
+       style="background: linear-gradient(135deg, #1a0a2e, #16213e, #1a0a2e);">
+    <h1 class="profile-title">🎮 Kids Games</h1>
+    <p class="profile-subtitle">Who's playing?</p>
+    <div class="profile-cards">
+      <button class="card profile-card animate-fade-up" data-profile="Dan" style="animation-delay: 100ms">
+        <span class="profile-avatar">👦</span>
+        <span class="profile-name">Dan</span>
+      </button>
+      <button class="card profile-card animate-fade-up" data-profile="Emma" style="animation-delay: 200ms">
+        <span class="profile-avatar">👧</span>
+        <span class="profile-name">Emma</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== Game Launcher ===== -->
+  <div class="launcher" id="launcherScreen" style="display: none;">
     <h1 class="launcher-title">🎮 Kids Games</h1>
     <p class="launcher-subtitle">Fun learning adventures for ages 4–7!</p>
+    <div class="launcher-header">
+      <div class="profile-badge" id="profileBadge">
+        <span class="profile-badge-initial" id="badgeInitial"></span>
+        <span id="badgeName"></span>
+      </div>
+      <button class="btn-switch-player" id="btnSwitchPlayer">Switch Player</button>
+    </div>
     <div class="game-grid" id="gameGrid"></div>
+    <button class="btn-dashboard" id="btnDashboard">🔒 Parent Dashboard</button>
   </div>
+
+  <!-- ===== Parent Dashboard Screen ===== -->
+  <div class="dashboard-screen" id="dashboardScreen"
+       style="background: linear-gradient(135deg, #1a0a2e, #16213e, #1a0a2e);">
+    <div class="dashboard-header">
+      <button class="btn-dashboard-back" id="btnDashboardBack">←</button>
+      <h2 class="dashboard-title">Parent Dashboard</h2>
+    </div>
+    <div class="dashboard-tabs">
+      <button class="dashboard-tab active" data-profile="Dan">👦 Dan</button>
+      <button class="dashboard-tab" data-profile="Emma">👧 Emma</button>
+    </div>
+    <div class="dashboard-content"></div>
+  </div>
+
+  <!-- ===== PIN Pad Modal ===== -->
+  <div class="pin-overlay" id="pinOverlay" hidden>
+    <div class="pin-modal">
+      <h3>Enter Parent PIN</h3>
+      <div class="pin-dots">
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+        <span class="pin-dot"></span>
+      </div>
+      <div class="pin-error"></div>
+      <div class="pin-numpad">
+        <button class="pin-key" data-val="1">1</button>
+        <button class="pin-key" data-val="2">2</button>
+        <button class="pin-key" data-val="3">3</button>
+        <button class="pin-key" data-val="4">4</button>
+        <button class="pin-key" data-val="5">5</button>
+        <button class="pin-key" data-val="6">6</button>
+        <button class="pin-key" data-val="7">7</button>
+        <button class="pin-key" data-val="8">8</button>
+        <button class="pin-key" data-val="9">9</button>
+        <button class="pin-key pin-key-back" data-val="back">⌫</button>
+        <button class="pin-key" data-val="0">0</button>
+        <button class="pin-key pin-key-back" data-val="back">✕</button>
+      </div>
+      <button class="pin-cancel">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Supabase CDN (optional, graceful if blocked) -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Shared JS -->
+  <script src="shared/js/storage.js"></script>
+  <script src="shared/js/supabase-sync.js"></script>
+  <script src="shared/js/profile.js"></script>
+  <script src="shared/js/parent-dashboard.js"></script>
 
   <script>
     const GAMES = [
@@ -161,6 +241,7 @@
 
     function renderGames() {
       const grid = document.getElementById('gameGrid');
+      grid.innerHTML = '';
       GAMES.forEach((game, i) => {
         const card = document.createElement('div');
         card.className = `card game-card ${game.available ? '' : 'coming-soon'}`;
@@ -189,7 +270,47 @@
       });
     }
 
-    renderGames();
+    function showLauncher(profileName) {
+      document.getElementById('profileScreen').style.display = 'none';
+      const launcher = document.getElementById('launcherScreen');
+      launcher.style.display = '';
+
+      // Update badge
+      const initial = document.getElementById('badgeInitial');
+      initial.textContent = profileName[0];
+      initial.dataset.profile = profileName;
+      document.getElementById('badgeName').textContent = profileName;
+
+      renderGames();
+    }
+
+    function showProfileScreen() {
+      document.getElementById('launcherScreen').style.display = 'none';
+      document.getElementById('dashboardScreen').classList.remove('active');
+      document.getElementById('profileScreen').style.display = '';
+    }
+
+    // Profile card clicks
+    document.querySelectorAll('.profile-card').forEach(card => {
+      card.addEventListener('click', async () => {
+        const name = card.dataset.profile;
+        await Profile.selectProfile(name);
+        showLauncher(name);
+      });
+    });
+
+    // Switch player
+    document.getElementById('btnSwitchPlayer').addEventListener('click', showProfileScreen);
+
+    // Dashboard
+    document.getElementById('btnDashboard').addEventListener('click', () => Dashboard.open());
+    document.getElementById('btnDashboardBack').addEventListener('click', () => Dashboard.hide());
+
+    // Auto-resume if profile already set
+    const savedProfile = Storage.getProfile();
+    if (savedProfile) {
+      showLauncher(savedProfile);
+    }
   </script>
 </body>
 </html>
