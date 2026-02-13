@@ -37,7 +37,8 @@ const Storage = (() => {
     save(gameId, field, value) {
       try {
         localStorage.setItem(key(gameId, field), JSON.stringify(value));
-        if (activeProfile && typeof SyncEngine !== 'undefined' && SyncEngine.isActive()) {
+        // Always queue if profile is set — connectivity checked at flush time
+        if (activeProfile && typeof SyncEngine !== 'undefined') {
           syncQueue.push({ gameId, field, value });
           scheduleFlush();
         }
@@ -100,7 +101,10 @@ const Storage = (() => {
 
     async flushSync() {
       if (!syncQueue.length || !activeProfile) return;
-      if (typeof SyncEngine === 'undefined' || !SyncEngine.isActive()) return;
+      if (typeof SyncEngine === 'undefined') return;
+      // Wait for SDK to load, then check connectivity
+      await SyncEngine.ready();
+      if (!SyncEngine.isActive()) return;
       const batch = syncQueue.splice(0);
       try {
         const profileId = await SyncEngine.getProfileId(activeProfile);
@@ -108,7 +112,6 @@ const Storage = (() => {
         await SyncEngine.pushBatch(profileId, batch);
       } catch (e) {
         console.warn('Cloud push failed:', e);
-        // Re-queue on failure
         syncQueue.unshift(...batch);
       }
     },
