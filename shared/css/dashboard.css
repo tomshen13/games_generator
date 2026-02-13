@@ -1,0 +1,286 @@
+/* ===== Parent Dashboard ===== */
+.dashboard-screen {
+  min-height: 100%;
+  padding: var(--space-xl) var(--space-lg);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  overflow-y: auto;
+}
+
+.dashboard-screen.active {
+  display: flex;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+  width: 100%;
+  max-width: 900px;
+}
+
+.dashboard-title {
+  font-size: var(--text-xl);
+  flex: 1;
+}
+
+.btn-dashboard-back {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: var(--color-text);
+  font-size: var(--text-lg);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-round);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--duration-fast);
+}
+
+.btn-dashboard-back:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ===== Kid Tabs ===== */
+.dashboard-tabs {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xl);
+}
+
+.dashboard-tab {
+  padding: var(--space-sm) var(--space-xl);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-lg);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.dashboard-tab:hover {
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.dashboard-tab.active {
+  color: #fff;
+}
+
+.dashboard-tab[data-profile="Dan"].active {
+  background: rgba(74, 158, 255, 0.2);
+  border-color: #4a9eff;
+}
+
+.dashboard-tab[data-profile="Emma"].active {
+  background: rgba(217, 70, 239, 0.2);
+  border-color: #d946ef;
+}
+
+/* ===== Game Stats Cards ===== */
+.dashboard-content {
+  width: 100%;
+  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xl);
+}
+
+.game-stat-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--radius-lg);
+  padding: var(--space-xl);
+}
+
+.game-stat-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-lg);
+}
+
+.game-stat-icon {
+  font-size: 36px;
+}
+
+.game-stat-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  flex: 1;
+}
+
+.game-stat-pct {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  color: #4ade80;
+}
+
+/* ===== Level Progress ===== */
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-md);
+}
+
+.stat-label {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.stat-value {
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.stat-bar {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.stat-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width var(--duration-normal);
+}
+
+/* ===== Mastery Breakdown Bar ===== */
+.mastery-bar {
+  display: flex;
+  height: 12px;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: var(--space-sm);
+}
+
+.mastery-segment {
+  transition: width var(--duration-normal);
+}
+
+.mastery-mastered { background: #4ade80; }
+.mastery-learning { background: #facc15; }
+.mastery-struggling { background: #f87171; }
+
+.mastery-legend {
+  display: flex;
+  gap: var(--space-lg);
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.mastery-legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.mastery-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-round);
+}
+
+/* ===== Struggling Items ===== */
+.struggling-section {
+  margin-top: var(--space-lg);
+}
+
+.struggling-title {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.struggling-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+}
+
+.struggling-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  background: rgba(248, 113, 113, 0.15);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+}
+
+.chip-problem {
+  font-weight: 700;
+  color: #fca5a5;
+}
+
+.chip-accuracy {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+/* ===== Donut Chart ===== */
+.donut-wrap {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+}
+
+.donut-wrap svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.donut-bg { stroke: rgba(255, 255, 255, 0.1); }
+.donut-fill { transition: stroke-dasharray var(--duration-normal); }
+
+.donut-label {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+}
+
+/* ===== No Data State ===== */
+.no-data {
+  text-align: center;
+  padding: var(--space-2xl);
+  color: var(--color-text-muted);
+  font-size: var(--text-md);
+}
+
+/* ===== Dashboard Button (on launcher) ===== */
+.btn-dashboard {
+  margin-top: var(--space-xl);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: var(--color-text-muted);
+  padding: var(--space-sm) var(--space-xl);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.btn-dashboard:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--color-text);
+}
