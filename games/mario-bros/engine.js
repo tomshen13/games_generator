@@ -13,11 +13,11 @@ const Engine = (() => {
   // All state as closure variables — no `this` binding issues
   const _keys = {};
   const _pressed = {};
-  const _PREVENT = new Set(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter','KeyX','KeyE']);
+  const _PREVENT = new Set(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Enter','KeyX','KeyE','KeyQ']);
 
-  const _P1 = { left: 'KeyA', right: 'KeyD', jump: 'Space', jump2: 'KeyW', shoot: 'KeyE' };
-  const _P2 = { left: 'ArrowLeft', right: 'ArrowRight', jump: 'Enter', jump2: 'ArrowUp', shoot: 'ShiftRight' };
-  const _SP = { left: 'ArrowLeft', right: 'ArrowRight', jump: 'Space', jump2: 'ArrowUp', shoot: 'KeyX' };
+  const _P1 = { left: 'KeyA', right: 'KeyD', jump: 'Space', jump2: 'KeyW', shoot: 'KeyE', skill: 'KeyQ' };
+  const _P2 = { left: 'ArrowLeft', right: 'ArrowRight', jump: 'Enter', jump2: 'ArrowUp', shoot: 'ShiftRight', skill: 'Slash' };
+  const _SP = { left: 'ArrowLeft', right: 'ArrowRight', jump: 'Space', jump2: 'ArrowUp', shoot: 'KeyX', skill: 'KeyQ' };
 
   function _isDown(c) { return !!_keys[c]; }
   function _justPressed(c) { return !!_pressed[c]; }
@@ -65,6 +65,11 @@ const Engine = (() => {
       if (!coop) return _justPressed(_SP.shoot) || _justPressed(_P1.shoot);
       const c = pn === 1 ? _P1 : _P2;
       return _justPressed(c.shoot);
+    },
+    skillPressed(pn, coop) {
+      if (!coop) return _justPressed(_SP.skill) || _justPressed(_P1.skill);
+      const c = pn === 1 ? _P1 : _P2;
+      return _justPressed(c.skill);
     },
   };
 

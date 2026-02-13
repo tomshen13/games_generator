@@ -5,8 +5,15 @@ const Entities = (() => {
 
   // ===== PLAYER =====
 
+  const CHAR_STATS = {
+    mario:  { runSpeed: 2.8, accel: 0.2,  jumpForce: -9.0,  maxSpeed: 2.8 },
+    luigi:  { runSpeed: 2.2, accel: 0.15, jumpForce: -10.5, maxSpeed: 2.2 },
+    toad:   { runSpeed: 3.5, accel: 0.25, jumpForce: -7.5,  maxSpeed: 3.5 },
+    peach:  { runSpeed: 2.5, accel: 0.18, jumpForce: -8.5,  maxSpeed: 2.5 },
+  };
+
   function createPlayer(charType, playerNum, x, y) {
-    const isLuigi = charType === 'luigi';
+    const stats = CHAR_STATS[charType] || CHAR_STATS.mario;
     return {
       type: 'player', charType, playerNum,
       x, y,
@@ -18,17 +25,38 @@ const Entities = (() => {
       invincible: false,
       invTimer: 0,
 
-      runSpeed: isLuigi ? 2.2 : 2.8,
-      accel: isLuigi ? 0.15 : 0.2,
-      jumpForce: isLuigi ? -10.5 : -9.0,
-      maxSpeed: isLuigi ? 2.2 : 2.8,
+      runSpeed: stats.runSpeed,
+      accel: stats.accel,
+      jumpForce: stats.jumpForce,
+      maxSpeed: stats.maxSpeed,
 
-      powerUp: null,
+      powerStack: [],
       isBig: false,
       hasDoubleJump: false,
       usedDoubleJump: false,
       starTimer: 0,
+      speedTimer: 0,
+      baseRunSpeed: stats.runSpeed,
+      baseMaxSpeed: stats.maxSpeed,
+      baseJumpForce: stats.jumpForce,
       shootCooldown: 0,
+
+      // Peach float
+      canFloat: charType === 'peach',
+      floatTimer: 90,
+
+      // Shield
+      hasShield: false,
+
+      // Skills
+      skill: charType === 'mario' ? 'ground_pound' : charType === 'luigi' ? 'super_jump' : charType === 'toad' ? 'dash' : 'heal',
+      skillCooldown: 0,
+      skillMaxCooldown: charType === 'peach' ? 600 : charType === 'luigi' ? 240 : 180,
+      skillActive: false,
+      skillTimer: 0,
+
+      // Gems
+      gems: 0,
 
       animFrame: 0,
       animTimer: 0,
@@ -48,6 +76,35 @@ const Entities = (() => {
       groundTile: 0,
       hitWall: false,
     };
+  }
+
+  function hasPower(player, type) {
+    return player.powerStack.includes(type);
+  }
+
+  function getShootPower(player) {
+    for (let i = player.powerStack.length - 1; i >= 0; i--) {
+      if (player.powerStack[i] === 'ice' || player.powerStack[i] === 'fire') return player.powerStack[i];
+    }
+    return null;
+  }
+
+  function removePower(player, type) {
+    const idx = player.powerStack.indexOf(type);
+    if (idx !== -1) player.powerStack.splice(idx, 1);
+    if (type === 'wings') player.hasDoubleJump = false;
+    if (type === 'mushroom' && player.isBig) { player.isBig = false; player.h = 16; }
+    if (type === 'shield') player.hasShield = false;
+    if (type === 'speed') {
+      player.speedTimer = 0;
+      player.runSpeed = player.baseRunSpeed;
+      player.maxSpeed = player.baseMaxSpeed;
+      player.jumpForce = player.baseJumpForce;
+    }
+    if (type === 'star') {
+      player.starTimer = 0;
+      if (player.invTimer <= 0) player.invincible = false;
+    }
   }
 
   function updatePlayer(player, level, coop) {
@@ -94,10 +151,20 @@ const Entities = (() => {
       player.vy *= 0.6;
     }
 
-    if (player.onGround) player.usedDoubleJump = false;
+    if (player.onGround) {
+      player.usedDoubleJump = false;
+      player.floatTimer = 90;
+    }
 
     // Gravity
     Engine.applyGravity(player);
+
+    // Peach float: hold jump while falling to slow descent
+    if (player.canFloat && !player.onGround && player.vy > 0
+        && Engine.Input.jumpHeld(pn, coop) && player.floatTimer > 0) {
+      player.vy = Math.min(player.vy, 0.5);
+      player.floatTimer--;
+    }
 
     // Move + collide
     player.hitHazard = false;
@@ -128,7 +195,7 @@ const Entities = (() => {
     if (player.shootCooldown > 0) player.shootCooldown--;
     player.wantsShoot = false;
     if (Engine.Input.shootPressed(pn, coop) && player.shootCooldown <= 0) {
-      if (player.powerUp === 'ice' || player.powerUp === 'fire') {
+      if (getShootPower(player)) {
         player.wantsShoot = true;
         player.shootCooldown = 15;
         Audio.SFX.shoot();
@@ -136,20 +203,84 @@ const Entities = (() => {
     }
 
     // Star timer
-    if (player.powerUp === 'star' && player.starTimer > 0) {
+    if (hasPower(player, 'star') && player.starTimer > 0) {
       player.starTimer--;
       player.invincible = true;
       if (player.starTimer <= 0) {
-        player.powerUp = null;
-        player.invincible = false;
+        removePower(player, 'star');
       }
     }
+
+    // Speed timer
+    if (hasPower(player, 'speed') && player.speedTimer > 0) {
+      player.speedTimer--;
+      if (player.speedTimer <= 0) {
+        removePower(player, 'speed');
+      }
+    }
+
+    // Skill cooldown
+    if (player.skillCooldown > 0) player.skillCooldown--;
 
     // Damage invincibility
     if (player.invTimer > 0) {
       player.invTimer--;
-      if (player.invTimer <= 0 && player.powerUp !== 'star') {
+      if (player.invTimer <= 0 && !hasPower(player, 'star')) {
         player.invincible = false;
+      }
+    }
+
+    // Skill activation
+    if (Engine.Input.skillPressed(pn, coop) && player.skillCooldown <= 0) {
+      switch (player.skill) {
+        case 'ground_pound':
+          if (!player.onGround) {
+            player.vy = 12;
+            player.skillActive = true;
+            player.skillCooldown = player.skillMaxCooldown;
+          }
+          break;
+        case 'super_jump':
+          if (player.onGround) {
+            player.vy = player.jumpForce * 1.5;
+            player.onGround = false;
+            player.skillCooldown = player.skillMaxCooldown;
+            Audio.SFX.jump();
+          }
+          break;
+        case 'dash':
+          player.vx = player.facingRight ? 10 : -10;
+          player.skillActive = true;
+          player.skillTimer = 15;
+          player.invincible = true;
+          player.skillCooldown = player.skillMaxCooldown;
+          break;
+        case 'heal':
+          if (!player.hasShield) {
+            player.hasShield = true;
+          } else {
+            player.invTimer = 30;
+            player.invincible = true;
+          }
+          player.skillCooldown = player.skillMaxCooldown;
+          Audio.SFX.powerup();
+          break;
+      }
+    }
+
+    // Active skill updates
+    if (player.skillActive) {
+      if (player.skill === 'ground_pound' && player.onGround) {
+        // Ground pound landed — defeat nearby ground enemies (handled in game.js)
+        player.skillActive = false;
+        player.groundPoundLanded = true;
+      }
+      if (player.skill === 'dash') {
+        player.skillTimer--;
+        if (player.skillTimer <= 0) {
+          player.skillActive = false;
+          player.invincible = player.invTimer > 0 || (hasPower(player, 'star') && player.starTimer > 0);
+        }
       }
     }
 
@@ -199,24 +330,45 @@ const Entities = (() => {
     const [sx, sy] = Engine.Camera.worldToScreen(player.x - 1, player.y);
 
     // Star power rainbow tint
-    if (player.powerUp === 'star' && player.alive) {
+    if (hasPower(player, 'star') && player.alive) {
       ctx.save();
       ctx.filter = `hue-rotate(${(player.starTimer * 12) % 360}deg) saturate(2)`;
+      Engine.drawSprite(ctx, frame, sx, sy, !player.facingRight);
+      ctx.restore();
+    } else if (hasPower(player, 'speed') && player.alive) {
+      // Speed boost yellow tint + flashing when ending
+      ctx.save();
+      if (player.speedTimer < 120 && Math.floor(player.speedTimer / 6) % 2 === 0) {
+        ctx.globalAlpha = 0.5;
+      }
+      ctx.filter = 'saturate(1.5) brightness(1.2)';
       Engine.drawSprite(ctx, frame, sx, sy, !player.facingRight);
       ctx.restore();
     } else {
       Engine.drawSprite(ctx, frame, sx, sy, !player.facingRight);
     }
+
+    // Shield bubble
+    if (player.hasShield && player.alive) {
+      const sw = (player.isBig ? 32 : 16) * Engine.SCALE;
+      const sh = (player.isBig ? 32 : 16) * Engine.SCALE;
+      ctx.save();
+      ctx.strokeStyle = `rgba(0, 191, 255, ${0.4 + Math.sin(Date.now() / 200) * 0.2})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.ellipse(sx + sw / 2, sy + sh / 2, sw / 2 + 4, sh / 2 + 4, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
   }
 
   function hurtPlayer(player) {
     if (player.invincible) return;
-    if (player.isBig) {
-      player.isBig = false;
-      player.h = 16;
-      player.powerUp = null;
-      player.hasDoubleJump = false;
-      player.invTimer = 90;
+    if (player.powerStack.length > 0) {
+      // Pop the most recent power off the stack
+      const lost = player.powerStack.pop();
+      removePower(player, lost);
+      player.invTimer = 60;
       player.invincible = true;
       Audio.SFX.hurt();
     } else {
@@ -231,11 +383,17 @@ const Entities = (() => {
     player.vy = -8;
     player.vx = 0;
     player.deathY = player.y;
-    player.powerUp = null;
+    player.powerStack = [];
     player.isBig = false;
     player.hasDoubleJump = false;
+    player.hasShield = false;
     player.invincible = false;
     player.h = 16;
+    player.starTimer = 0;
+    player.speedTimer = 0;
+    player.runSpeed = player.baseRunSpeed;
+    player.maxSpeed = player.baseMaxSpeed;
+    player.jumpForce = player.baseJumpForce;
     Audio.SFX.die();
   }
 
@@ -248,8 +406,14 @@ const Entities = (() => {
     player.vx = 0;
     player.h = 16;
     player.isBig = false;
-    player.powerUp = null;
+    player.powerStack = [];
     player.hasDoubleJump = false;
+    player.hasShield = false;
+    player.starTimer = 0;
+    player.speedTimer = 0;
+    player.runSpeed = player.baseRunSpeed;
+    player.maxSpeed = player.baseMaxSpeed;
+    player.jumpForce = player.baseJumpForce;
 
     if (otherPlayer && otherPlayer.alive) {
       player.x = otherPlayer.x;
@@ -267,7 +431,10 @@ const Entities = (() => {
   }
 
   function applyPowerUp(player, type) {
-    player.powerUp = type;
+    // Add to stack (no duplicates except refresh timed powers)
+    if (!player.powerStack.includes(type)) {
+      player.powerStack.push(type);
+    }
     Audio.SFX.powerup();
     switch (type) {
       case 'ice':
@@ -286,6 +453,17 @@ const Entities = (() => {
           player.h = 32;
           player.y -= 16;
         }
+        break;
+      case 'magnet':
+        break;
+      case 'shield':
+        player.hasShield = true;
+        break;
+      case 'speed':
+        player.speedTimer = 480;
+        player.runSpeed = player.baseRunSpeed * 2;
+        player.maxSpeed = player.baseMaxSpeed * 2;
+        player.jumpForce = player.baseJumpForce * 1.1;
         break;
     }
   }
@@ -328,7 +506,69 @@ const Entities = (() => {
     };
   }
 
-  function updateEnemy(enemy, level) {
+  function createPiranha(x, y) {
+    return {
+      type: 'piranha',
+      x, y: y + 16, w: 16, h: 16,
+      vx: 0, vy: 0,
+      baseY: y + 16,
+      alive: true,
+      squashTimer: 0,
+      animFrame: 0, animTimer: 0,
+      scoreValue: 200,
+      phase: 'hidden', // hidden, rising, exposed, sinking
+      phaseTimer: 120,
+      noStomp: true,
+      onGround: false, hitWall: false, hitHazard: false, groundTile: 0, hitCeiling: false,
+    };
+  }
+
+  function createBoo(x, y) {
+    return {
+      type: 'boo',
+      x, y, w: 16, h: 16,
+      vx: 0, vy: 0,
+      alive: true,
+      squashTimer: 0,
+      animFrame: 0, animTimer: 0,
+      scoreValue: 300,
+      shy: false,
+      noStomp: true,
+      onGround: false, hitWall: false, hitHazard: false, groundTile: 0, hitCeiling: false,
+    };
+  }
+
+  function createBeetle(x, y) {
+    return {
+      type: 'beetle',
+      x, y, w: 16, h: 16,
+      vx: -0.7, vy: 0,
+      alive: true,
+      squashTimer: 0,
+      animFrame: 0, animTimer: 0,
+      scoreValue: 100,
+      shellState: 'walking', // walking, shell, sliding
+      shellTimer: 0,
+      onGround: false, hitWall: false, hitHazard: false, groundTile: 0, hitCeiling: false,
+    };
+  }
+
+  function createBobomb(x, y) {
+    return {
+      type: 'bobomb',
+      x, y, w: 16, h: 16,
+      vx: -0.6, vy: 0,
+      alive: true,
+      squashTimer: 0,
+      animFrame: 0, animTimer: 0,
+      scoreValue: 100,
+      lit: false,
+      fuseTimer: 0,
+      onGround: false, hitWall: false, hitHazard: false, groundTile: 0, hitCeiling: false,
+    };
+  }
+
+  function updateEnemy(enemy, level, players) {
     if (!enemy.alive) {
       if (enemy.squashTimer > 0) enemy.squashTimer--;
       return enemy.squashTimer > 0;
@@ -359,6 +599,134 @@ const Entities = (() => {
       if (enemy.x > enemy.baseX + 50) enemy.vx = -Math.abs(enemy.vx);
     }
 
+    if (enemy.type === 'piranha') {
+      enemy.phaseTimer--;
+      if (enemy.phaseTimer <= 0) {
+        switch (enemy.phase) {
+          case 'hidden':
+            // Check if player is standing on pipe — stay hidden
+            if (players) {
+              const onPipe = players.some(p => p.alive &&
+                Math.abs((p.x + p.w / 2) - (enemy.x + enemy.w / 2)) < 24 &&
+                p.y + p.h <= enemy.baseY && p.y + p.h >= enemy.baseY - 20);
+              if (onPipe) { enemy.phaseTimer = 30; break; }
+            }
+            enemy.phase = 'rising';
+            enemy.phaseTimer = 30;
+            break;
+          case 'rising':
+            enemy.phase = 'exposed';
+            enemy.phaseTimer = 120;
+            break;
+          case 'exposed':
+            enemy.phase = 'sinking';
+            enemy.phaseTimer = 30;
+            break;
+          case 'sinking':
+            enemy.phase = 'hidden';
+            enemy.phaseTimer = 120;
+            break;
+        }
+      }
+      // Animate position
+      if (enemy.phase === 'rising') {
+        enemy.y = enemy.baseY - (1 - enemy.phaseTimer / 30) * 16;
+      } else if (enemy.phase === 'exposed') {
+        enemy.y = enemy.baseY - 16;
+      } else if (enemy.phase === 'sinking') {
+        enemy.y = enemy.baseY - (enemy.phaseTimer / 30) * 16;
+      } else {
+        enemy.y = enemy.baseY;
+      }
+    }
+
+    if (enemy.type === 'boo') {
+      enemy.shy = false;
+      if (players) {
+        for (const p of players) {
+          if (!p.alive) continue;
+          const booIsRight = enemy.x > p.x;
+          if ((p.facingRight && booIsRight) || (!p.facingRight && !booIsRight)) {
+            enemy.shy = true;
+            break;
+          }
+        }
+      }
+      if (!enemy.shy && players) {
+        // Move toward nearest alive player
+        let nearest = null, minDist = Infinity;
+        for (const p of players) {
+          if (!p.alive) continue;
+          const d = Math.abs(p.x - enemy.x) + Math.abs(p.y - enemy.y);
+          if (d < minDist) { minDist = d; nearest = p; }
+        }
+        if (nearest) {
+          const dx = nearest.x - enemy.x;
+          const dy = nearest.y - enemy.y;
+          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
+          enemy.x += (dx / dist) * 0.8;
+          enemy.y += (dy / dist) * 0.8;
+          enemy.vx = dx > 0 ? 0.8 : -0.8;
+        }
+      }
+    }
+
+    if (enemy.type === 'beetle') {
+      if (enemy.shellState === 'walking') {
+        Engine.applyGravity(enemy);
+        enemy.hitWall = false;
+        Engine.moveAndCollide(enemy, level);
+        if (enemy.hitWall) enemy.vx = -enemy.vx;
+        if (enemy.onGround) {
+          const aheadCol = Math.floor((enemy.x + (enemy.vx > 0 ? enemy.w + 2 : -2)) / Engine.TILE);
+          const belowRow = Math.floor((enemy.y + enemy.h + 2) / Engine.TILE);
+          if (!Engine.isSolid(Engine.getTile(level, aheadCol, belowRow))) {
+            enemy.vx = -enemy.vx;
+          }
+        }
+      } else if (enemy.shellState === 'shell') {
+        Engine.applyGravity(enemy);
+        Engine.moveAndCollide(enemy, level);
+        enemy.shellTimer--;
+        if (enemy.shellTimer <= 0) {
+          enemy.shellState = 'walking';
+          enemy.vx = -0.7;
+          enemy.h = 16;
+        }
+      } else if (enemy.shellState === 'sliding') {
+        Engine.applyGravity(enemy);
+        enemy.hitWall = false;
+        Engine.moveAndCollide(enemy, level);
+        if (enemy.hitWall) enemy.vx = -enemy.vx;
+      }
+    }
+
+    if (enemy.type === 'bobomb') {
+      if (!enemy.lit) {
+        Engine.applyGravity(enemy);
+        enemy.hitWall = false;
+        Engine.moveAndCollide(enemy, level);
+        if (enemy.hitWall) enemy.vx = -enemy.vx;
+        if (enemy.onGround) {
+          const aheadCol = Math.floor((enemy.x + (enemy.vx > 0 ? enemy.w + 2 : -2)) / Engine.TILE);
+          const belowRow = Math.floor((enemy.y + enemy.h + 2) / Engine.TILE);
+          if (!Engine.isSolid(Engine.getTile(level, aheadCol, belowRow))) {
+            enemy.vx = -enemy.vx;
+          }
+        }
+      } else {
+        enemy.vx = 0;
+        enemy.fuseTimer--;
+        Engine.applyGravity(enemy);
+        Engine.moveAndCollide(enemy, level);
+        if (enemy.fuseTimer <= 0) {
+          enemy.alive = false;
+          enemy.squashTimer = 0;
+          return false; // Signal explosion in game.js
+        }
+      }
+    }
+
     enemy.animTimer++;
     if (enemy.animTimer > 10) {
       enemy.animTimer = 0;
@@ -371,6 +739,9 @@ const Entities = (() => {
   function renderEnemy(ctx, enemy, cam) {
     if (!enemy.alive && enemy.squashTimer <= 0) return;
 
+    // Piranha: don't render when fully hidden
+    if (enemy.type === 'piranha' && enemy.phase === 'hidden') return;
+
     let frames, frame;
     if (enemy.type === 'goomba') {
       if (!enemy.alive) {
@@ -378,14 +749,45 @@ const Entities = (() => {
       } else {
         frames = SPRITES.ANIMS.goomba.walk;
       }
-    } else {
+    } else if (enemy.type === 'koopa_fly') {
       frames = SPRITES.ANIMS.koopa.fly;
+    } else if (enemy.type === 'piranha') {
+      frames = SPRITES.ANIMS.piranha.bite;
+    } else if (enemy.type === 'boo') {
+      frames = enemy.shy ? SPRITES.ANIMS.boo.shy : SPRITES.ANIMS.boo.normal;
+    } else if (enemy.type === 'beetle') {
+      if (enemy.shellState === 'shell' || enemy.shellState === 'sliding') {
+        frames = SPRITES.ANIMS.beetle.shell;
+      } else {
+        frames = SPRITES.ANIMS.beetle.walk;
+      }
+    } else if (enemy.type === 'bobomb') {
+      frames = SPRITES.ANIMS.bobomb.walk;
+    } else {
+      frames = SPRITES.ANIMS.goomba.walk;
     }
     frame = frames[enemy.animFrame % frames.length];
 
     const [sx, sy] = Engine.Camera.worldToScreen(enemy.x, enemy.y);
     const flip = enemy.vx > 0;
-    Engine.drawSprite(ctx, frame, sx, sy, flip);
+
+    // Boo: semi-transparent when shy
+    if (enemy.type === 'boo' && enemy.shy) {
+      ctx.save();
+      ctx.globalAlpha = 0.4;
+      Engine.drawSprite(ctx, frame, sx, sy, flip);
+      ctx.restore();
+    } else if (enemy.type === 'bobomb' && enemy.lit) {
+      // Flashing red when lit
+      ctx.save();
+      if (Math.floor(enemy.fuseTimer / 5) % 2 === 0) {
+        ctx.filter = 'hue-rotate(0deg) saturate(3) brightness(1.5)';
+      }
+      Engine.drawSprite(ctx, frame, sx, sy, flip);
+      ctx.restore();
+    } else {
+      Engine.drawSprite(ctx, frame, sx, sy, flip);
+    }
   }
 
   function defeatEnemy(enemy, player) {
@@ -472,6 +874,9 @@ const Entities = (() => {
       wings: SPRITES.POWERUP_WINGS,
       star: SPRITES.POWERUP_STAR,
       mushroom: SPRITES.POWERUP_MUSHROOM,
+      magnet: SPRITES.POWERUP_MAGNET,
+      shield: SPRITES.POWERUP_SHIELD,
+      speed: SPRITES.POWERUP_SPEED,
     };
     const sprite = spriteMap[pu.powerType];
     if (!sprite) return;
@@ -485,7 +890,7 @@ const Entities = (() => {
     const speed = 5;
     return {
       type: 'projectile',
-      projType: player.powerUp,
+      projType: getShootPower(player),
       x: player.facingRight ? player.x + player.w : player.x - 8,
       y: player.y + (player.isBig ? 10 : 4),
       w: 8, h: 8,
@@ -562,10 +967,47 @@ const Entities = (() => {
     Engine.drawSprite(ctx, SPRITES.FLAG, sx, sy, false);
   }
 
+  // ===== GEMS =====
+
+  function createGem(x, y) {
+    return {
+      type: 'gem', x: x + 2, y, w: 12, h: 16,
+      collected: false,
+      animFrame: 0, animTimer: 0,
+    };
+  }
+
+  function updateGem(gem) {
+    if (gem.collected) return false;
+    gem.animTimer++;
+    if (gem.animTimer > 12) {
+      gem.animTimer = 0;
+      gem.animFrame = (gem.animFrame + 1) % 4;
+    }
+    return true;
+  }
+
+  function renderGem(ctx, gem, cam) {
+    if (gem.collected) return;
+    const frames = SPRITES.ANIMS.gem.sparkle;
+    const frame = frames[gem.animFrame % frames.length];
+    const [sx, sy] = Engine.Camera.worldToScreen(gem.x, gem.y);
+    Engine.drawSprite(ctx, frame, sx, sy, false);
+  }
+
+  function collectGem(gem, player) {
+    gem.collected = true;
+    player.gems++;
+    player.score += 500;
+    Audio.SFX.powerup();
+  }
+
   return {
-    createPlayer, updatePlayer, renderPlayer, hurtPlayer, killPlayer, respawnPlayer, applyPowerUp,
-    createGoomba, createKoopaFly, updateEnemy, renderEnemy, defeatEnemy,
+    createPlayer, updatePlayer, renderPlayer, hurtPlayer, killPlayer, respawnPlayer, applyPowerUp, hasPower, getShootPower,
+    createGoomba, createKoopaFly, createPiranha, createBoo, createBeetle, createBobomb,
+    updateEnemy, renderEnemy, defeatEnemy,
     createCoin, updateCoin, renderCoin, collectCoin,
+    createGem, updateGem, renderGem, collectGem,
     createPowerUp, updatePowerUp, renderPowerUp,
     createProjectile, updateProjectile, renderProjectile,
     createFlag, renderFlag,

@@ -48,6 +48,26 @@ const SPRITES = (() => {
     Y: '#FFD700', // yellow
   };
 
+  const TOAD_PAL = {
+    R: '#FFFFFF', // white cap
+    B: '#E52521', // red spots / details
+    S: '#FFB900', // skin
+    O: '#5050DC', // purple vest
+    K: '#1A1A1A', // dark
+    W: '#FFFFFF', // white
+    Y: '#FFD700', // yellow
+  };
+
+  const PEACH_PAL = {
+    R: '#FF69B4', // pink dress
+    B: '#FFD700', // gold hair
+    S: '#FFB900', // skin
+    O: '#FF1493', // deep pink details
+    K: '#1A1A1A', // dark
+    W: '#FFFFFF', // white
+    Y: '#FFD700', // yellow
+  };
+
   const GOOMBA_PAL = {
     B: '#8B4513', // brown body
     D: '#5C2E00', // dark brown
@@ -377,6 +397,26 @@ const SPRITES = (() => {
   const LUIGI_BIG_JUMP = recolor(MARIO_BIG_JUMP, MARIO_PAL, LUIGI_PAL);
   const LUIGI_BIG_RUN1 = recolor(MARIO_BIG_RUN1, MARIO_PAL, LUIGI_PAL);
 
+  // Generate Toad sprites by recoloring Mario
+  const TOAD_IDLE = recolor(MARIO_IDLE, MARIO_PAL, TOAD_PAL);
+  const TOAD_RUN1 = recolor(MARIO_RUN1, MARIO_PAL, TOAD_PAL);
+  const TOAD_RUN2 = recolor(MARIO_RUN2, MARIO_PAL, TOAD_PAL);
+  const TOAD_JUMP = recolor(MARIO_JUMP, MARIO_PAL, TOAD_PAL);
+  const TOAD_SHOOT = recolor(MARIO_SHOOT, MARIO_PAL, TOAD_PAL);
+  const TOAD_BIG_IDLE = recolor(MARIO_BIG_IDLE, MARIO_PAL, TOAD_PAL);
+  const TOAD_BIG_JUMP = recolor(MARIO_BIG_JUMP, MARIO_PAL, TOAD_PAL);
+  const TOAD_BIG_RUN1 = recolor(MARIO_BIG_RUN1, MARIO_PAL, TOAD_PAL);
+
+  // Generate Peach sprites by recoloring Mario
+  const PEACH_IDLE = recolor(MARIO_IDLE, MARIO_PAL, PEACH_PAL);
+  const PEACH_RUN1 = recolor(MARIO_RUN1, MARIO_PAL, PEACH_PAL);
+  const PEACH_RUN2 = recolor(MARIO_RUN2, MARIO_PAL, PEACH_PAL);
+  const PEACH_JUMP = recolor(MARIO_JUMP, MARIO_PAL, PEACH_PAL);
+  const PEACH_SHOOT = recolor(MARIO_SHOOT, MARIO_PAL, PEACH_PAL);
+  const PEACH_BIG_IDLE = recolor(MARIO_BIG_IDLE, MARIO_PAL, PEACH_PAL);
+  const PEACH_BIG_JUMP = recolor(MARIO_BIG_JUMP, MARIO_PAL, PEACH_PAL);
+  const PEACH_BIG_RUN1 = recolor(MARIO_BIG_RUN1, MARIO_PAL, PEACH_PAL);
+
   // ===== ENEMY SPRITES =====
 
   const GOOMBA_1 = parse(16, 16,
@@ -476,6 +516,249 @@ const SPRITES = (() => {
     '..SSS....SSS....' +
     '................' +
     '................', KOOPA_PAL);
+
+  // ===== NEW ENEMY PALETTES =====
+
+  const PIRANHA_PAL = {
+    G: '#3CB043', // green body
+    D: '#2E7D32', // dark green
+    R: '#E52521', // red mouth
+    W: '#FFFFFF', // white teeth
+    K: '#1A1A1A', // outline
+    L: '#5DD55D', // light green
+  };
+
+  const BOO_PAL = {
+    W: '#FFFFFF', // white body
+    L: '#E0E0E0', // light grey
+    K: '#1A1A1A', // black eyes
+    P: '#FF69B4', // pink blush
+    M: '#4A0080', // mouth
+  };
+
+  const BEETLE_PAL = {
+    B: '#1A237E', // dark blue shell
+    L: '#3949AB', // lighter blue
+    S: '#5C6BC0', // shell highlight
+    W: '#FFFFFF', // white eyes
+    K: '#1A1A1A', // black
+    T: '#795548', // brown feet
+  };
+
+  const BOBOMB_PAL = {
+    B: '#1A1A1A', // black body
+    D: '#333333', // dark grey
+    W: '#FFFFFF', // white eyes
+    K: '#000000', // outline
+    R: '#E52521', // fuse tip
+    Y: '#FFD700', // fuse glow
+    F: '#FFB900', // feet
+  };
+
+  // ===== NEW ENEMY SPRITES =====
+
+  const PIRANHA_1 = parse(16, 16,
+    '......RRRR......' +
+    '....RRRRRRRR....' +
+    '...RRWRRRRWRR...' +
+    '..RRRWRRRRWRRR..' +
+    '..RRRRRRRRRRRR..' +
+    '...RRRKKKRRR....' +
+    '....GGGGGGG.....' +
+    '....GGGGGGGG....' +
+    '...GGGDDDGGGG...' +
+    '...GGDDDDDDGG..' +
+    '...GGDDDDDDGG..' +
+    '...GGGDDDGGGG...' +
+    '....GGGGGGGG....' +
+    '....GGLLGGGG....' +
+    '.....GGGGGG.....' +
+    '......GGGG......', PIRANHA_PAL);
+
+  const PIRANHA_2 = parse(16, 16,
+    '....RRRRRRRR....' +
+    '...RRRRRRRRRR...' +
+    '..RRRWRRRWRRRR..' +
+    '..RRRWRRRWRRRR..' +
+    '..RRRRRRRRRRRR..' +
+    '...RRRKKKKRRR...' +
+    '....GGGGGGG.....' +
+    '....GGGGGGGG....' +
+    '...GGGDDDGGGG...' +
+    '...GGDDDDDDGG..' +
+    '...GGDDDDDDGG..' +
+    '...GGGDDDGGGG...' +
+    '....GGGGGGGG....' +
+    '....GGLLGGGG....' +
+    '.....GGGGGG.....' +
+    '......GGGG......', PIRANHA_PAL);
+
+  const BOO_NORMAL = parse(16, 16,
+    '......WWWW......' +
+    '....WWWWWWWW....' +
+    '...WWWWWWWWWW...' +
+    '..WWWKWWWWKWWW..' +
+    '..WWKKWWWWKKWW..' +
+    '..WWWWWWWWWWWW..' +
+    '.WWWWWWMMMWWWWW.' +
+    '.WWWWWMMMMWWWWW.' +
+    '.WWWWWWWWWWWWWW.' +
+    '..WWWWWWWWWWWW..' +
+    '..LWWWWWWWWWWL..' +
+    '...LWWWWWWWWL...' +
+    '....LLWWWWLL....' +
+    '.....WWLLWW.....' +
+    '......WWWW......' +
+    '................', BOO_PAL);
+
+  const BOO_SHY = parse(16, 16,
+    '......WWWW......' +
+    '....WWWWWWWW....' +
+    '...WWWWWWWWWW...' +
+    '..WWWWWWWWWWWW..' +
+    '..WWLLWWWWLLWW..' +
+    '..WWLLWWWWLLWW..' +
+    '.WWWWWPPPPWWWWW.' +
+    '.WWWWWWWWWWWWWW.' +
+    '.WWWWWWWWWWWWWW.' +
+    '..WWWWWWWWWWWW..' +
+    '..LWWWWWWWWWWL..' +
+    '...LWWWWWWWWL...' +
+    '....LLWWWWLL....' +
+    '.....WWLLWW.....' +
+    '......WWWW......' +
+    '................', BOO_PAL);
+
+  const BEETLE_1 = parse(16, 16,
+    '......BBBB......' +
+    '....BBBBBBBB....' +
+    '...BBBSBBSBBB...' +
+    '..BBBKBBBBKBBB..' +
+    '..BBKWBBBBWKBB..' +
+    '..BBLBBBBBBLLBB.' +
+    '.BBBLLLLLLLLBBB.' +
+    '.BBBBBBBBBBBBB..' +
+    '.BBBLLLLLLBBBB..' +
+    '..BBBBBBBBBBB...' +
+    '..BBBBBBBBBB....' +
+    '...BBBBBBBBB....' +
+    '....BBBBBBB.....' +
+    '..TTTBBBBBTTT...' +
+    '.TTTTT..TTTTT...' +
+    'TTTTT....TTTTT..', BEETLE_PAL);
+
+  const BEETLE_2 = parse(16, 16,
+    '......BBBB......' +
+    '....BBBBBBBB....' +
+    '...BBBSBBSBBB...' +
+    '..BBBKBBBBKBBB..' +
+    '..BBKWBBBBWKBB..' +
+    '..BBLBBBBBBLLBB.' +
+    '.BBBLLLLLLLLBBB.' +
+    '.BBBBBBBBBBBBB..' +
+    '.BBBLLLLLLBBBB..' +
+    '..BBBBBBBBBBB...' +
+    '..BBBBBBBBBB....' +
+    '...BBBBBBBBB....' +
+    '...TBBBBBBBTT...' +
+    '..TTTTBBBBTTTT..' +
+    '.TTTTT..TTTTT...' +
+    '.TTTT....TTTT...', BEETLE_PAL);
+
+  const BEETLE_SHELL = parse(16, 12,
+    '....BBBBBBBB....' +
+    '..BBBBSSSSBBBB..' +
+    '.BBBBSSSSSSBBBB.' +
+    'BBBBLLLLLLLLLBBB' +
+    'BBBBBBBBBBBBBBB.' +
+    'BBBBLLLLLLLBBBB.' +
+    '.BBBBBBBBBBBBBB.' +
+    '.BBBBLLLLLBBBBB.' +
+    '..BBBBBBBBBBBB..' +
+    '...BBBBBBBBBB...' +
+    '....BBBBBBBB....' +
+    '................', BEETLE_PAL);
+
+  const BOBOMB_1 = parse(16, 16,
+    '.......YR.......' +
+    '......YY........' +
+    '.....BBBB.......' +
+    '...BBBBBBBB.....' +
+    '..BBBBBBBBBB....' +
+    '..BBWBBBWBBBB...' +
+    '.BBBWBBBWBBBBB..' +
+    '.BBBBBBBBBBBBB..' +
+    '.BBBBDDDDBBBB...' +
+    '.BBBDDDDDDBBBB..' +
+    '..BBBBBBBBBBBB..' +
+    '..BBBBBBBBBBB...' +
+    '...BBBBBBBBB....' +
+    '..FFFBBBBFFF....' +
+    '.FFFFF..FFFFF...' +
+    'FFFFF....FFFFF..', BOBOMB_PAL);
+
+  const BOBOMB_2 = parse(16, 16,
+    '......YR........' +
+    '.....YY.........' +
+    '.....BBBB.......' +
+    '...BBBBBBBB.....' +
+    '..BBBBBBBBBB....' +
+    '..BBWBBBWBBBB...' +
+    '.BBBWBBBWBBBBB..' +
+    '.BBBBBBBBBBBBB..' +
+    '.BBBBDDDDBBBB...' +
+    '.BBBDDDDDDBBBB..' +
+    '..BBBBBBBBBBBB..' +
+    '..BBBBBBBBBBB...' +
+    '...BBBBBBBBB....' +
+    '..FFFBBBBFFF....' +
+    '.FFFFF..FFFFF...' +
+    '.FFFF....FFFF...', BOBOMB_PAL);
+
+  // ===== GEM SPRITES =====
+
+  const GEM_PAL = {
+    D: '#0000CC', // dark blue
+    B: '#4444FF', // blue
+    L: '#8888FF', // light blue
+    W: '#FFFFFF', // white highlight
+  };
+
+  const GEM_1 = parse(16, 16,
+    '......DDDD......' +
+    '.....DBBBBDD....' +
+    '....DBWBBBBDD...' +
+    '...DBBWBBBBBD...' +
+    '..DBBBWBBBBBBD..' +
+    '.DBBBBWBBBBBBBD.' +
+    'DBBBBBWBBBBBBBBD' +
+    'DBBBBBBBBBBBBBD.' +
+    '.DBBBBBBBBBBBBD.' +
+    '..DBBBBBBBBBD...' +
+    '...DBBBBBBBBD...' +
+    '....DBBBBBBD....' +
+    '.....DBBBD......' +
+    '......DBD.......' +
+    '.......D........' +
+    '................', GEM_PAL);
+
+  const GEM_2 = parse(16, 16,
+    '......DDDD......' +
+    '.....DLLLLD.....' +
+    '....DLWLLLLD....' +
+    '...DLLWLLLLD....' +
+    '..DLLLWLLLLLLD..' +
+    '.DLLLLWLLLLLLD..' +
+    'DLLLLLWLLLLLLLLD' +
+    'DLLLLLLLLLLLLLD.' +
+    '.DLLLLLLLLLLLLD.' +
+    '..DLLLLLLLLLD...' +
+    '...DLLLLLLLLD...' +
+    '....DLLLLLD.....' +
+    '.....DLLLD......' +
+    '......DLD.......' +
+    '.......D........' +
+    '................', GEM_PAL);
 
   // ===== TILE SPRITES (16x16) =====
 
@@ -867,6 +1150,60 @@ const SPRITES = (() => {
     '...TTTTTTTTTT...' +
     '....TTTTTTTT....', POWERUP_PAL);
 
+  const POWERUP_MAGNET = parse(16, 16,
+    '..RRRR....RRRR..' +
+    '.RRRRRR..RRRRRR.' +
+    '.RR..RR..RR..RR.' +
+    '.RR..RR..RR..RR.' +
+    '.RR..RRRRRR..RR.' +
+    '.RR..RRRRRR..RR.' +
+    '.RR...RRRR...RR.' +
+    '..RR..RRRR..RR..' +
+    '..RR..RRRR..RR..' +
+    '..LLLLLLLLLLLL..' +
+    '...LLLLLLLLLL...' +
+    '...LLLLLLLLLL...' +
+    '....LLLLLLLL....' +
+    '....LLLLLLLL....' +
+    '.....LLLLLL.....' +
+    '......LLLL......', POWERUP_PAL);
+
+  const POWERUP_SHIELD = parse(16, 16,
+    '......IIII......' +
+    '....IILLLLII....' +
+    '...ILLLLLLLLLI..' +
+    '..ILLWWWWWWWLLI.' +
+    '..ILWWWWWWWWLI..' +
+    '.IILWWWWWWWWLII.' +
+    '.IILWWWWWWWWLII.' +
+    '.IILLWWWWWWLLII.' +
+    '.IIILLWWWWLLLII.' +
+    '..IIILLWWLLLII..' +
+    '..IIIILLLLLIIII.' +
+    '...IIIIIIIIII...' +
+    '....IIIIIIII....' +
+    '.....IIIIII.....' +
+    '......IIII......' +
+    '.......II.......', POWERUP_PAL);
+
+  const POWERUP_SPEED = parse(16, 16,
+    '........YY......' +
+    '.......YYO......' +
+    '......YYOO......' +
+    '.....YYOO.......' +
+    '....YYOO........' +
+    '...YYYOOO.......' +
+    '..YYYYOOOO......' +
+    '.YYYYYOOOOO.....' +
+    '..YYYYOOOO......' +
+    '...YYYOOO.......' +
+    '....YYOO........' +
+    '.....YYOO.......' +
+    '......YYOO......' +
+    '.......YYO......' +
+    '........YY......' +
+    '................', POWERUP_PAL);
+
   // ===== PROJECTILE SPRITES (8x8) =====
 
   const PROJ_ICE = parse(8, 8,
@@ -910,12 +1247,47 @@ const SPRITES = (() => {
       bigRun: [LUIGI_BIG_RUN1, LUIGI_BIG_IDLE],
       bigJump: [LUIGI_BIG_JUMP],
     },
+    toad: {
+      idle: [TOAD_IDLE],
+      run:  [TOAD_RUN1, TOAD_IDLE, TOAD_RUN2, TOAD_IDLE],
+      jump: [TOAD_JUMP],
+      shoot: [TOAD_SHOOT],
+      bigIdle: [TOAD_BIG_IDLE],
+      bigRun: [TOAD_BIG_RUN1, TOAD_BIG_IDLE],
+      bigJump: [TOAD_BIG_JUMP],
+    },
+    peach: {
+      idle: [PEACH_IDLE],
+      run:  [PEACH_RUN1, PEACH_IDLE, PEACH_RUN2, PEACH_IDLE],
+      jump: [PEACH_JUMP],
+      shoot: [PEACH_SHOOT],
+      bigIdle: [PEACH_BIG_IDLE],
+      bigRun: [PEACH_BIG_RUN1, PEACH_BIG_IDLE],
+      bigJump: [PEACH_BIG_JUMP],
+    },
     goomba: {
       walk: [GOOMBA_1, GOOMBA_2],
       squash: [GOOMBA_SQUASH],
     },
     koopa: {
       fly: [KOOPA_FLY1, KOOPA_FLY2],
+    },
+    piranha: {
+      bite: [PIRANHA_1, PIRANHA_2],
+    },
+    boo: {
+      normal: [BOO_NORMAL],
+      shy: [BOO_SHY],
+    },
+    beetle: {
+      walk: [BEETLE_1, BEETLE_2],
+      shell: [BEETLE_SHELL],
+    },
+    bobomb: {
+      walk: [BOBOMB_1, BOBOMB_2],
+    },
+    gem: {
+      sparkle: [GEM_1, GEM_2, GEM_1, GEM_2],
     },
     coin: {
       spin: [COIN_1, COIN_2, COIN_1, COIN_2],
@@ -950,6 +1322,9 @@ const SPRITES = (() => {
     POWERUP_WINGS,
     POWERUP_STAR,
     POWERUP_MUSHROOM,
+    POWERUP_MAGNET,
+    POWERUP_SHIELD,
+    POWERUP_SPEED,
     PROJ_ICE,
     PROJ_FIRE,
     FLAG: FLAG_SPRITE,
