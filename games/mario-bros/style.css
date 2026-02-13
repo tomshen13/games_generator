@@ -232,8 +232,9 @@
 }
 
 .shop-item-owned {
-  opacity: 0.5;
-  border-color: rgba(0, 255, 0, 0.3);
+  opacity: 0.7;
+  border-color: rgba(0, 255, 0, 0.5);
+  background: rgba(0, 255, 0, 0.08);
   cursor: default;
 }
 

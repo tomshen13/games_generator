@@ -152,7 +152,7 @@ const Game = (() => {
       Audio.SFX.tap();
       persistent.lives = 3;
       persistent.coins = 0;
-      persistent.powerStack = [];
+      // Keep purchased powers — they're permanent
       startLevel(state.currentLevel);
     });
 
@@ -821,14 +821,12 @@ const Game = (() => {
   // ===== SHOP =====
 
   const SHOP_DATA = [
-    { type: 'mushroom', icon: '🍄', name: 'Mushroom',   desc: 'Grow big, extra hit',    price: 10 },
+    { type: 'mushroom', icon: '🍄', name: 'Mushroom',   desc: 'Start big every level',   price: 10 },
     { type: 'fire',     icon: '🔥', name: 'Fire Power',  desc: 'Shoot fireballs',         price: 15 },
     { type: 'ice',      icon: '❄️', name: 'Ice Power',   desc: 'Shoot ice balls',         price: 15 },
-    { type: 'wings',    icon: '🪽', name: 'Wings',       desc: 'Double jump',             price: 20 },
-    { type: 'shield',   icon: '🛡️', name: 'Shield',      desc: 'Block one hit',           price: 20 },
-    { type: 'magnet',   icon: '🧲', name: 'Magnet',      desc: 'Attract coins',           price: 15 },
-    { type: 'speed',    icon: '⚡', name: 'Speed',       desc: 'Run & jump faster',       price: 15 },
-    { type: 'star',     icon: '⭐', name: 'Star',        desc: 'Brief invincibility',     price: 30 },
+    { type: 'wings',    icon: '🪽', name: 'Wings',       desc: 'Double jump always',      price: 20 },
+    { type: 'shield',   icon: '🛡️', name: 'Shield',      desc: 'Extra hit protection',    price: 20 },
+    { type: 'magnet',   icon: '🧲', name: 'Magnet',      desc: 'Attract nearby coins',    price: 15 },
     { type: 'life',     icon: '❤️', name: 'Extra Life',  desc: '+1 life',                 price: 25 },
   ];
 
@@ -854,7 +852,7 @@ const Game = (() => {
         <span class="shop-item-icon">${item.icon}</span>
         <span class="shop-item-name">${item.name}</span>
         <span class="shop-item-desc">${item.desc}</span>
-        <span class="shop-item-price">${owned ? 'Owned' : '🪙 ' + item.price}</span>
+        <span class="shop-item-price">${owned ? '✓ Unlocked' : '🪙 ' + item.price}</span>
       `;
 
       if (!owned && !tooExpensive) {
@@ -887,13 +885,11 @@ const Game = (() => {
 
     const p1 = state.players[0];
 
-    // Save player state to persistent
+    // Save player state to persistent (powerStack is permanent — only changed via shop)
     if (!state.coop) {
       persistent.coins = p1.coins;
       persistent.score = p1.score;
       persistent.lives = p1.lives;
-      // Keep non-timed powers only (star/speed expire)
-      persistent.powerStack = p1.powerStack.filter(p => p !== 'star' && p !== 'speed');
     }
 
     Storage.save(GAME_ID, 'level', state.currentLevel + 1);
