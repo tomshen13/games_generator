@@ -459,6 +459,57 @@
   opacity: 0.3;
 }
 
+/* ===== COMPARISON MODE ===== */
+.comparison-layout {
+  gap: var(--space-xl);
+}
+
+.comparison-btn {
+  min-width: 140px;
+  min-height: 140px;
+  width: clamp(120px, 30vw, 180px);
+  height: clamp(120px, 30vw, 180px);
+  font-size: var(--text-2xl);
+}
+
+.comparison-btn .dot-pattern {
+  margin-top: var(--space-xs);
+}
+
+/* ===== COUNTING MODE ===== */
+.counting-dots {
+  margin-bottom: var(--space-sm);
+}
+
+.counting-dots .dot-pattern {
+  justify-content: center;
+  max-width: 200px;
+  margin: 0 auto;
+}
+
+.counting-dots .dot {
+  width: 18px;
+  height: 18px;
+  opacity: 1;
+  background: currentColor;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
+
+.prompt.fire .counting-dots .dot {
+  background: var(--fire-secondary);
+  box-shadow: 0 0 10px var(--fire-glow);
+}
+
+.prompt.water .counting-dots .dot {
+  background: var(--water-primary);
+  box-shadow: 0 0 10px var(--water-glow);
+}
+
+.prompt.rainbow .counting-dots .dot {
+  background: #ff69b4;
+  box-shadow: 0 0 10px rgba(255, 105, 180, 0.5);
+}
+
 /* Stagger animation delays for targets */
 .target-btn:nth-child(1) { animation-delay: 0ms; }
 .target-btn:nth-child(2) { animation-delay: 80ms; }

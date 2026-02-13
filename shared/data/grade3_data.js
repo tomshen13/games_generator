@@ -41,6 +41,7 @@ const GRADE_3_DATA = {
             kpi: 'Solves 3x8; Reads numbers to 1,000; Solves 12/3 with counters',
             gameMapping: {
               gameId: 'pokemon-multiply',
+              mode: 'multiply',
               factorRule: { include: [3, 4], maxFactor: 10, exclude: [2, 5, 10] },
             },
           },
@@ -51,6 +52,7 @@ const GRADE_3_DATA = {
             kpi: 'Solves 45/5 and 23/5 (remainder); Calc perimeter; Identifies place value in 5,432',
             gameMapping: {
               gameId: 'pokemon-multiply',
+              mode: 'multiply',
               factorRule: { squares: true, minFactor: 1, maxFactor: 9 },
             },
           },
@@ -59,14 +61,22 @@ const GRADE_3_DATA = {
             name: 'Multi-Digit Ops',
             description: '2-digit mult and data interpretation',
             kpi: 'Solves 123x4 vertically; Interprets bar graphs; Solves 2-step word problems',
-            gameMapping: null,
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'multiply',
+              factorRule: { include: [6, 7, 8, 9], maxFactor: 12, exclude: [2, 3, 4, 5, 10] },
+            },
           },
           {
             level: 5,
             name: 'Fraction Intro',
             description: 'Unit fractions and logic',
             kpi: 'Identifies fractions on number line; Uses unitary method (3 pens=12); Estimates sums',
-            gameMapping: null,
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'divide',
+              factorRule: { include: [2, 3, 4, 5, 10], maxFactor: 10 },
+            },
           },
         ],
       },

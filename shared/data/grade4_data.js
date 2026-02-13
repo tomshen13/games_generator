@@ -39,14 +39,22 @@ const GRADE_4_DATA = {
             name: 'Scaffolded Ops',
             description: 'Guided division and simple fractions',
             kpi: 'Solves 42/3 with guidance; Compares 1/2 > 1/4; Identifies right angles',
-            gameMapping: null,
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'divide',
+              factorRule: { include: [2, 3, 4, 5, 10], maxFactor: 10 },
+            },
           },
           {
             level: 3,
             name: 'Long Division',
             description: 'Standard Algorithm and Fractions',
             kpi: 'Solves 3456/8; Adds fractions with like denominators; Area/Perimeter of rectangles',
-            gameMapping: null,
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'divide',
+              factorRule: { include: [6, 7, 8, 9], maxFactor: 12 },
+            },
           },
           {
             level: 4,

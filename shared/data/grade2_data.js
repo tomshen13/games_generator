@@ -39,14 +39,22 @@ const GRADE_2_DATA = {
             name: 'No Regrouping',
             description: 'Simple 2-digit operations',
             kpi: 'Solves 24+13; Skips counts by 10s/5s; Measures length with non-standard units',
-            gameMapping: null,
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'add',
+              additionRule: { minOperand: 10, maxOperand: 50, maxSum: 50 },
+            },
           },
           {
             level: 3,
             name: 'Regrouping Mastery',
             description: 'Addition/Subtraction to 100 with carry',
             kpi: 'Solves 45+37 vertically; Represents 3x5 as 5+5+5; Reads numbers to 1,000',
-            gameMapping: null,
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'add',
+              additionRule: { minOperand: 10, maxOperand: 99, maxSum: 199 },
+            },
           },
           {
             level: 4,
@@ -55,6 +63,7 @@ const GRADE_2_DATA = {
             kpi: 'Recalls facts for 2, 5, 10; Tells time to quarter-hour; Solves money word problems',
             gameMapping: {
               gameId: 'pokemon-multiply',
+              mode: 'multiply',
               factorRule: { include: [2, 5, 10], maxFactor: 10 },
             },
           },
@@ -63,7 +72,11 @@ const GRADE_2_DATA = {
             name: 'Mental Flexibility',
             description: 'Compensation and Division concepts',
             kpi: 'Solves 98+45 via 100+43; Divides 12 into 3 groups; Solves Magic Squares',
-            gameMapping: null,
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'subtract',
+              subtractionRule: { maxMinuend: 100, maxOperand: 50 },
+            },
           },
         ],
       },

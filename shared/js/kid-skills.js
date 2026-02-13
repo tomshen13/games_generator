@@ -43,8 +43,12 @@ const KidSkills = (() => {
       starsHtml = `<div class="level-stars">${renderStars(stats.stars)}</div>`;
     }
 
+    const gameAttrs = level.gameMapping
+      ? `data-game="${level.gameMapping.gameId}" data-mode="${level.gameMapping.mode || ''}"`
+      : '';
+
     return `
-      <div class="level-node ${state}" ${level.gameMapping ? `data-game="${level.gameMapping.gameId}"` : ''}>
+      <div class="level-node ${state}" ${gameAttrs}>
         <div class="level-dot">${dot}</div>
         <div class="level-label">${level.name}</div>
         ${starsHtml}
@@ -193,11 +197,13 @@ const KidSkills = (() => {
     content.querySelectorAll('.level-node.available, .level-node.in-progress').forEach(node => {
       const gameId = node.dataset.game;
       if (!gameId) return;
+      const mode = node.dataset.mode;
       const path = Curriculum.getGamePath(gameId);
       if (!path) return;
+      const url = mode ? `${path}?mode=${encodeURIComponent(mode)}` : path;
       node.style.cursor = 'pointer';
       node.addEventListener('click', () => {
-        window.location.href = path;
+        window.location.href = url;
       });
     });
   }

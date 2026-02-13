@@ -39,21 +39,34 @@ const GRADE_1_DATA = {
             name: 'Addition to 10',
             description: 'Basic addition using objects',
             kpi: 'Solves 2+3 with manipulatives; Compares numbers to 20 (<, >, =); Completes number line to 20',
-            gameMapping: null,
+            gameMapping: {
+              gameId: 'unicorn-numbers',
+              mode: 'addition',
+              storageKey: 'unicorn-addition',
+              additionRule: { maxOperand: 5, maxSum: 10 },
+            },
           },
           {
             level: 3,
             name: 'The Ten Unit',
             description: 'Addition/Subtraction within 20 and Place Value',
             kpi: 'Fluency in "friends of 10"; Identifies tens/ones in teens; Names basic 2D shapes',
-            gameMapping: null,
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'add',
+              additionRule: { maxOperand: 10, maxSum: 20 },
+            },
           },
           {
             level: 4,
             name: 'Mental Strategies',
             description: 'Sums within 20 and Time',
             kpi: 'Solves missing addend (3+?=10); Adds tens (20+30); Reads analog clock to the hour',
-            gameMapping: null,
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'add',
+              additionRule: { minOperand: 10, maxOperand: 30, maxSum: 60 },
+            },
           },
           {
             level: 5,

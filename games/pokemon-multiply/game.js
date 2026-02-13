@@ -34,10 +34,28 @@ const Game = (() => {
 
   let els = {};
 
+  // ─── Active levels (set by operation mode) ─────────────
+  let activeLevels = LEVELS;
+
   // ─── Init ───────────────────────────────────────────────
   function init() {
     Audio.init();
     cacheDOM();
+
+    // Read operation mode from URL query parameter
+    const params = new URLSearchParams(window.location.search);
+    const modeParam = params.get('mode');
+    state.operationMode = (modeParam && OPERATION_MODES[modeParam]) || OPERATION_MODES.multiply;
+    activeLevels = LEVELS_BY_MODE[state.operationMode.id] || LEVELS;
+
+    // Update title/subtitle to match mode
+    document.querySelector('.title-text').innerHTML = state.operationMode.title;
+    document.querySelector('.title-subtitle').textContent = state.operationMode.subtitle;
+
+    // Update operator symbols
+    document.querySelector('.problem-op').textContent = state.operationMode.symbol;
+    document.querySelector('.battle-op').textContent = state.operationMode.symbol;
+
     bindEvents();
     loadProgress();
     Adaptive.load('pokemon-multiply');
@@ -200,7 +218,7 @@ const Game = (() => {
     // Level complete
     els.btnNextLevel.addEventListener('click', () => {
       Audio.SFX.tap();
-      if (state.level >= LEVELS.length) {
+      if (state.level >= activeLevels.length) {
         showGameComplete();
       } else {
         showScreen('levelSelect');
@@ -263,7 +281,7 @@ const Game = (() => {
     els.coinCount.textContent = state.coins;
     els.levelMap.innerHTML = '';
 
-    LEVELS.forEach((level, i) => {
+    activeLevels.forEach((level, i) => {
       // Path connector (except first)
       if (i > 0) {
         const path = document.createElement('div');
@@ -301,7 +319,7 @@ const Game = (() => {
 
   // ─── Start Level ───────────────────────────────────────
   function startLevel() {
-    const levelDef = LEVELS[state.level];
+    const levelDef = activeLevels[state.level];
 
     state.round = 0;
     state.levelCoins = 0;
@@ -337,66 +355,19 @@ const Game = (() => {
     updateHUD();
   }
 
-  function buildProblemPool(levelDef) {
-    const keys = new Set();
-    levelDef.factors.forEach(f => {
-      for (let op = 1; op <= levelDef.maxOperand; op++) {
-        keys.add(`${Math.min(f, op)}x${Math.max(f, op)}`);
-      }
-    });
-    return [...keys];
-  }
-
-  function keyToProblem(key) {
-    const [a, b] = key.split('x').map(Number);
-    if (Math.random() > 0.5) return [a, b];
-    return [b, a];
-  }
-
   function generateProblem() {
-    const levelDef = LEVELS[state.level];
-    const pool = buildProblemPool(levelDef);
+    const op = state.operationMode;
+    const levelDef = activeLevels[state.level];
+    const pool = op.buildPool(levelDef);
     const key = Adaptive.pickItem(pool);
-    const [n1, n2] = keyToProblem(key);
+    const [n1, n2] = op.keyToProblem(key);
 
     state.num1 = n1;
     state.num2 = n2;
     state.currentKey = key;
-    state.correctAnswer = n1 * n2;
-    const distractors = generateDistractors(state.correctAnswer, state.num1, state.num2);
+    state.correctAnswer = op.compute(n1, n2);
+    const distractors = op.generateDistractors(state.correctAnswer, n1, n2);
     state.options = Utils.shuffle([state.correctAnswer, ...distractors]);
-  }
-
-  function generateDistractors(correct, n1, n2) {
-    const set = new Set();
-
-    // Common mistake patterns
-    set.add(n1 * (n2 + 1));
-    set.add(n1 * (n2 - 1));
-    set.add((n1 + 1) * n2);
-    set.add((n1 - 1) * n2);
-    set.add(n1 + n2);
-    set.add(correct + Utils.randInt(1, 5));
-    set.add(correct - Utils.randInt(1, 5));
-    set.add(correct + 10);
-    set.add(correct - 10);
-
-    // Remove invalid values
-    set.delete(correct);
-    set.delete(0);
-    const filtered = [...set].filter(n => n > 0 && n !== correct);
-    Utils.shuffle(filtered);
-
-    // Ensure exactly 3
-    let safety = 0;
-    while (filtered.length < 3 && safety < 30) {
-      safety++;
-      let val = correct + Utils.randInt(2, 15) * (Math.random() > 0.5 ? 1 : -1);
-      if (val > 0 && val !== correct && !filtered.includes(val)) {
-        filtered.push(val);
-      }
-    }
-    return filtered.slice(0, 3);
   }
 
   function renderProblem() {
@@ -442,7 +413,7 @@ const Game = (() => {
     Audio.SFX.correct();
 
     // Coins
-    const levelDef = LEVELS[state.level];
+    const levelDef = activeLevels[state.level];
     let earned = levelDef.coinsPerCorrect;
     state.streak++;
     if (state.streak >= 5) earned += 2;
@@ -497,7 +468,7 @@ const Game = (() => {
 
     // Show the correct answer briefly in the speech
     setTimeout(() => {
-      Audio.speak(`${state.num1} times ${state.num2} equals ${state.correctAnswer}`);
+      Audio.speak(`${state.num1} ${state.operationMode.verb} ${state.num2} equals ${state.correctAnswer}`);
     }, 400);
 
     await Utils.wait(700);
@@ -512,7 +483,7 @@ const Game = (() => {
   }
 
   function updateHUD() {
-    const levelDef = LEVELS[state.level];
+    const levelDef = activeLevels[state.level];
     els.hudCoinCount.textContent = state.coins;
     els.hudStreakCount.textContent = state.streak;
     const pct = Math.round((state.round / levelDef.rounds) * 100);
@@ -521,7 +492,7 @@ const Game = (() => {
 
   // ─── Level Complete ────────────────────────────────────
   function completeLevel() {
-    const levelDef = LEVELS[state.level];
+    const levelDef = activeLevels[state.level];
 
     // Calculate stars
     const ratio = state.roundsCorrectFirstTry / levelDef.rounds;
@@ -541,7 +512,7 @@ const Game = (() => {
 
     // Unlock next level
     if (state.level + 1 > state.highestLevel) {
-      state.highestLevel = Math.min(state.level + 1, LEVELS.length - 1);
+      state.highestLevel = Math.min(state.level + 1, activeLevels.length - 1);
     }
 
     state.level++;
@@ -562,7 +533,7 @@ const Game = (() => {
     const partner = getPokemonById(state.starterPokemon);
     els.lcSprite.src = getPokemonSprite(state.starterPokemon);
 
-    els.lcTitle.textContent = state.level >= LEVELS.length ? 'All Routes Complete!' : 'Level Complete!';
+    els.lcTitle.textContent = state.level >= activeLevels.length ? 'All Routes Complete!' : 'Level Complete!';
 
     // Stars
     els.lcStars.forEach((star, i) => {
@@ -573,7 +544,7 @@ const Game = (() => {
     els.lcCoinsEarned.textContent = `🪙 +${state.levelCoins}`;
 
     // Button text
-    els.btnNextLevel.textContent = state.level >= LEVELS.length ? '🏆 See Results!' : 'Next Level ⚡';
+    els.btnNextLevel.textContent = state.level >= activeLevels.length ? '🏆 See Results!' : 'Next Level ⚡';
 
     showScreen('levelComplete');
 
@@ -584,6 +555,7 @@ const Game = (() => {
 
   // ─── Game Complete ─────────────────────────────────────
   function showGameComplete() {
+    document.querySelector('.gc-subtitle').textContent = state.operationMode.conqueredText;
     showScreen('gameComplete');
 
     // Pokemon parade
@@ -602,7 +574,7 @@ const Game = (() => {
     Audio.SFX.celebration();
     setTimeout(() => Particles.confetti(100), 300);
     setTimeout(() => Particles.confetti(60), 1500);
-    Audio.speak('You are a Pokemon Multiplication Master!');
+    Audio.speak(state.operationMode.masterSpeech);
   }
 
   // ─── Battle System ─────────────────────────────────────
@@ -650,17 +622,18 @@ const Game = (() => {
   }
 
   function generateBattleProblem() {
+    const op = state.operationMode;
     const levelIndex = Math.max(0, state.level - 1);
-    const levelDef = LEVELS[Math.min(levelIndex, LEVELS.length - 1)];
-    const pool = buildProblemPool(levelDef);
+    const levelDef = activeLevels[Math.min(levelIndex, activeLevels.length - 1)];
+    const pool = op.buildPool(levelDef);
     const key = Adaptive.pickItem(pool);
-    const [n1, n2] = keyToProblem(key);
+    const [n1, n2] = op.keyToProblem(key);
 
     state.num1 = n1;
     state.num2 = n2;
     state.currentKey = key;
-    state.correctAnswer = n1 * n2;
-    const distractors = generateDistractors(state.correctAnswer, state.num1, state.num2);
+    state.correctAnswer = op.compute(n1, n2);
+    const distractors = op.generateDistractors(state.correctAnswer, n1, n2);
     state.options = Utils.shuffle([state.correctAnswer, ...distractors]);
 
     renderBattleProblem();
@@ -739,7 +712,7 @@ const Game = (() => {
       updateHPBars();
 
       // Speak the correct answer
-      Audio.speak(`${state.num1} times ${state.num2} is ${state.correctAnswer}`);
+      Audio.speak(`${state.num1} ${state.operationMode.verb} ${state.num2} is ${state.correctAnswer}`);
 
       if (state.battlePlayerHP <= 0) {
         await Utils.wait(400);
@@ -952,22 +925,33 @@ const Game = (() => {
   }
 
   // ─── Persistence ───────────────────────────────────────
+  /** Storage key suffix for mode-specific progress (shared coins/pokemon, separate levels) */
+  function modeKey(field) {
+    const modeId = state.operationMode ? state.operationMode.id : 'multiply';
+    if (modeId === 'multiply') return field; // backward compat: no suffix for multiply
+    return `${field}_${modeId}`;
+  }
+
   function saveProgress() {
-    Storage.save(GAME_ID, 'level', state.level);
-    Storage.save(GAME_ID, 'highestLevel', state.highestLevel);
+    // Mode-specific: level progression
+    Storage.save(GAME_ID, modeKey('level'), state.level);
+    Storage.save(GAME_ID, modeKey('highestLevel'), state.highestLevel);
+    Storage.save(GAME_ID, modeKey('completedLevels'), state.completedLevels);
+    // Shared across all modes: coins, pokemon
     Storage.save(GAME_ID, 'coins', state.coins);
     Storage.save(GAME_ID, 'ownedPokemon', state.ownedPokemon);
     Storage.save(GAME_ID, 'starterPokemon', state.starterPokemon);
-    Storage.save(GAME_ID, 'completedLevels', state.completedLevels);
   }
 
   function loadProgress() {
-    state.level = Storage.load(GAME_ID, 'level', 0);
-    state.highestLevel = Storage.load(GAME_ID, 'highestLevel', 0);
+    // Mode-specific
+    state.level = Storage.load(GAME_ID, modeKey('level'), 0);
+    state.highestLevel = Storage.load(GAME_ID, modeKey('highestLevel'), 0);
+    state.completedLevels = Storage.load(GAME_ID, modeKey('completedLevels'), {});
+    // Shared
     state.coins = Storage.load(GAME_ID, 'coins', 0);
     state.ownedPokemon = Storage.load(GAME_ID, 'ownedPokemon', []);
     state.starterPokemon = Storage.load(GAME_ID, 'starterPokemon', null);
-    state.completedLevels = Storage.load(GAME_ID, 'completedLevels', {});
   }
 
   function updateContinueInfo() {
@@ -975,7 +959,7 @@ const Game = (() => {
       els.btnPlay.textContent = '🔄 NEW GAME';
       els.continueWrapper.style.display = 'flex';
       if (state.highestLevel > 0) {
-        els.continueInfo.textContent = `Route ${Math.min(state.highestLevel + 1, LEVELS.length)} • 🪙 ${state.coins} coins • ${state.ownedPokemon.length} Pokemon`;
+        els.continueInfo.textContent = `Route ${Math.min(state.highestLevel + 1, activeLevels.length)} • 🪙 ${state.coins} coins • ${state.ownedPokemon.length} Pokemon`;
       } else {
         els.continueInfo.textContent = `🪙 ${state.coins} coins • ${state.ownedPokemon.length} Pokemon`;
       }

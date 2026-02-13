@@ -54,6 +54,40 @@ const Curriculum = (() => {
   }
 
   /**
+   * Resolve an additionRule into adaptive keys like "3+5", "12+8".
+   * Rule: { minOperand?, maxOperand, maxSum }
+   */
+  function resolveAdditionRule(rule) {
+    const keys = [];
+    const min = rule.minOperand || 1;
+    const max = rule.maxOperand || 10;
+    const maxSum = rule.maxSum || 20;
+    for (let a = min; a <= max; a++) {
+      for (let b = a; b <= max; b++) {
+        if (a + b <= maxSum) keys.push(`${a}+${b}`);
+      }
+    }
+    return keys;
+  }
+
+  /**
+   * Resolve a subtractionRule into adaptive keys like "15-7", "82-35".
+   * Rule: { minOperand?, maxOperand?, maxMinuend }
+   */
+  function resolveSubtractionRule(rule) {
+    const keys = [];
+    const min = rule.minOperand || 1;
+    const max = rule.maxOperand || rule.maxMinuend;
+    const maxMinuend = rule.maxMinuend || 20;
+    for (let minuend = min + 1; minuend <= maxMinuend; minuend++) {
+      for (let sub = min; sub < minuend && sub <= max; sub++) {
+        keys.push(`${minuend}-${sub}`);
+      }
+    }
+    return keys;
+  }
+
+  /**
    * Resolve the adaptive keys for a level's game mapping.
    * Returns an array of key strings, or empty array if no mapping.
    */
@@ -61,6 +95,8 @@ const Curriculum = (() => {
     if (!gameMapping) return [];
     if (gameMapping.adaptiveKeys) return gameMapping.adaptiveKeys;
     if (gameMapping.factorRule) return resolveFactorRule(gameMapping.factorRule);
+    if (gameMapping.additionRule) return resolveAdditionRule(gameMapping.additionRule);
+    if (gameMapping.subtractionRule) return resolveSubtractionRule(gameMapping.subtractionRule);
     return [];
   }
 
@@ -100,8 +136,8 @@ const Curriculum = (() => {
       return { mastered: 0, learning: 0, struggling: 0, notStarted: 0, total: 0, pct: 0, stars: 0, strugglingItems: [], hasGame: false };
     }
 
-    const gameId = level.gameMapping.gameId;
-    const adaptive = (allGameData[gameId] && allGameData[gameId].adaptive) || {};
+    const storageId = level.gameMapping.storageKey || level.gameMapping.gameId;
+    const adaptive = (allGameData[storageId] && allGameData[storageId].adaptive) || {};
 
     let mastered = 0, learning = 0, struggling = 0, notStarted = 0;
     const strugglingItems = [];
@@ -196,6 +232,17 @@ const Curriculum = (() => {
     return null;
   }
 
+  /** Build a full game URL with optional ?mode= parameter */
+  function getGameURL(gameMapping) {
+    if (!gameMapping) return null;
+    const basePath = getGamePath(gameMapping.gameId);
+    if (!basePath) return null;
+    if (gameMapping.mode) {
+      return `${basePath}?mode=${encodeURIComponent(gameMapping.mode)}`;
+    }
+    return basePath;
+  }
+
   // ── Grade helpers ──
 
   /**
@@ -237,5 +284,6 @@ const Curriculum = (() => {
     computeSkillStats,
     computeTrackStats,
     getGamePath,
+    getGameURL,
   };
 })();

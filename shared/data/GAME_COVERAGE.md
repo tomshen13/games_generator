@@ -13,9 +13,9 @@ Overview of which curriculum levels have games and which need development.
 |-------|------|-----|------|
 | 1 | Visual Estimation | Distinguishes extreme differences; no 1-to-1 correspondence | `[ ]` |
 | 2 | Rote Counting | Recites 1-10; matches shapes | `[x]` unicorn-numbers |
-| 3 | Correspondence | Answers "How many?" for sets up to 10 | `[ ]` |
-| 4 | Relationships | "More than/less than"; extends A-B-A-B patterns | `[ ]` |
-| 5 | Decomposition | Decomposes 5 into 2+3; simple verbal problems | `[ ]` |
+| 3 | Correspondence | Answers "How many?" for sets up to 10 | `[x]` unicorn-numbers (counting) |
+| 4 | Relationships | "More than/less than"; extends A-B-A-B patterns | `[x]` unicorn-numbers (comparison) |
+| 5 | Decomposition | Decomposes 5 into 2+3; simple verbal problems | `[x]` unicorn-numbers (addition) |
 
 ### Hebrew: Emergent Literacy (`k-hebrew-literacy`)
 | Level | Name | KPI | Game |
@@ -52,9 +52,9 @@ Overview of which curriculum levels have games and which need development.
 | Level | Name | KPI | Game |
 |-------|------|-----|------|
 | 1 | Concrete Counting | Counts to 20 with reversals; needs counters for 3+2 | `[ ]` |
-| 2 | Addition to 10 | Solves 2+3 with manipulatives; compares to 20 | `[ ]` |
-| 3 | The Ten Unit | "Friends of 10"; identifies tens/ones in teens | `[ ]` |
-| 4 | Mental Strategies | Missing addend (3+?=10); adds tens (20+30) | `[ ]` |
+| 2 | Addition to 10 | Solves 2+3 with manipulatives; compares to 20 | `[x]` unicorn-numbers (addition) |
+| 3 | The Ten Unit | "Friends of 10"; identifies tens/ones in teens | `[x]` pokemon-multiply (add) |
+| 4 | Mental Strategies | Missing addend (3+?=10); adds tens (20+30) | `[x]` pokemon-multiply (add) |
 | 5 | Word Problems | Commutativity; money problems; multiple ways to make 15 | `[ ]` |
 
 ### Hebrew: Acquisition of the Code (`g1-hebrew-code`)
@@ -92,10 +92,10 @@ Overview of which curriculum levels have games and which need development.
 | Level | Name | KPI | Game |
 |-------|------|-----|------|
 | 1 | Place Value Struggle | Adds within 20 but fails 23+4 | `[ ]` |
-| 2 | No Regrouping | Solves 24+13; skip counts by 10s/5s | `[ ]` |
-| 3 | Regrouping Mastery | Solves 45+37 vertically; 3x5 as 5+5+5 | `[ ]` |
+| 2 | No Regrouping | Solves 24+13; skip counts by 10s/5s | `[x]` pokemon-multiply (add) |
+| 3 | Regrouping Mastery | Solves 45+37 vertically; 3x5 as 5+5+5 | `[x]` pokemon-multiply (add) |
 | 4 | Early Multiplication | Recalls facts for 2, 5, 10; tells time | `[x]` pokemon-multiply |
-| 5 | Mental Flexibility | Solves 98+45 via 100+43; divides 12 into 3 groups | `[ ]` |
+| 5 | Mental Flexibility | Solves 98+45 via 100+43; divides 12 into 3 groups | `[x]` pokemon-multiply (subtract) |
 
 ### Hebrew: Fluency & Comprehension (`g2-hebrew-fluency`)
 | Level | Name | KPI | Game |
@@ -134,8 +134,8 @@ Overview of which curriculum levels have games and which need development.
 | 1 | Incomplete Tables | Solves 3x4 by counting up; errors in vertical sub | `[ ]` |
 | 2 | Basic Tables | Solves 3x8; reads to 1,000; 12/3 with counters | `[x]` pokemon-multiply |
 | 3 | Full Tables | Solves 45/5 and 23/5 (remainder); perimeter | `[x]` pokemon-multiply |
-| 4 | Multi-Digit Ops | Solves 123x4 vertically; interprets bar graphs | `[ ]` |
-| 5 | Fraction Intro | Fractions on number line; unitary method; estimates | `[ ]` |
+| 4 | Multi-Digit Ops | Solves 123x4 vertically; interprets bar graphs | `[x]` pokemon-multiply (multiply) |
+| 5 | Fraction Intro | Fractions on number line; unitary method; estimates | `[x]` pokemon-multiply (divide) |
 
 ### Hebrew: Variety of Texts (`g3-hebrew-texts`)
 | Level | Name | KPI | Game |
@@ -172,8 +172,8 @@ Overview of which curriculum levels have games and which need development.
 | Level | Name | KPI | Game |
 |-------|------|-----|------|
 | 1 | Gaps | Struggles with large numbers; no fraction concept | `[ ]` |
-| 2 | Scaffolded Ops | 42/3 with guidance; compares 1/2 > 1/4 | `[ ]` |
-| 3 | Long Division | Solves 3456/8; adds fractions with like denominators | `[ ]` |
+| 2 | Scaffolded Ops | 42/3 with guidance; compares 1/2 > 1/4 | `[x]` pokemon-multiply (divide) |
+| 3 | Long Division | Solves 3456/8; adds fractions with like denominators | `[x]` pokemon-multiply (divide) |
 | 4 | Mixed Numbers | Converts 1 1/2 to 3/2; solves 23x45 | `[ ]` |
 | 5 | Decimals & Order | 0.5 = 1/2; order of operations; estimation | `[ ]` |
 
@@ -210,17 +210,23 @@ Overview of which curriculum levels have games and which need development.
 
 | Subject | Total Levels | With Games | Coverage |
 |---------|-------------|------------|----------|
-| Math | 25 | 4 | 16% |
+| Math | 25 | 17 | 68% |
 | Hebrew | 25 | 1 | 4% |
 | English | 25 | 0 | 0% |
 | Logic | 25 | 0 | 0% |
-| **Total** | **100** | **5** | **5%** |
+| **Total** | **100** | **18** | **18%** |
 
 ### Existing Games → Mapped Levels
 
-| Game | Levels Covered |
-|------|---------------|
-| unicorn-numbers | K Math L2 (Rote Counting) |
-| unicorn-hebrew | G1 Hebrew L1 (Letter Identification) |
-| pokemon-multiply | G2 Math L4 (Early Mult), G3 Math L2 (Basic Tables), G3 Math L3 (Full Tables) |
-| mario-bros | — (not curriculum-mapped, standalone platformer) |
+| Game | Mode | Levels Covered |
+|------|------|---------------|
+| unicorn-numbers | numbers | K Math L2 (Rote Counting) |
+| unicorn-numbers | counting | K Math L3 (Correspondence) |
+| unicorn-numbers | comparison | K Math L4 (Relationships) |
+| unicorn-numbers | addition | K Math L5 (Decomposition), G1 Math L2 (Addition to 10) |
+| unicorn-hebrew | hebrew | G1 Hebrew L1 (Letter Identification) |
+| pokemon-multiply | multiply | G2 Math L4, G3 Math L2-L4 |
+| pokemon-multiply | add | G1 Math L3-L4, G2 Math L2-L3 |
+| pokemon-multiply | subtract | G2 Math L5 |
+| pokemon-multiply | divide | G3 Math L5, G4 Math L2-L3 |
+| mario-bros | — | (not curriculum-mapped, standalone platformer) |
