@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="shared/css/components.css">
   <link rel="stylesheet" href="shared/css/profile.css">
   <link rel="stylesheet" href="shared/css/dashboard.css">
+  <link rel="stylesheet" href="shared/css/skills.css">
   <style>
     html, body {
       overflow: auto;
@@ -131,8 +132,19 @@
       </div>
       <button class="btn-switch-player" id="btnSwitchPlayer">Switch Player</button>
     </div>
+    <button class="btn-skills" id="btnSkills">⭐ My Skills</button>
     <div class="game-grid" id="gameGrid"></div>
     <button class="btn-dashboard" id="btnDashboard">🔒 Parent Dashboard</button>
+  </div>
+
+  <!-- ===== Kid Skills Screen ===== -->
+  <div class="launcher skills-screen" id="skillsScreen" style="display: none;">
+    <div class="skills-header">
+      <button class="btn-skills-back" id="btnSkillsBack">←</button>
+      <h2 class="skills-title">My Skills</h2>
+    </div>
+    <div class="subject-tabs" id="subjectTabs"></div>
+    <div class="skills-content" id="skillsContent"></div>
   </div>
 
   <!-- ===== Parent Dashboard Screen ===== -->
@@ -182,6 +194,9 @@
   <script src="shared/js/storage.js"></script>
   <script src="shared/js/supabase-sync.js"></script>
   <script src="shared/js/profile.js"></script>
+  <script src="shared/data/curriculum.js"></script>
+  <script src="shared/js/curriculum.js"></script>
+  <script src="shared/js/kid-skills.js"></script>
   <script src="shared/js/parent-dashboard.js"></script>
 
   <script>
@@ -313,6 +328,10 @@
 
     // Switch player
     document.getElementById('btnSwitchPlayer').addEventListener('click', showProfileScreen);
+
+    // Skills
+    document.getElementById('btnSkills').addEventListener('click', () => KidSkills.show());
+    document.getElementById('btnSkillsBack').addEventListener('click', () => KidSkills.hide());
 
     // Dashboard
     document.getElementById('btnDashboard').addEventListener('click', () => Dashboard.open());
