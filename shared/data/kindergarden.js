@@ -1,0 +1,203 @@
+/**
+ * Israeli Ministry of Education Curriculum Data
+ * Phase: Kindergarten (Gan Hova)
+ */
+
+const KINDERGARTEN_DATA = {
+  subjects: {
+    math:    { name: 'Math',    hebrewName: 'חשבון',  icon: '🔢', color: '#4ade80' },
+    hebrew:  { name: 'Hebrew',  hebrewName: 'עברית',  icon: '🔤', color: '#4a9eff' },
+    english: { name: 'English', hebrewName: 'אנגלית', icon: '🌎', color: '#a855f7' },
+    logic:   { name: 'Logic',   hebrewName: 'חשיבה',  icon: '🧠', color: '#f97316' },
+  },
+
+  phase: {
+    id: 'kindergarten',
+    name: 'Kindergarten',
+    hebrewName: 'גן חובה',
+    shortName: 'Gan',
+    grade: 0,
+    ageRange: [5, 6],
+    icon: '🌱',
+    skills: [
+      {
+        id: 'k-math-foundations',
+        name: 'Intuitive Math & Geometry',
+        hebrewName: 'חשבון אינטואיטיבי וגיאומטריה',
+        subject: 'math',
+        icon: '🔢',
+        levels: [
+          {
+            level: 1,
+            name: 'Visual Estimation',
+            description: 'Relying on visual perception rather than counting',
+            kpi: 'Distinguishes only between extreme differences (e.g., one vs. many); no one-to-one correspondence',
+            gameMapping: null,
+          },
+          {
+            level: 2,
+            name: 'Rote Counting',
+            description: 'Reciting numbers and basic shape matching',
+            kpi: 'Recites numbers 1–10; Matches identical shapes but fails if size/color differs',
+            gameMapping: {
+              gameId: 'unicorn-numbers',
+              adaptiveKeys: ['1','2','3','4','5','6','7','8','9','10'],
+            },
+          },
+          {
+            level: 3,
+            name: 'Correspondence',
+            description: 'One-to-one matching and cardinality',
+            kpi: 'Correctly answers "How many?" for sets up to 10; Links symbol "5" to group of 5',
+            gameMapping: null,
+          },
+          {
+            level: 4,
+            name: 'Relationships',
+            description: 'Comparing quantities and patterns',
+            kpi: 'Identifies "more than/less than" without recounting; Extends A-B-A-B patterns',
+            gameMapping: null,
+          },
+          {
+            level: 5,
+            name: 'Decomposition',
+            description: 'Composing/decomposing numbers to 10',
+            kpi: 'Decomposes 5 into 2 and 3; Solves simple verbal problems (e.g., 2 apples + 1 apple)',
+            gameMapping: null,
+          },
+        ],
+      },
+      {
+        id: 'k-hebrew-literacy',
+        name: 'Emergent Literacy',
+        hebrewName: 'ניצני אוריינות',
+        subject: 'hebrew',
+        icon: '🗣️',
+        levels: [
+          {
+            level: 1,
+            name: 'Passive Listening',
+            description: 'Limited vocabulary and passive engagement',
+            kpi: 'Responds only to direct name calls; Expresses needs in fragmented phrases',
+            gameMapping: null,
+          },
+          {
+            level: 2,
+            name: 'Syllables & Names',
+            description: 'Syllabication and name recognition',
+            kpi: 'Claps hands for syllables in own name; Identifies first sound in a word with prompting',
+            gameMapping: null,
+          },
+          {
+            level: 3,
+            name: 'Phonological Awareness',
+            description: 'Segmentation and Letter Knowledge',
+            kpi: 'Segments trisyllabic words (Sha-lom); Recognizes 15–22 letters visually',
+            gameMapping: null,
+          },
+          {
+            level: 4,
+            name: 'Blending & Print',
+            description: 'Early blending and environmental print',
+            kpi: 'Blends K-A to make KA; Reads signs like "STOP"; Writes own name correctly',
+            gameMapping: null,
+          },
+          {
+            level: 5,
+            name: 'Early Decoding',
+            description: 'Reading simple CVC words',
+            kpi: 'Reads words like Abba/Gan with vowels; Narrates stories with conflict/resolution',
+            gameMapping: null,
+          },
+        ],
+      },
+      {
+        id: 'k-english-exposure',
+        name: 'Pre-A1 Exposure',
+        hebrewName: 'חשיפה לאנגלית',
+        subject: 'english',
+        icon: '👂',
+        levels: [
+          {
+            level: 1,
+            name: 'No Reaction',
+            description: 'Treats English as background noise',
+            kpi: 'Shows fleeting attention to English songs; No verbal/non-verbal response',
+            gameMapping: null,
+          },
+          {
+            level: 2,
+            name: 'Mimicry',
+            description: 'Mimicking sounds and words',
+            kpi: 'Repeats single words after teacher; Joins physical movements of action songs',
+            gameMapping: null,
+          },
+          {
+            level: 3,
+            name: 'Receptive Basics',
+            description: 'Understanding commands and nouns',
+            kpi: 'Responds to TPR (Sit, Jump); Identifies 5–10 basic nouns (colors, animals)',
+            gameMapping: null,
+          },
+          {
+            level: 4,
+            name: 'Production',
+            description: 'Isolated words and receptive bilingualism',
+            kpi: 'Says "Dog" pointing to picture; Sings short rhymes; Distinguishes English text from Hebrew',
+            gameMapping: null,
+          },
+          {
+            level: 5,
+            name: 'Code Switching',
+            description: 'Mixing English words in Hebrew sentences',
+            kpi: 'Answers Yes/No correctly; Recognizes own name in English; Initiates "Hello"',
+            gameMapping: null,
+          },
+        ],
+      },
+      {
+        id: 'k-logic-unplugged',
+        name: 'Unplugged Thinking',
+        hebrewName: 'חשיבה ללא מחשב',
+        subject: 'logic',
+        icon: '🧩',
+        levels: [
+          {
+            level: 1,
+            name: 'Random Play',
+            description: 'Lack of sequence or categorization',
+            kpi: 'Stacks blocks without pattern; Cannot categorize objects by traits',
+            gameMapping: null,
+          },
+          {
+            level: 2,
+            name: 'Linear Steps',
+            description: 'Following single steps',
+            kpi: 'Copies simple block tower; Understands "First X, then Y"',
+            gameMapping: null,
+          },
+          {
+            level: 3,
+            name: 'Algorithmic Basics',
+            description: '3-step sequencing and sorting',
+            kpi: 'Completes pattern (Red-Blue-Red-?); Sorts by color then shape',
+            gameMapping: null,
+          },
+          {            level: 4,
+            name: 'Debugging',
+            description: 'Fixing errors in routines',
+            kpi: 'Identifies error in sequence; Navigates floor maze with "Forward/Turn"',
+            gameMapping: null,
+          },
+          {
+            level: 5,
+            name: 'Program Design',
+            description: 'Creating instructions for others',
+            kpi: 'Gives precise verbal directions to find object; Decomposes Lego models',
+            gameMapping: null,
+          },
+        ],
+      },
+    ],
+  },
+};
