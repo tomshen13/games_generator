@@ -105,18 +105,23 @@ const Curriculum = (() => {
 
     let mastered = 0, learning = 0, struggling = 0, notStarted = 0;
     const strugglingItems = [];
+    const allItems = [];
 
     for (const key of keys) {
       const rec = adaptive[key];
       if (!rec || (rec.correct === 0 && rec.wrong === 0)) {
         notStarted++;
+        allItems.push({ key, status: 'not-started', record: rec || null });
       } else if (rec.box >= 3) {
         mastered++;
+        allItems.push({ key, status: 'mastered', record: rec });
       } else if (rec.box >= 1) {
         learning++;
+        allItems.push({ key, status: 'learning', record: rec });
       } else {
         struggling++;
         strugglingItems.push({ key, record: rec });
+        allItems.push({ key, status: 'struggling', record: rec });
       }
     }
 
@@ -135,7 +140,7 @@ const Curriculum = (() => {
       return aAcc - bAcc;
     });
 
-    return { mastered, learning, struggling, notStarted, total, pct, stars, strugglingItems, hasGame: true };
+    return { mastered, learning, struggling, notStarted, total, pct, stars, strugglingItems, allItems, hasGame: true };
   }
 
   /**
@@ -191,12 +196,42 @@ const Curriculum = (() => {
     return null;
   }
 
+  // ── Grade helpers ──
+
+  /**
+   * Get all phases (grades) that contain skills for the given subject.
+   * Returns phases in order.
+   */
+  function getSubjectGrades(subject) {
+    const grades = [];
+    for (const phase of CURRICULUM_DATA.phases) {
+      if (phase.skills.some(s => s.subject === subject)) {
+        grades.push(phase);
+      }
+    }
+    return grades;
+  }
+
+  /**
+   * Get skills for a specific subject + phase combo.
+   * Each skill is augmented with .phase reference.
+   */
+  function getSkillsForSubjectGrade(subject, phaseId) {
+    const phase = CURRICULUM_DATA.phases.find(p => p.id === phaseId);
+    if (!phase) return [];
+    return phase.skills
+      .filter(s => s.subject === subject)
+      .map(s => ({ ...s, phase }));
+  }
+
   // ── Public API ──
 
   return {
     getSubjects: () => CURRICULUM_DATA.subjects,
     getPhases: () => CURRICULUM_DATA.phases,
     getSubjectTracks,
+    getSubjectGrades,
+    getSkillsForSubjectGrade,
     resolveAdaptiveKeys,
     computeLevelStats,
     computeSkillStats,

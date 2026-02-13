@@ -8,6 +8,34 @@ const Dashboard = (() => {
   };
 
   let activeTab = 'Dan';
+  let activeGrades = {}; // { subject: phaseId }
+
+  function initDefaultGrade(subject, allGameData) {
+    if (activeGrades[subject]) return;
+    const grades = Curriculum.getSubjectGrades(subject);
+    if (!grades.length) return;
+    for (const grade of grades) {
+      const skills = Curriculum.getSkillsForSubjectGrade(subject, grade.id);
+      for (const skill of skills) {
+        const stats = Curriculum.computeSkillStats(allGameData, skill);
+        if (stats.hasAnyGame) { activeGrades[subject] = grade.id; return; }
+      }
+    }
+    activeGrades[subject] = grades[0].id;
+  }
+
+  function renderDashboardGradeStepper(subject, grades) {
+    const currentId = activeGrades[subject];
+    const idx = grades.findIndex(g => g.id === currentId);
+    const grade = grades[idx] || grades[0];
+    const atStart = idx <= 0;
+    const atEnd = idx >= grades.length - 1;
+    return `<span class="dashboard-grade-stepper" data-subject="${subject}">
+      <button class="grade-arrow grade-prev" ${atStart ? 'disabled' : ''}>◀</button>
+      <span class="grade-label">${grade.name}</span>
+      <button class="grade-arrow grade-next" ${atEnd ? 'disabled' : ''}>▶</button>
+    </span>`;
+  }
 
   function renderDonut(pct) {
     const r = 32;
@@ -44,12 +72,105 @@ const Dashboard = (() => {
       </div>`;
   }
 
-  function formatKey(key, gameId) {
+  function formatKeyReadable(key, gameId) {
     if (gameId === 'pokemon-multiply') return key.replace('x', ' × ');
+    if (gameId === 'unicorn-numbers') return `Number "${key}"`;
+    if (gameId === 'unicorn-hebrew') return `Letter "${key}"`;
     return key;
   }
 
+  function getGameTitle(gameId) {
+    const titles = {
+      'unicorn-numbers': '🦄 Unicorn Numbers',
+      'unicorn-hebrew': '🦄 Unicorn Hebrew',
+      'pokemon-multiply': '⚡ Pokemon Multiply',
+    };
+    return titles[gameId] || gameId;
+  }
+
+  function getItemWord(gameId, count) {
+    const labels = {
+      'unicorn-numbers': ['number', 'numbers'],
+      'unicorn-hebrew': ['letter', 'letters'],
+      'pokemon-multiply': ['fact', 'facts'],
+    };
+    const pair = labels[gameId] || ['item', 'items'];
+    return count === 1 ? pair[0] : pair[1];
+  }
+
   // ── Curriculum-based skill card ──
+
+  function renderLevelGroup(level, stats) {
+    const gameId = level.gameMapping ? level.gameMapping.gameId : null;
+    const total = stats.mastered + stats.learning + stats.struggling;
+    const stars = '★'.repeat(stats.stars) + '☆'.repeat(3 - stats.stars);
+
+    // Mastery bar
+    const barHtml = total > 0 ? `
+      <div class="dashboard-tier-bar">
+        <div class="mastery-segment mastery-mastered" style="width: ${(stats.mastered / stats.total * 100)}%"></div>
+        <div class="mastery-segment mastery-learning" style="width: ${(stats.learning / stats.total * 100)}%"></div>
+        <div class="mastery-segment mastery-struggling" style="width: ${(stats.struggling / stats.total * 100)}%"></div>
+      </div>` : '<div class="dashboard-tier-bar"></div>';
+
+    // Compact legend (always visible)
+    const legendParts = [];
+    if (stats.mastered > 0) legendParts.push(`<span><span class="legend-dot" style="background:#4ade80"></span> ${stats.mastered} ${getItemWord(gameId, stats.mastered)} mastered</span>`);
+    if (stats.learning > 0) legendParts.push(`<span><span class="legend-dot" style="background:#facc15"></span> ${stats.learning} still learning</span>`);
+    if (stats.struggling > 0) legendParts.push(`<span><span class="legend-dot" style="background:#f87171"></span> ${stats.struggling} needs practice</span>`);
+    if (stats.notStarted > 0) legendParts.push(`<span>${stats.notStarted} not tried yet</span>`);
+    const legendHtml = legendParts.length ? `<div class="dashboard-level-legend">${legendParts.join('')}</div>` : '';
+
+    // Detail panel (hidden by default)
+    let detailHtml = '';
+    if (stats.hasGame) {
+      // KPI
+      const kpiHtml = level.kpi
+        ? `<div class="dashboard-level-kpi-text"><strong>Goal:</strong> ${level.kpi}</div>`
+        : '';
+
+      // Item grid — show every item color-coded by status
+      const statusColors = { mastered: '#4ade80', learning: '#facc15', struggling: '#f87171', 'not-started': 'rgba(255,255,255,0.1)' };
+      const statusTitles = { mastered: 'Mastered', learning: 'Still learning', struggling: 'Needs practice', 'not-started': 'Not tried yet' };
+      const itemGridHtml = stats.allItems.length ? `
+        <div class="dashboard-item-grid">
+          ${stats.allItems.map(item => {
+            const label = gameId === 'pokemon-multiply' ? item.key.replace('x', '×') : item.key;
+            const acc = item.record ? `${item.record.correct}/${item.record.correct + item.record.wrong}` : '';
+            const tooltip = `${statusTitles[item.status]}${acc ? ' (' + acc + ')' : ''}`;
+            return `<span class="item-badge item-${item.status}" title="${tooltip}">${label}</span>`;
+          }).join('')}
+        </div>
+        <div class="dashboard-item-grid-legend">
+          <span><span class="legend-dot" style="background:#4ade80"></span> Mastered</span>
+          <span><span class="legend-dot" style="background:#facc15"></span> Learning</span>
+          <span><span class="legend-dot" style="background:#f87171"></span> Needs practice</span>
+          <span><span class="legend-dot" style="background:rgba(255,255,255,0.15)"></span> Not tried</span>
+        </div>` : '';
+
+      // Game link
+      const gamePath = Curriculum.getGamePath(gameId);
+      const gameTitle = getGameTitle(gameId);
+      const gameLinkHtml = gamePath
+        ? `<div class="dashboard-level-game"><span class="dashboard-game-name">${gameTitle}</span><a class="dashboard-play-link" data-href="${gamePath}">▶ Play</a></div>`
+        : '';
+
+      detailHtml = `<div class="dashboard-level-detail">${kpiHtml}${itemGridHtml}${gameLinkHtml}</div>`;
+    }
+
+    return `
+      <div class="dashboard-level-group">
+        <div class="dashboard-level-row expandable">
+          <span class="dashboard-level-chevron">▸</span>
+          <span class="dashboard-level-num">${level.level}</span>
+          <span class="dashboard-level-name">${level.name}</span>
+          ${barHtml}
+          <span class="dashboard-level-stars">${stars}</span>
+        </div>
+        ${legendHtml}
+        ${detailHtml}
+      </div>`;
+  }
 
   function renderSkillCard(skill, skillStats, allGameData) {
     const subjects = Curriculum.getSubjects();
@@ -59,41 +180,23 @@ const Dashboard = (() => {
     const mappedLevels = skillStats.levelStats.filter(ls => ls.stats.hasGame);
     const lockedCount = skillStats.levelStats.filter(ls => !ls.stats.hasGame).length;
 
-    const levelRows = mappedLevels.map(({ level, stats }) => {
-      const total = stats.mastered + stats.learning + stats.struggling;
-      const barHtml = total > 0 ? `
-        <div class="dashboard-tier-bar">
-          <div class="mastery-segment mastery-mastered" style="width: ${(stats.mastered / stats.total * 100)}%"></div>
-          <div class="mastery-segment mastery-learning" style="width: ${(stats.learning / stats.total * 100)}%"></div>
-          <div class="mastery-segment mastery-struggling" style="width: ${(stats.struggling / stats.total * 100)}%"></div>
-        </div>` : '<div class="dashboard-tier-bar"></div>';
+    const levelRows = mappedLevels
+      .map(({ level, stats }) => renderLevelGroup(level, stats))
+      .join('');
 
-      // Struggling items for this level
-      let strugglingHtml = '';
-      if (stats.strugglingItems.length) {
-        const gameId = level.gameMapping.gameId;
-        const chips = stats.strugglingItems.slice(0, 8).map(s => {
-          const t = s.record.correct + s.record.wrong;
-          return `<span class="struggling-chip"><span class="chip-problem">${formatKey(s.key, gameId)}</span><span class="chip-accuracy">(${s.record.correct}/${t})</span></span>`;
-        }).join('');
-        strugglingHtml = `<div class="struggling-section"><div class="struggling-title">Needs practice:</div><div class="struggling-chips">${chips}</div></div>`;
-      }
-
-      const stars = '★'.repeat(stats.stars) + '☆'.repeat(3 - stats.stars);
-      return `
-        <div class="dashboard-level-row">
-          <span class="dashboard-level-num">${level.level}</span>
-          <span class="dashboard-level-name">${level.name}</span>
-          ${barHtml}
-          <span class="dashboard-level-pct">${Math.round(stats.pct)}%</span>
-          <span class="dashboard-level-stars">${stars}</span>
-        </div>
-        ${strugglingHtml}`;
-    }).join('');
-
-    // Collapsed locked levels summary
+    // Locked levels summary
     const lockedHtml = lockedCount > 0
-      ? `<div class="dashboard-locked-summary">🔒 ${lockedCount} more level${lockedCount > 1 ? 's' : ''} coming soon</div>`
+      ? `<div class="dashboard-locked-summary">🔒 ${mappedLevels.length === 0 ? `All ${lockedCount} levels` : `${lockedCount} more level${lockedCount > 1 ? 's' : ''}`} — no games yet</div>`
+      : '';
+
+    // Skill summary line
+    const totalMastered = mappedLevels.reduce((s, ls) => s + ls.stats.mastered, 0);
+    const totalItems = mappedLevels.reduce((s, ls) => s + ls.stats.total, 0);
+    const activeLevels = mappedLevels.length;
+    const firstGameId = mappedLevels.length ? mappedLevels[0].level.gameMapping.gameId : null;
+    const summaryItemWord = getItemWord(firstGameId, totalItems);
+    const summaryHtml = totalItems > 0
+      ? `<div class="dashboard-skill-summary">${totalMastered} of ${totalItems} ${summaryItemWord} mastered across ${activeLevels} active level${activeLevels > 1 ? 's' : ''}</div>`
       : '';
 
     return `
@@ -106,6 +209,7 @@ const Dashboard = (() => {
               <span class="dashboard-subject-tag" style="background: ${subj.color}22; color: ${subj.color}; border: 1px solid ${subj.color}44">${subj.name}</span>
               <span style="font-size: var(--text-xs); color: var(--color-text-muted)">${skill.phase.name}</span>
             </div>
+            ${summaryHtml}
           </div>
           ${skillStats.hasAnyGame ? renderDonut(skillStats.overallPct) : ''}
         </div>
@@ -153,30 +257,30 @@ const Dashboard = (() => {
     let html = '';
     let hasData = false;
 
-    // Curriculum skills grouped by subject
-    const tracks = Curriculum.getSubjectTracks();
+    // Curriculum skills grouped by subject, filtered by selected grade
     const subjects = Curriculum.getSubjects();
 
     for (const [subjKey, subjMeta] of Object.entries(subjects)) {
-      const skills = tracks[subjKey] || [];
-      let subjectHtml = '';
-      let subjectHasData = false;
+      const grades = Curriculum.getSubjectGrades(subjKey);
+      if (!grades.length) continue;
 
+      initDefaultGrade(subjKey, allGameData);
+      const gradeId = activeGrades[subjKey] || grades[0].id;
+      const skills = Curriculum.getSkillsForSubjectGrade(subjKey, gradeId);
+
+      let subjectHtml = '';
       for (const skill of skills) {
         const skillStats = Curriculum.computeSkillStats(allGameData, skill);
-        if (!skillStats.hasAnyGame) continue; // Skip fully locked skills in dashboard
-
-        subjectHasData = true;
         hasData = true;
         subjectHtml += renderSkillCard(skill, skillStats, allGameData);
       }
 
-      if (subjectHasData) {
-        html += `<div class="dashboard-subject-section">
-          <h3 class="dashboard-subject-heading" style="color: ${subjMeta.color}">${subjMeta.icon} ${subjMeta.name}</h3>
-          ${subjectHtml}
-        </div>`;
-      }
+      const stepperHtml = grades.length > 1 ? renderDashboardGradeStepper(subjKey, grades) : `<span style="font-size: var(--text-sm); color: var(--color-text-muted); margin-left: var(--space-md)">${grades[0].name}</span>`;
+
+      html += `<div class="dashboard-subject-section">
+        <h3 class="dashboard-subject-heading" style="color: ${subjMeta.color}">${subjMeta.icon} ${subjMeta.name} ${stepperHtml}</h3>
+        ${subjectHtml}
+      </div>`;
     }
 
     // Mario (non-curriculum)
@@ -193,6 +297,36 @@ const Dashboard = (() => {
     }
 
     content.innerHTML = html;
+
+    // Expand/collapse click handlers
+    content.querySelectorAll('.dashboard-level-row.expandable').forEach(row => {
+      row.addEventListener('click', () => {
+        row.closest('.dashboard-level-group').classList.toggle('expanded');
+      });
+    });
+
+    // Play link click handlers
+    content.querySelectorAll('.dashboard-play-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const href = link.dataset.href;
+        if (href) window.location.href = href;
+      });
+    });
+
+    // Grade stepper click handlers
+    content.querySelectorAll('.dashboard-grade-stepper').forEach(stepper => {
+      const subj = stepper.dataset.subject;
+      const grades = Curriculum.getSubjectGrades(subj);
+      const idx = grades.findIndex(g => g.id === activeGrades[subj]);
+
+      stepper.querySelector('.grade-prev').addEventListener('click', () => {
+        if (idx > 0) { activeGrades[subj] = grades[idx - 1].id; renderTab(profileName); }
+      });
+      stepper.querySelector('.grade-next').addEventListener('click', () => {
+        if (idx < grades.length - 1) { activeGrades[subj] = grades[idx + 1].id; renderTab(profileName); }
+      });
+    });
   }
 
   return {
