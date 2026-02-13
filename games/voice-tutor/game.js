@@ -48,7 +48,8 @@
     micStatus:      $('.mic-status'),
     // Complete
     durationStat:   $('.session-duration-stat'),
-    focusStat:      $('.session-focus-stat'),
+    sessionReview:  $('#sessionReview'),
+    reviewSummary:  $('#reviewSummary'),
     playAgainBtn:   $('.play-again-btn'),
     homeBtnComplete:$('.home-btn-complete'),
     // Shared
@@ -88,6 +89,45 @@
   const NUDGE_DELAY_MS = 4000;
   let nudgeTimer = null;
 
+  // Assessment state
+  let assessmentData = null;
+  let assessmentResolve = null;
+  const ASSESSMENT_TIMEOUT_MS = 10000;
+
+  // Mapping from focus+theme to the skill keys Gemini should assess
+  const FOCUS_SKILL_KEYS = {
+    'pronunciation': ['phonemes', 'pronunciation'],
+    'vocabulary:nouns': ['nouns'],
+    'vocabulary:verbs': ['verbs'],
+    'vocabulary:adjectives': ['adjectives'],
+    'vocabulary:phrases': ['phrases'],
+    'conversation': ['my-self', 'qa', 'description'],
+    'storytelling': ['dialogue'],
+  };
+
+  // Skill display info
+  const SKILL_DISPLAY = {
+    'phonemes':      { icon: '👂', name: 'Phonemes' },
+    'nouns':         { icon: '📚', name: 'Nouns' },
+    'verbs':         { icon: '🏃', name: 'Verbs' },
+    'adjectives':    { icon: '🎨', name: 'Adjectives' },
+    'phrases':       { icon: '👋', name: 'Phrases' },
+    'pronunciation': { icon: '🗣️', name: 'Pronunciation' },
+    'my-self':       { icon: '🙋', name: 'My Self' },
+    'qa':            { icon: '❓', name: 'Q&A' },
+    'description':   { icon: '🖼️', name: 'Description' },
+    'dialogue':      { icon: '💬', name: 'Dialogue' },
+  };
+
+  /** Get the skill keys relevant for the current session's focus+theme */
+  function getSessionSkillKeys() {
+    if (!selectedFocus) return [];
+    const key = selectedFocus === 'vocabulary' && selectedTheme
+      ? `vocabulary:${selectedTheme}`
+      : selectedFocus;
+    return FOCUS_SKILL_KEYS[key] || [];
+  }
+
   // ===== SCREEN MANAGEMENT =====
   function showScreen(name) {
     Object.values(screens).forEach(s => s.classList.remove('active'));
@@ -120,7 +160,8 @@ RULES:
 - Start the session with a warm, excited greeting
 - NEVER end the session yourself. Never say goodbye or wrap up on your own. The session timer will handle ending — just keep teaching and engaging until then.
 - If the child says "bye", "I want to stop", or tries to end the lesson, gently redirect them: "Wait, I have something fun! Let's try one more thing!" or "Before we finish, can you say [word] for me?"
-- If the child insists a second time that they want to stop, say a quick warm goodbye and praise their effort.`;
+- If the child insists a second time that they want to stop, say a quick warm goodbye and praise their effort.
+- When the session ends, you will receive a system message asking you to assess the student. Say a warm goodbye, then call the session_assessment function with honest ratings (1-5) for each skill practiced. Be encouraging in your spoken goodbye but accurate in the function call ratings.`;
 
     let focusInstructions = '';
 
@@ -603,6 +644,14 @@ registerProcessor('pcm-processor', PCMProcessor);
           // Session ready
         },
 
+        onAssessment(data) {
+          console.log('[VoiceTutor] Assessment received:', data);
+          assessmentData = data;
+          if (assessmentResolve) {
+            assessmentResolve(data);
+          }
+        },
+
         onError(type) {
           if (type === 'disconnected' && session) {
             // Mid-session disconnect — try to reconnect once
@@ -630,24 +679,151 @@ registerProcessor('pcm-processor', PCMProcessor);
     }
   }
 
+  // ===== REVIEW & ADAPTIVE RECORDS =====
+
+  function renderStars(rating, max) {
+    max = max || 5;
+    let html = '';
+    for (let i = 1; i <= max; i++) {
+      html += i <= rating
+        ? '<span class="star-filled">★</span>'
+        : '<span class="star-empty">★</span>';
+    }
+    return html;
+  }
+
+  function renderReview(assessment) {
+    if (!assessment || !assessment.skills || !assessment.skills.length) {
+      els.sessionReview.innerHTML = '';
+      els.reviewSummary.textContent = '';
+      return;
+    }
+
+    els.sessionReview.innerHTML = assessment.skills.map((s, i) => {
+      const display = SKILL_DISPLAY[s.skill] || { icon: '📝', name: s.skill };
+      return `
+        <div class="review-card" style="animation-delay: ${i * 0.1}s">
+          <span class="review-skill-icon">${display.icon}</span>
+          <div class="review-skill-info">
+            <div class="review-skill-name">${display.name}</div>
+            <p class="review-note">${s.note || ''}</p>
+          </div>
+          <div class="review-stars">${renderStars(s.rating)}</div>
+        </div>`;
+    }).join('');
+
+    if (assessment.summary) {
+      els.reviewSummary.textContent = assessment.summary;
+    }
+  }
+
+  function saveAdaptiveRecords(assessment) {
+    if (!assessment || !assessment.skills) return;
+    if (typeof Storage === 'undefined' || !window.Storage) return;
+
+    const profileName = Storage.getProfile();
+    if (!profileName) return;
+
+    const records = Storage.load('voice-tutor', 'adaptive', {});
+
+    for (const s of assessment.skills) {
+      const existing = records[s.skill] || { box: 0, correct: 0, wrong: 0 };
+      const rating = Math.max(1, Math.min(5, s.rating));
+
+      // Map rating to box level (matching curriculum.js thresholds)
+      // box >= 3 = mastered, box >= 1 = learning, box 0 = struggling
+      if (rating >= 5) {
+        existing.box = 3;
+      } else if (rating >= 4) {
+        existing.box = 2;
+      } else if (rating >= 3) {
+        existing.box = 1;
+      } else {
+        existing.box = 0;
+      }
+
+      // Track cumulative attempts
+      existing.correct += rating >= 3 ? 1 : 0;
+      existing.wrong += rating < 3 ? 1 : 0;
+
+      records[s.skill] = existing;
+    }
+
+    Storage.save('voice-tutor', 'adaptive', records);
+    console.log('[VoiceTutor] Saved adaptive records:', records);
+  }
+
+  function showReviewLoading() {
+    els.sessionReview.innerHTML = `
+      <div class="review-loading">
+        <div class="spinner"></div>
+        <span>Preparing your review...</span>
+      </div>`;
+    els.reviewSummary.textContent = '';
+  }
+
   // ===== END SESSION =====
-  function endSession() {
+  async function endSession() {
     stopTimer();
     clearNudgeTimer();
-
-    // Close connections
-    if (session) {
-      session.close();
-      session = null;
-    }
     stopMicCapture();
-    closePlayback();
 
     // Calculate stats
     const elapsed = sessionStartTime ? Math.round((Date.now() - sessionStartTime) / 60000) : 0;
     const displayMin = Math.max(1, elapsed);
     els.durationStat.textContent = displayMin;
-    els.focusStat.textContent = selectedFocus ? selectedFocus.charAt(0).toUpperCase() + selectedFocus.slice(1) : '—';
+
+    // Show complete screen immediately with loading state
+    showScreen('complete');
+    showReviewLoading();
+
+    if (typeof Particles !== 'undefined') {
+      Particles.init(els.particleCanvas);
+      Particles.confetti(60);
+    }
+
+    if (typeof Audio !== 'undefined' && Audio.SFX) {
+      try { Audio.SFX.celebration(); } catch {}
+    }
+
+    // Request assessment from Gemini before closing
+    const skillKeys = getSessionSkillKeys();
+    assessmentData = null;
+
+    if (session && skillKeys.length > 0) {
+      // Create a promise that resolves when assessment arrives
+      const assessmentPromise = new Promise(resolve => {
+        assessmentResolve = resolve;
+      });
+
+      // Request assessment (Gemini will speak goodbye + call function)
+      session.requestAssessment(skillKeys);
+
+      // Wait for assessment with timeout
+      const timeoutPromise = new Promise(resolve => {
+        setTimeout(() => resolve(null), ASSESSMENT_TIMEOUT_MS);
+      });
+
+      assessmentData = await Promise.race([assessmentPromise, timeoutPromise]);
+      console.log('[VoiceTutor] Assessment result:', assessmentData);
+    }
+
+    // Close session after assessment (or timeout)
+    if (session) {
+      session.close();
+      session = null;
+    }
+    closePlayback();
+
+    // Render review
+    if (assessmentData) {
+      renderReview(assessmentData);
+      saveAdaptiveRecords(assessmentData);
+    } else {
+      // No assessment — clear loading state
+      els.sessionReview.innerHTML = '';
+      els.reviewSummary.textContent = '';
+    }
 
     // Save session history
     if (typeof Storage !== 'undefined' && window.Storage) {
@@ -658,21 +834,12 @@ registerProcessor('pcm-processor', PCMProcessor);
         theme: selectedTheme,
         topic: selectedTopic,
         durationMin: displayMin,
+        assessment: assessmentData || null,
       });
       Storage.save('voice-tutor', 'sessions', history);
     }
 
-    // Show complete screen with celebration
-    showScreen('complete');
-
-    if (typeof Particles !== 'undefined') {
-      Particles.init(els.particleCanvas);
-      Particles.confetti(60);
-    }
-
-    if (typeof Audio !== 'undefined' && Audio.SFX) {
-      try { Audio.SFX.celebration(); } catch {}
-    }
+    assessmentResolve = null;
   }
 
   // ===== EVENT HANDLERS =====
@@ -816,6 +983,8 @@ registerProcessor('pcm-processor', PCMProcessor);
     selectedTheme = null;
     selectedTopic = null;
     selectedDuration = 10;
+    assessmentData = null;
+    assessmentResolve = null;
     els.focusCards.forEach(c => c.classList.remove('selected'));
     els.themeChips.forEach(c => c.classList.remove('active'));
     els.topicChips.forEach(c => c.classList.remove('active'));

@@ -393,6 +393,12 @@
 }
 
 /* ===== COMPLETE SCREEN ===== */
+.complete-screen {
+  overflow-y: auto;
+  justify-content: flex-start;
+  padding-top: var(--space-2xl);
+}
+
 .complete-emoji {
   font-size: clamp(4rem, 12vw, 7rem);
   margin-bottom: var(--space-lg);
@@ -428,6 +434,94 @@
 .stat-label {
   font-size: var(--text-sm);
   color: var(--color-text-muted);
+}
+
+/* Session review */
+.session-review {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: var(--space-lg);
+  max-height: 40vh;
+  overflow-y: auto;
+}
+
+.review-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  animation: fade-up 0.3s ease both;
+}
+
+.review-skill-icon {
+  font-size: var(--text-lg);
+  flex-shrink: 0;
+}
+
+.review-skill-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.review-skill-name {
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  margin-bottom: 2px;
+}
+
+.review-note {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.review-stars {
+  flex-shrink: 0;
+  font-size: var(--text-md);
+  letter-spacing: 1px;
+}
+
+.review-stars .star-filled {
+  color: #fbbf24;
+}
+
+.review-stars .star-empty {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.review-summary {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  text-align: center;
+  max-width: 400px;
+  margin-bottom: var(--space-lg);
+  font-style: italic;
+}
+
+.review-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  margin-bottom: var(--space-lg);
+}
+
+.review-loading .spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-top-color: #c44dff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
 .complete-actions {
