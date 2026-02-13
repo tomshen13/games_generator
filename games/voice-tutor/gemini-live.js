@@ -7,10 +7,28 @@
  *   session.close();
  */
 const GeminiLive = (() => {
-  // TODO: Move API key to Supabase Edge Function for production
-  const API_KEY = 'AIzaSyA_lgf76fwtXxm0ubStGk_nb9EEl2leaeA';
   const MODEL = 'models/gemini-2.5-flash-native-audio-preview-12-2025';
-  const WS_URL = `wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=${API_KEY}`;
+  const WS_BASE = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent';
+
+  // Fetch API key from Supabase Edge Function (falls back to hardcoded for local dev)
+  const SUPABASE_URL = 'https://xanesbzvzhjqndkskvnh.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhhbmVzYnp2emhqcW5ka3Nrdm5oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5ODA5NDcsImV4cCI6MjA4NjU1Njk0N30.uoNz0Wm-832jeIyRYu-NlJUHvgkE89bU_tHtXD4skfs';
+  const KEY_ENDPOINT = `${SUPABASE_URL}/functions/v1/gemini-key`;
+  const FALLBACK_KEY = 'AIzaSyA_lgf76fwtXxm0ubStGk_nb9EEl2leaeA'; // local dev only
+
+  async function fetchApiKey() {
+    try {
+      const res = await fetch(KEY_ENDPOINT, {
+        headers: { 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+      const data = await res.json();
+      return data.key;
+    } catch (e) {
+      console.warn('[GeminiLive] Edge function unavailable, using fallback key:', e.message);
+      return FALLBACK_KEY;
+    }
+  }
 
   const MAX_RETRIES = 3;
   const RETRY_BASE_MS = 1000;
@@ -29,13 +47,16 @@ const GeminiLive = (() => {
    * @returns {Promise<{sendAudio: function, close: function, reconnect: function, sendText: function, requestAssessment: function}>}
    */
   async function connect(opts) {
+    const apiKey = await fetchApiKey();
+    const wsUrl = `${WS_BASE}?key=${apiKey}`;
+
     let ws = null;
     let retries = 0;
     let closed = false;
     let setupResolved = false;
 
     function openSocket(resolve, reject) {
-      ws = new WebSocket(WS_URL);
+      ws = new WebSocket(wsUrl);
 
       ws.onopen = () => {
         // Send setup message
