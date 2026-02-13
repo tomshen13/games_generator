@@ -79,6 +79,65 @@
   border-color: var(--tab-border, rgba(255, 255, 255, 0.4));
 }
 
+/* ===== Grade Stepper (shared by kid skills + dashboard) ===== */
+.grade-stepper {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  justify-content: center;
+  margin-bottom: var(--space-lg);
+}
+
+.grade-arrow {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: var(--color-text);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-round);
+  cursor: pointer;
+  font-size: var(--text-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--duration-fast);
+}
+
+.grade-arrow:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.grade-arrow:disabled {
+  opacity: 0.2;
+  cursor: default;
+}
+
+.grade-label {
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  min-width: 180px;
+  text-align: center;
+}
+
+/* Dashboard variant — inline in subject heading */
+.dashboard-grade-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-left: var(--space-md);
+}
+
+.dashboard-grade-stepper .grade-arrow {
+  width: 24px;
+  height: 24px;
+  font-size: var(--text-sm);
+}
+
+.dashboard-grade-stepper .grade-label {
+  font-size: var(--text-sm);
+  min-width: 120px;
+}
+
 /* ===== Skills Content ===== */
 .skills-content {
   width: 100%;

@@ -196,12 +196,42 @@ const Curriculum = (() => {
     return null;
   }
 
+  // ── Grade helpers ──
+
+  /**
+   * Get all phases (grades) that contain skills for the given subject.
+   * Returns phases in order.
+   */
+  function getSubjectGrades(subject) {
+    const grades = [];
+    for (const phase of CURRICULUM_DATA.phases) {
+      if (phase.skills.some(s => s.subject === subject)) {
+        grades.push(phase);
+      }
+    }
+    return grades;
+  }
+
+  /**
+   * Get skills for a specific subject + phase combo.
+   * Each skill is augmented with .phase reference.
+   */
+  function getSkillsForSubjectGrade(subject, phaseId) {
+    const phase = CURRICULUM_DATA.phases.find(p => p.id === phaseId);
+    if (!phase) return [];
+    return phase.skills
+      .filter(s => s.subject === subject)
+      .map(s => ({ ...s, phase }));
+  }
+
   // ── Public API ──
 
   return {
     getSubjects: () => CURRICULUM_DATA.subjects,
     getPhases: () => CURRICULUM_DATA.phases,
     getSubjectTracks,
+    getSubjectGrades,
+    getSkillsForSubjectGrade,
     resolveAdaptiveKeys,
     computeLevelStats,
     computeSkillStats,

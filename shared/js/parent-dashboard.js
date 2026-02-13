@@ -8,6 +8,34 @@ const Dashboard = (() => {
   };
 
   let activeTab = 'Dan';
+  let activeGrades = {}; // { subject: phaseId }
+
+  function initDefaultGrade(subject, allGameData) {
+    if (activeGrades[subject]) return;
+    const grades = Curriculum.getSubjectGrades(subject);
+    if (!grades.length) return;
+    for (const grade of grades) {
+      const skills = Curriculum.getSkillsForSubjectGrade(subject, grade.id);
+      for (const skill of skills) {
+        const stats = Curriculum.computeSkillStats(allGameData, skill);
+        if (stats.hasAnyGame) { activeGrades[subject] = grade.id; return; }
+      }
+    }
+    activeGrades[subject] = grades[0].id;
+  }
+
+  function renderDashboardGradeStepper(subject, grades) {
+    const currentId = activeGrades[subject];
+    const idx = grades.findIndex(g => g.id === currentId);
+    const grade = grades[idx] || grades[0];
+    const atStart = idx <= 0;
+    const atEnd = idx >= grades.length - 1;
+    return `<span class="dashboard-grade-stepper" data-subject="${subject}">
+      <button class="grade-arrow grade-prev" ${atStart ? 'disabled' : ''}>◀</button>
+      <span class="grade-label">${grade.name}</span>
+      <button class="grade-arrow grade-next" ${atEnd ? 'disabled' : ''}>▶</button>
+    </span>`;
+  }
 
   function renderDonut(pct) {
     const r = 32;
@@ -156,9 +184,9 @@ const Dashboard = (() => {
       .map(({ level, stats }) => renderLevelGroup(level, stats))
       .join('');
 
-    // Collapsed locked levels summary
+    // Locked levels summary
     const lockedHtml = lockedCount > 0
-      ? `<div class="dashboard-locked-summary">🔒 ${lockedCount} more level${lockedCount > 1 ? 's' : ''} coming soon</div>`
+      ? `<div class="dashboard-locked-summary">🔒 ${mappedLevels.length === 0 ? `All ${lockedCount} levels` : `${lockedCount} more level${lockedCount > 1 ? 's' : ''}`} — no games yet</div>`
       : '';
 
     // Skill summary line
@@ -229,30 +257,30 @@ const Dashboard = (() => {
     let html = '';
     let hasData = false;
 
-    // Curriculum skills grouped by subject
-    const tracks = Curriculum.getSubjectTracks();
+    // Curriculum skills grouped by subject, filtered by selected grade
     const subjects = Curriculum.getSubjects();
 
     for (const [subjKey, subjMeta] of Object.entries(subjects)) {
-      const skills = tracks[subjKey] || [];
-      let subjectHtml = '';
-      let subjectHasData = false;
+      const grades = Curriculum.getSubjectGrades(subjKey);
+      if (!grades.length) continue;
 
+      initDefaultGrade(subjKey, allGameData);
+      const gradeId = activeGrades[subjKey] || grades[0].id;
+      const skills = Curriculum.getSkillsForSubjectGrade(subjKey, gradeId);
+
+      let subjectHtml = '';
       for (const skill of skills) {
         const skillStats = Curriculum.computeSkillStats(allGameData, skill);
-        if (!skillStats.hasAnyGame) continue; // Skip fully locked skills in dashboard
-
-        subjectHasData = true;
         hasData = true;
         subjectHtml += renderSkillCard(skill, skillStats, allGameData);
       }
 
-      if (subjectHasData) {
-        html += `<div class="dashboard-subject-section">
-          <h3 class="dashboard-subject-heading" style="color: ${subjMeta.color}">${subjMeta.icon} ${subjMeta.name}</h3>
-          ${subjectHtml}
-        </div>`;
-      }
+      const stepperHtml = grades.length > 1 ? renderDashboardGradeStepper(subjKey, grades) : `<span style="font-size: var(--text-sm); color: var(--color-text-muted); margin-left: var(--space-md)">${grades[0].name}</span>`;
+
+      html += `<div class="dashboard-subject-section">
+        <h3 class="dashboard-subject-heading" style="color: ${subjMeta.color}">${subjMeta.icon} ${subjMeta.name} ${stepperHtml}</h3>
+        ${subjectHtml}
+      </div>`;
     }
 
     // Mario (non-curriculum)
@@ -283,6 +311,20 @@ const Dashboard = (() => {
         e.stopPropagation();
         const href = link.dataset.href;
         if (href) window.location.href = href;
+      });
+    });
+
+    // Grade stepper click handlers
+    content.querySelectorAll('.dashboard-grade-stepper').forEach(stepper => {
+      const subj = stepper.dataset.subject;
+      const grades = Curriculum.getSubjectGrades(subj);
+      const idx = grades.findIndex(g => g.id === activeGrades[subj]);
+
+      stepper.querySelector('.grade-prev').addEventListener('click', () => {
+        if (idx > 0) { activeGrades[subj] = grades[idx - 1].id; renderTab(profileName); }
+      });
+      stepper.querySelector('.grade-next').addEventListener('click', () => {
+        if (idx < grades.length - 1) { activeGrades[subj] = grades[idx + 1].id; renderTab(profileName); }
       });
     });
   }
