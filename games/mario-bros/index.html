@@ -36,8 +36,8 @@
         <span class="continue-info"></span>
       </div>
       <div class="controls-hint">
-        <p><strong>1P:</strong> Arrows / WASD = Move · Space = Jump · X = Shoot</p>
-        <p><strong>Co-op:</strong> P1: WASD+Space+E · P2: Arrows+Enter+Shift</p>
+        <p><strong>1P:</strong> Arrows / WASD = Move · Space = Jump · X = Shoot · Q = Skill</p>
+        <p><strong>Co-op:</strong> P1: WASD+Space+E+Q · P2: Arrows+Enter+Shift+/</p>
       </div>
     </div>
 
@@ -56,6 +56,16 @@
           <span class="char-name">Luigi</span>
           <span class="char-stat">Higher jump, slower run</span>
         </button>
+        <button class="card char-card" data-char="toad">
+          <canvas class="char-preview" width="64" height="64"></canvas>
+          <span class="char-name">Toad</span>
+          <span class="char-stat">Fastest runner, low jump</span>
+        </button>
+        <button class="card char-card" data-char="peach">
+          <canvas class="char-preview" width="64" height="64"></canvas>
+          <span class="char-name">Peach</span>
+          <span class="char-stat">Can float while falling</span>
+        </button>
       </div>
     </div>
 
@@ -66,6 +76,18 @@
       <p class="lc-stats"></p>
       <p class="lc-powerup-preview"></p>
       <button class="btn btn-primary btn-large btn-next-level">▶ Next Level</button>
+    </div>
+
+    <!-- ===== SHOP ===== -->
+    <div class="screen shop-screen">
+      <h2 class="shop-title">Power-Up Shop</h2>
+      <p class="shop-coins">🪙 <span class="shop-coin-count">0</span></p>
+      <div class="shop-items"></div>
+      <div class="shop-inventory">
+        <span class="shop-inv-label">Unlocked:</span>
+        <span class="shop-inv-icons"></span>
+      </div>
+      <button class="btn btn-primary btn-large btn-start-level">Start Level ▶</button>
     </div>
 
     <!-- ===== GAME OVER ===== -->
@@ -100,6 +122,7 @@
       <div class="hud-group">
         <span class="hud-score">Score: 0</span>
         <span class="hud-powerup"></span>
+        <span class="hud-skill"></span>
       </div>
       <div class="hud-p2" style="display: none;">
         <span class="hud-p2-lives">💚💚💚</span>
