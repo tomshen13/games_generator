@@ -35,6 +35,7 @@ const Game = (() => {
     const savedModeId = Storage.load('unicorn-numbers', 'selectedMode', null);
     if (savedModeId && MODES[savedModeId]) {
       state.mode = MODES[savedModeId];
+      Adaptive.load(state.mode.storageKey);
       loadProgress();
       showScreen('title');
     } else {
@@ -90,6 +91,7 @@ const Game = (() => {
         Audio.SFX.tap();
         const modeId = card.dataset.mode;
         state.mode = MODES[modeId];
+        Adaptive.load(state.mode.storageKey);
         Storage.save('unicorn-numbers', 'selectedMode', modeId);
         loadProgress();
         showScreen('title');
@@ -323,8 +325,10 @@ const Game = (() => {
     state.wrongAttempts = 0;
     state.answered = [];
 
-    // Pick target and distractors
-    const target = levelDef.items[Utils.randInt(0, levelDef.items.length - 1)];
+    // Pick target using adaptive difficulty
+    const pool = levelDef.items.map(String);
+    const pickedKey = Adaptive.pickItem(pool);
+    const target = state.mode.id === 'numbers' ? Number(pickedKey) : pickedKey;
     state.target = target;
 
     // Build options: target + random distractors
@@ -406,6 +410,7 @@ const Game = (() => {
   }
 
   async function handleCorrect(btn) {
+    Adaptive.recordAnswer(String(state.target), true);
     // Visual effect on button
     btn.classList.add('correct');
 
@@ -455,6 +460,7 @@ const Game = (() => {
 
   async function handleWrong(btn) {
     state.wrongAttempts++;
+    Adaptive.recordAnswer(String(state.target), false);
     btn.classList.add('wrong');
     Audio.SFX.wrong();
 

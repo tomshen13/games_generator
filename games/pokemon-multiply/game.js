@@ -40,6 +40,7 @@ const Game = (() => {
     cacheDOM();
     bindEvents();
     loadProgress();
+    Adaptive.load('pokemon-multiply');
 
     if (state.starterPokemon) {
       updateContinueInfo();
@@ -336,20 +337,32 @@ const Game = (() => {
     updateHUD();
   }
 
+  function buildProblemPool(levelDef) {
+    const keys = new Set();
+    levelDef.factors.forEach(f => {
+      for (let op = 1; op <= levelDef.maxOperand; op++) {
+        keys.add(`${Math.min(f, op)}x${Math.max(f, op)}`);
+      }
+    });
+    return [...keys];
+  }
+
+  function keyToProblem(key) {
+    const [a, b] = key.split('x').map(Number);
+    if (Math.random() > 0.5) return [a, b];
+    return [b, a];
+  }
+
   function generateProblem() {
     const levelDef = LEVELS[state.level];
-    const factor = levelDef.factors[Utils.randInt(0, levelDef.factors.length - 1)];
-    const operand = Utils.randInt(1, levelDef.maxOperand);
+    const pool = buildProblemPool(levelDef);
+    const key = Adaptive.pickItem(pool);
+    const [n1, n2] = keyToProblem(key);
 
-    if (Math.random() > 0.5) {
-      state.num1 = factor;
-      state.num2 = operand;
-    } else {
-      state.num1 = operand;
-      state.num2 = factor;
-    }
-
-    state.correctAnswer = state.num1 * state.num2;
+    state.num1 = n1;
+    state.num2 = n2;
+    state.currentKey = key;
+    state.correctAnswer = n1 * n2;
     const distractors = generateDistractors(state.correctAnswer, state.num1, state.num2);
     state.options = Utils.shuffle([state.correctAnswer, ...distractors]);
   }
@@ -425,6 +438,7 @@ const Game = (() => {
   async function handleCorrect(btn) {
     btn.classList.add('correct');
     els.problemAnswer.textContent = state.correctAnswer;
+    Adaptive.recordAnswer(state.currentKey, true);
     Audio.SFX.correct();
 
     // Coins
@@ -475,6 +489,7 @@ const Game = (() => {
   async function handleWrong(btn) {
     state.wrongAttempts++;
     state.streak = 0;
+    Adaptive.recordAnswer(state.currentKey, false);
     btn.classList.add('wrong');
     Audio.SFX.wrong();
 
@@ -635,20 +650,16 @@ const Game = (() => {
   }
 
   function generateBattleProblem() {
-    // Use current level's factors for battle
     const levelIndex = Math.max(0, state.level - 1);
     const levelDef = LEVELS[Math.min(levelIndex, LEVELS.length - 1)];
-    const factor = levelDef.factors[Utils.randInt(0, levelDef.factors.length - 1)];
-    const operand = Utils.randInt(1, levelDef.maxOperand);
+    const pool = buildProblemPool(levelDef);
+    const key = Adaptive.pickItem(pool);
+    const [n1, n2] = keyToProblem(key);
 
-    if (Math.random() > 0.5) {
-      state.num1 = factor;
-      state.num2 = operand;
-    } else {
-      state.num1 = operand;
-      state.num2 = factor;
-    }
-    state.correctAnswer = state.num1 * state.num2;
+    state.num1 = n1;
+    state.num2 = n2;
+    state.currentKey = key;
+    state.correctAnswer = n1 * n2;
     const distractors = generateDistractors(state.correctAnswer, state.num1, state.num2);
     state.options = Utils.shuffle([state.correctAnswer, ...distractors]);
 
@@ -676,6 +687,7 @@ const Game = (() => {
     if (value === state.correctAnswer) {
       // Player attacks!
       btn.classList.add('correct');
+      Adaptive.recordAnswer(state.currentKey, true);
       const damage = 20 + Utils.randInt(0, 10);
       state.battleOpponentHP = Math.max(0, state.battleOpponentHP - damage);
 
@@ -709,6 +721,7 @@ const Game = (() => {
     } else {
       // Opponent attacks!
       btn.classList.add('wrong');
+      Adaptive.recordAnswer(state.currentKey, false);
       const damage = 10 + Utils.randInt(0, 5);
       state.battlePlayerHP = Math.max(0, state.battlePlayerHP - damage);
 
