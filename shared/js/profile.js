@@ -51,10 +51,34 @@ const Profile = (() => {
       return getStoredPinHash() !== null;
     },
 
-    /** Set a new PIN */
+    /** Set a new PIN (localStorage + Supabase) */
     async setPIN(pin) {
       const hash = await hashPin(pin);
       localStorage.setItem(PIN_HASH_KEY, hash);
+      try {
+        if (typeof SyncEngine !== 'undefined' && SyncEngine.isActive()) {
+          const profileId = await SyncEngine.getProfileId('Dan');
+          if (profileId) {
+            await SyncEngine.pushBatch(profileId, [{ gameId: '_system', field: 'parent_pin_hash', value: hash }]);
+          }
+        }
+      } catch (e) { /* will sync next time */ }
+    },
+
+    /** Pull PIN hash from Supabase into localStorage */
+    async syncPIN() {
+      try {
+        if (typeof SyncEngine === 'undefined') return;
+        await SyncEngine.ready();
+        if (!SyncEngine.isActive()) return;
+        const profileId = await SyncEngine.getProfileId('Dan');
+        if (!profileId) return;
+        const rows = await SyncEngine.pullAll(profileId);
+        const pinRow = rows.find(r => r.game_id === '_system' && r.field === 'parent_pin_hash');
+        if (pinRow && pinRow.value) {
+          localStorage.setItem(PIN_HASH_KEY, pinRow.value);
+        }
+      } catch (e) { /* offline — local PIN still works */ }
     },
 
     /** Verify a PIN */

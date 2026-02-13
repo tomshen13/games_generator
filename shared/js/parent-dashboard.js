@@ -191,6 +191,8 @@ const Dashboard = (() => {
 
   return {
     async open() {
+      // Sync PIN from cloud so it works cross-device
+      await Profile.syncPIN();
       // PIN gate
       if (Profile.hasPIN()) {
         const ok = await Profile.showPINPad(false);
