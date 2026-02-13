@@ -39,10 +39,11 @@ const Profile = (() => {
     },
 
     /** Select a profile (called from launcher) */
-    async selectProfile(name) {
+    selectProfile(name) {
       Storage.migrateUnprefixed(name);
       Storage.setProfile(name);
-      await Storage.pullFromCloud();
+      // Pull cloud data in background — don't block UI
+      Storage.pullFromCloud().catch(() => {});
     },
 
     /** Check if a PIN has been set */
