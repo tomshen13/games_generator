@@ -143,6 +143,26 @@ const Game = (() => {
       }
     });
 
+    document.querySelector('.btn-switch-char').addEventListener('click', () => {
+      Audio.SFX.tap();
+      // Go to char select but keep progress — re-bind cards to continue from next level
+      showScreen('charSelect');
+      document.querySelectorAll('.char-card').forEach(card => {
+        const clone = card.cloneNode(true);
+        card.parentNode.replaceChild(clone, card);
+        clone.addEventListener('click', () => {
+          Audio.SFX.tap();
+          state.charType = clone.dataset.char;
+          Storage.save(GAME_ID, 'charType', state.charType);
+          if (!state.coop) {
+            showShop();
+          } else {
+            startLevel(state.currentLevel + 1);
+          }
+        });
+      });
+    });
+
     document.querySelector('.btn-start-level').addEventListener('click', () => {
       Audio.SFX.tap();
       startLevel(state.currentLevel + 1);
