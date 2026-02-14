@@ -105,9 +105,10 @@ const GeminiLive = (() => {
                         required: ['skill', 'rating', 'note']
                       }
                     },
-                    summary: { type: 'string', description: 'One sentence overall assessment of the session' }
+                    summary: { type: 'string', description: 'One sentence overall assessment of the session' },
+                    studentDetails: { type: 'string', description: 'Key personal facts and preferences the student shared (e.g. "Favorite Pokemon is Pikachu, likes fire types, knows colors red/blue/yellow, sister named Noa"). Include words/phrases they mastered and ones they struggled with.' }
                   },
-                  required: ['skills', 'summary']
+                  required: ['skills', 'summary', 'studentDetails']
                 }
               }]
             }]
@@ -252,7 +253,9 @@ const GeminiLive = (() => {
           `[SYSTEM: The session is ending now. First, say a warm, short goodbye to the student and praise their effort. ` +
           `Then call the session_assessment function with your honest evaluation. ` +
           `Rate these skills if they were practiced: ${skillList}. ` +
-          `Rate 1-5 (1=struggling, 3=okay, 5=excellent). Only include skills that were actually practiced in this session.]`
+          `Rate 1-5 (1=struggling, 3=okay, 5=excellent). Only include skills that were actually practiced in this session. ` +
+          `IMPORTANT: In studentDetails, note everything personal the child shared — favorite characters, pets, family members, ` +
+          `interests, preferences, specific words they learned or struggled with. These details will be used in future sessions.]`
         );
       },
 

@@ -83,6 +83,33 @@ const SyncEngine = (() => {
       if (error) throw error;
       return data || [];
     },
+
+    async deleteGame(profileId, gameId) {
+      await this.ready();
+      if (!client || !navigator.onLine) return;
+      try {
+        const { error } = await client.from('game_data')
+          .delete()
+          .eq('profile_id', profileId)
+          .eq('game_id', gameId);
+        if (error) console.warn('Cloud deleteGame failed:', error);
+      } catch (e) {
+        console.warn('Cloud deleteGame failed:', e);
+      }
+    },
+
+    async deleteAllForProfile(profileId) {
+      await this.ready();
+      if (!client || !navigator.onLine) return;
+      try {
+        const { error } = await client.from('game_data')
+          .delete()
+          .eq('profile_id', profileId);
+        if (error) console.warn('Cloud deleteAll failed:', error);
+      } catch (e) {
+        console.warn('Cloud deleteAll failed:', e);
+      }
+    },
   };
 })();
 

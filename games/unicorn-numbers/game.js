@@ -281,13 +281,10 @@ const Game = (() => {
 
   function speakItem(item) {
     if (state.mode.id === 'hebrew-letters') {
-      const lang = Audio.getLang();
       const names = HEBREW_LETTER_NAMES[item];
       if (!names) return Audio.speak(String(item), 0.8);
-      if (lang === 'he') {
-        return Audio.speak(names.he, 0.8, 'he-IL');
-      }
-      return Audio.speak(names.en, 0.8, 'en-US');
+      // Always speak Hebrew letters in Hebrew — they sound wrong in English TTS
+      return Audio.speak(names.he, 0.8, 'he-IL');
     }
     // Default: numbers
     return Audio.speakNumber(item);

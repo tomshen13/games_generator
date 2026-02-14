@@ -5,7 +5,7 @@
  */
 const Game = (() => {
   const GAME_ID = 'pokemon-multiply';
-  const SESSION_ROUNDS = 10;
+  const SESSION_ROUNDS = 7;
 
   let state = {
     screen: 'title',
@@ -106,6 +106,10 @@ const Game = (() => {
     els.btnContinue = document.querySelector('.btn-continue');
     els.continueWrapper = document.querySelector('.continue-wrapper');
     els.continueInfo = document.querySelector('.continue-info');
+    els.titleNav = document.querySelector('.title-nav');
+    els.btnBattleNav = document.querySelector('.btn-battle-nav');
+    els.btnShopNav = document.querySelector('.btn-shop-nav');
+    els.btnCollectionNav = document.querySelector('.btn-collection-nav');
 
     // Game
     els.levelLabel = document.querySelector('.level-label');
@@ -216,6 +220,22 @@ const Game = (() => {
         const id = parseInt(card.dataset.starter);
         selectStarter(id);
       });
+    });
+
+    // Title nav buttons (battle, shop, collection)
+    els.btnBattleNav.addEventListener('click', () => {
+      Audio.SFX.tap();
+      startManualBattle();
+    });
+    els.btnShopNav.addEventListener('click', () => {
+      Audio.SFX.tap();
+      state.previousScreen = 'title';
+      showScreen('shop');
+    });
+    els.btnCollectionNav.addEventListener('click', () => {
+      Audio.SFX.tap();
+      state.previousScreen = 'title';
+      showScreen('collection');
     });
 
     // Game back
@@ -585,10 +605,18 @@ const Game = (() => {
   }
 
   // ─── Battle System ─────────────────────────────────────
+  function startManualBattle() {
+    const encounterKey = findEncounterTier(state.currentTier);
+    if (encounterKey === null) return;
+    state.manualBattle = true;
+    startBattle(encounterKey);
+  }
+
   function startBattle(encounterKey) {
     const encounters = WILD_ENCOUNTERS[encounterKey];
     const opponent = { ...encounters[Utils.randInt(0, encounters.length - 1)] };
 
+    state.inputLocked = false;
     state.inBattle = true;
     state.battleOpponent = opponent;
     state.battleOpponentHP = opponent.hp;
@@ -748,7 +776,12 @@ const Game = (() => {
     saveProgress();
     await Utils.wait(3000);
     els.battleMessage.style.display = 'none';
-    showSessionComplete();
+    if (state.manualBattle) {
+      state.manualBattle = false;
+      showScreen('title');
+    } else {
+      showSessionComplete();
+    }
   }
 
   async function battleLost() {
@@ -758,7 +791,12 @@ const Game = (() => {
 
     await Utils.wait(2500);
     els.battleMessage.style.display = 'none';
-    showSessionComplete();
+    if (state.manualBattle) {
+      state.manualBattle = false;
+      showScreen('title');
+    } else {
+      showSessionComplete();
+    }
   }
 
   function showBattleMessage(text) {
@@ -934,6 +972,7 @@ const Game = (() => {
     if (state.starterPokemon) {
       els.btnPlay.textContent = '🔄 NEW GAME';
       els.continueWrapper.style.display = 'flex';
+      els.titleNav.style.display = 'flex';
       els.continueInfo.textContent = `Tier ${state.currentTier + 1} • 🪙 ${state.coins} coins • ${state.ownedPokemon.length} Pokemon`;
     }
   }

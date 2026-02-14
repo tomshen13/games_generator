@@ -7,6 +7,13 @@ const Dashboard = (() => {
     'mario-bros': { title: 'Super Mario Bros', icon: '🍄', type: 'mario' },
   };
 
+  const GAME_DISPLAY = {
+    'unicorn-numbers': { icon: '🦄', title: 'Unicorn Numbers' },
+    'pokemon-multiply': { icon: '⚡', title: 'Pokemon Math' },
+    'mario-bros': { icon: '🍄', title: 'Super Mario Bros' },
+    'voice-tutor': { icon: '👩‍🏫', title: 'Voice Tutor' },
+  };
+
   let activeTab = 'Dan';
   let activeGrades = {}; // { subject: phaseId }
 
@@ -266,6 +273,60 @@ const Dashboard = (() => {
 
   // ── Render tab ──
 
+  // ── Data management section ──
+
+  function renderDataManagement(profileName, allGameData) {
+    const gameIds = Object.keys(allGameData);
+    if (!gameIds.length) return '';
+
+    const rows = gameIds.map(id => {
+      const meta = GAME_DISPLAY[id] || { icon: '🎮', title: id };
+      return `<div class="data-mgmt-row">
+        <span class="data-mgmt-game">${meta.icon} ${meta.title}</span>
+        <button class="btn-reset" data-game="${id}">Reset</button>
+      </div>`;
+    }).join('');
+
+    return `<div class="dashboard-subject-section">
+      <h3 class="dashboard-subject-heading" style="color: var(--color-text-muted)">⚙️ Data Management</h3>
+      <div class="game-stat-card dashboard-data-mgmt">
+        ${rows}
+        <button class="btn-reset-all" data-profile="${profileName}">Reset All Data</button>
+      </div>
+    </div>`;
+  }
+
+  async function handleGameReset(profileName, gameId) {
+    const meta = GAME_DISPLAY[gameId] || { title: gameId };
+    if (!confirm(`Reset all ${meta.title} data for ${profileName}?`)) return;
+
+    Storage.clearGameForProfile(profileName, gameId);
+
+    // Cloud cleanup (best-effort)
+    if (typeof SyncEngine !== 'undefined' && SyncEngine.isActive()) {
+      const profileId = await SyncEngine.getProfileId(profileName);
+      if (profileId) await SyncEngine.deleteGame(profileId, gameId);
+    }
+
+    renderTab(profileName);
+  }
+
+  async function handleResetAll(profileName) {
+    if (!confirm(`Reset ALL game data for ${profileName}? This cannot be undone.`)) return;
+
+    Storage.clearAllForProfile(profileName);
+
+    // Cloud cleanup (best-effort)
+    if (typeof SyncEngine !== 'undefined' && SyncEngine.isActive()) {
+      const profileId = await SyncEngine.getProfileId(profileName);
+      if (profileId) await SyncEngine.deleteAllForProfile(profileId);
+    }
+
+    renderTab(profileName);
+  }
+
+  // ── Render tab ──
+
   function renderTab(profileName) {
     const content = document.querySelector('.dashboard-content');
     const allGameData = Storage.getAllForProfile(profileName);
@@ -308,6 +369,11 @@ const Dashboard = (() => {
       </div>`;
     }
 
+    // Data management
+    if (hasData) {
+      html += renderDataManagement(profileName, allGameData);
+    }
+
     if (!hasData) {
       html = '<div class="no-data">No game data yet for ' + profileName + '. Time to play!</div>';
     }
@@ -343,6 +409,15 @@ const Dashboard = (() => {
         if (idx < grades.length - 1) { activeGrades[subj] = grades[idx + 1].id; renderTab(profileName); }
       });
     });
+
+    // Reset button click handlers
+    content.querySelectorAll('.btn-reset').forEach(btn => {
+      btn.addEventListener('click', () => handleGameReset(profileName, btn.dataset.game));
+    });
+    const resetAllBtn = content.querySelector('.btn-reset-all');
+    if (resetAllBtn) {
+      resetAllBtn.addEventListener('click', () => handleResetAll(profileName));
+    }
   }
 
   return {

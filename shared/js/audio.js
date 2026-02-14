@@ -257,22 +257,29 @@ const Audio = (() => {
   };
 
   /**
-   * Speak text aloud using Web Speech API.
+   * Speak text aloud. Tries Gemini TTS first, falls back to Web Speech API.
    * @param {string} text
    * @param {number} rate
    * @param {string} [langOverride] - BCP 47 language tag, e.g. 'en' or 'he-IL'
    */
-  function speak(text, rate = 0.9, langOverride) {
+  async function speak(text, rate = 0.9, langOverride) {
+    // Cancel any ongoing speech from either system
+    if (typeof GeminiTTS !== 'undefined') GeminiTTS.stop();
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+
+    // Try Gemini TTS first
+    if (typeof GeminiTTS !== 'undefined' && GeminiTTS.isEnabled()) {
+      const geminiLang = langOverride ? langOverride.split('-')[0] : lang;
+      const ok = await GeminiTTS.speak(text, geminiLang);
+      if (ok) return;
+    }
+
+    // Fallback: Web Speech API
     return new Promise(resolve => {
-      if (!window.speechSynthesis) {
-        resolve();
-        return;
-      }
-      // Cancel any ongoing speech
-      window.speechSynthesis.cancel();
+      if (!window.speechSynthesis) { resolve(); return; }
       const utter = new SpeechSynthesisUtterance(text);
       utter.rate = rate;
-      utter.pitch = 1.2; // Slightly higher pitch — friendlier for kids
+      utter.pitch = 1.2;
       utter.volume = 1;
       if (langOverride) utter.lang = langOverride;
       utter.onend = resolve;
@@ -292,5 +299,15 @@ const Audio = (() => {
     return speak(String(n), 0.8, 'en-US');
   }
 
-  return { init, SFX, speak, speakNumber, setLang, getLang, HEBREW_NUMBERS };
+  /**
+   * Preload phrases into GeminiTTS cache (no-op if GeminiTTS not loaded).
+   */
+  function preloadTTS(phrases, langOverride) {
+    if (typeof GeminiTTS !== 'undefined') {
+      const geminiLang = langOverride ? langOverride.split('-')[0] : lang;
+      GeminiTTS.preload(phrases, geminiLang);
+    }
+  }
+
+  return { init, SFX, speak, speakNumber, setLang, getLang, HEBREW_NUMBERS, preloadTTS };
 })();

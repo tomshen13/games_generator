@@ -24,6 +24,7 @@
 
     <!-- ===== TITLE SCREEN ===== -->
     <div class="screen title-screen active">
+      <button class="btn-back" onclick="window.location.href='../../index.html'" title="Home">🏠</button>
       <div class="title-icon">🍄</div>
       <h1 class="title-text mario-title">Super Mario Bros</h1>
       <p class="title-subtitle">A platformer adventure!</p>
@@ -75,11 +76,15 @@
       <h2 class="lc-title">Level Complete!</h2>
       <p class="lc-stats"></p>
       <p class="lc-powerup-preview"></p>
-      <button class="btn btn-primary btn-large btn-next-level">▶ Next Level</button>
+      <div style="display: flex; gap: var(--space-md); flex-wrap: wrap; justify-content: center;">
+        <button class="btn btn-primary btn-large btn-next-level">▶ Next Level</button>
+        <button class="btn btn-primary btn-home">🏠 Home</button>
+      </div>
     </div>
 
     <!-- ===== SHOP ===== -->
     <div class="screen shop-screen">
+      <button class="btn-back btn-home" title="Home">🏠</button>
       <h2 class="shop-title">Power-Up Shop</h2>
       <p class="shop-coins">🪙 <span class="shop-coin-count">0</span></p>
       <div class="shop-items"></div>

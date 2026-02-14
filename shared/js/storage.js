@@ -79,6 +79,34 @@ const Storage = (() => {
       }
     },
 
+    clearGameForProfile(profile, gameId) {
+      try {
+        const pfx = `${PREFIX}${profile}_${gameId}_`;
+        const toRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k.startsWith(pfx)) toRemove.push(k);
+        }
+        toRemove.forEach(k => localStorage.removeItem(k));
+      } catch (e) {
+        console.warn('Storage clearGame failed:', e);
+      }
+    },
+
+    clearAllForProfile(profile) {
+      try {
+        const pfx = `${PREFIX}${profile}_`;
+        const toRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k.startsWith(pfx)) toRemove.push(k);
+        }
+        toRemove.forEach(k => localStorage.removeItem(k));
+      } catch (e) {
+        console.warn('Storage clearAll failed:', e);
+      }
+    },
+
     async pullFromCloud() {
       if (!activeProfile || typeof SyncEngine === 'undefined' || !SyncEngine.isActive()) return;
       try {

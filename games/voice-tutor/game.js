@@ -92,7 +92,9 @@
   // Assessment state
   let assessmentData = null;
   let assessmentResolve = null;
-  const ASSESSMENT_TIMEOUT_MS = 10000;
+  let reviewPending = false;
+  const ASSESSMENT_TIMEOUT_MS = 15000;
+  let isSessionEnding = false;
 
   // Mapping from focus+theme to the skill keys Gemini should assess
   const FOCUS_SKILL_KEYS = {
@@ -134,6 +136,47 @@
     screens[name].classList.add('active');
   }
 
+  // ===== SESSION HISTORY CONTEXT =====
+  function buildHistoryContext() {
+    if (typeof Storage === 'undefined' || !window.Storage) return '';
+    Storage.getProfile(); // ensure activeProfile is loaded from localStorage
+    const sessions = Storage.load('voice-tutor', 'sessions', []);
+    if (!sessions.length) return '';
+
+    // Last 5 sessions, most recent first
+    const recent = sessions.slice(-5).reverse();
+    const lines = recent.map(s => {
+      const date = new Date(s.date);
+      const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const focus = (s.focus || '').charAt(0).toUpperCase() + (s.focus || '').slice(1);
+      const sub = s.theme || s.topic || '';
+      const label = sub ? `${focus}/${sub}` : focus;
+
+      let skillStr = '';
+      let summary = '';
+      let details = '';
+      if (s.assessment) {
+        if (s.assessment.skills) {
+          skillStr = s.assessment.skills
+            .map(sk => `${sk.skill}: ${sk.rating}★`)
+            .join(', ');
+        }
+        summary = s.assessment.summary || '';
+        details = s.assessment.studentDetails || '';
+      }
+
+      let line = `- ${dateStr}: ${label}`;
+      if (skillStr) line += ` — ${skillStr}`;
+      if (summary) line += ` — "${summary}"`;
+      if (details) line += `\n  Student details: ${details}`;
+      return line;
+    });
+
+    const ctx = `\nPREVIOUS SESSIONS (most recent first):\n${lines.join('\n')}`;
+    console.log('[VoiceTutor] History context:', ctx);
+    return ctx;
+  }
+
   // ===== SYSTEM PROMPT BUILDER =====
   function buildSystemPrompt() {
     const base = `You are a warm, patient, and encouraging female English tutor for young children. Your name is Luna.
@@ -161,7 +204,9 @@ RULES:
 - NEVER end the session yourself. Never say goodbye or wrap up on your own. The session timer will handle ending — just keep teaching and engaging until then.
 - If the child says "bye", "I want to stop", or tries to end the lesson, gently redirect them: "Wait, I have something fun! Let's try one more thing!" or "Before we finish, can you say [word] for me?"
 - If the child insists a second time that they want to stop, say a quick warm goodbye and praise their effort.
-- When the session ends, you will receive a system message asking you to assess the student. Say a warm goodbye, then call the session_assessment function with honest ratings (1-5) for each skill practiced. Be encouraging in your spoken goodbye but accurate in the function call ratings.`;
+- When the session ends, you will receive a system message asking you to assess the student. Say a warm goodbye, then call the session_assessment function with honest ratings (1-5) for each skill practiced. Be encouraging in your spoken goodbye but accurate in the function call ratings.
+- If previous sessions exist below, review them. Avoid re-teaching words/topics the child already mastered (4-5★). Focus on areas rated 1-3★. Build on what they've learned.
+- Use student details from past sessions to personalize: reference their favorite characters, family, interests by name. Example: if they love Pikachu, say "Remember Pikachu? Is Pikachu fast or slow?" This makes the child feel known and excited.`;
 
     let focusInstructions = '';
 
@@ -295,7 +340,7 @@ Be extra patient — pronunciation takes time and repetition!`;
         break;
     }
 
-    return base + '\n' + focusInstructions;
+    return base + '\n' + focusInstructions + buildHistoryContext();
   }
 
   // ===== AUDIO WORKLET (via Blob URL) =====
@@ -546,7 +591,7 @@ registerProcessor('pcm-processor', PCMProcessor);
   function startNudgeTimer() {
     clearNudgeTimer();
     nudgeTimer = setTimeout(() => {
-      if (session && !isModelSpeaking) {
+      if (session && !isModelSpeaking && !isSessionEnding && timerSeconds > 5) {
         console.log('[VoiceTutor] Nudging — child silent for', NUDGE_DELAY_MS, 'ms');
         session.sendText('[The child has been silent. Gently encourage them or continue the activity.]');
       }
@@ -764,9 +809,12 @@ registerProcessor('pcm-processor', PCMProcessor);
 
   // ===== END SESSION =====
   async function endSession() {
+    isSessionEnding = true;
     stopTimer();
     clearNudgeTimer();
     stopMicCapture();
+    stopPlayback();
+    closePlayback();
 
     // Calculate stats
     const elapsed = sessionStartTime ? Math.round((Date.now() - sessionStartTime) / 60000) : 0;
@@ -791,6 +839,8 @@ registerProcessor('pcm-processor', PCMProcessor);
     assessmentData = null;
 
     if (session && skillKeys.length > 0) {
+      reviewPending = true;
+
       // Create a promise that resolves when assessment arrives
       const assessmentPromise = new Promise(resolve => {
         assessmentResolve = resolve;
@@ -805,6 +855,7 @@ registerProcessor('pcm-processor', PCMProcessor);
       });
 
       assessmentData = await Promise.race([assessmentPromise, timeoutPromise]);
+      reviewPending = false;
       console.log('[VoiceTutor] Assessment result:', assessmentData);
     }
 
@@ -813,7 +864,6 @@ registerProcessor('pcm-processor', PCMProcessor);
       session.close();
       session = null;
     }
-    closePlayback();
 
     // Render review
     if (assessmentData) {
@@ -827,6 +877,7 @@ registerProcessor('pcm-processor', PCMProcessor);
 
     // Save session history
     if (typeof Storage !== 'undefined' && window.Storage) {
+      Storage.getProfile(); // ensure profile-prefixed key
       const history = Storage.load('voice-tutor', 'sessions', []);
       history.push({
         date: new Date().toISOString(),
@@ -978,6 +1029,9 @@ registerProcessor('pcm-processor', PCMProcessor);
 
   // Play again
   els.playAgainBtn.addEventListener('click', () => {
+    if (reviewPending) {
+      if (!confirm('The review is still loading. Skip it?')) return;
+    }
     // Reset state
     selectedFocus = null;
     selectedTheme = null;
@@ -985,6 +1039,8 @@ registerProcessor('pcm-processor', PCMProcessor);
     selectedDuration = 10;
     assessmentData = null;
     assessmentResolve = null;
+    reviewPending = false;
+    isSessionEnding = false;
     els.focusCards.forEach(c => c.classList.remove('selected'));
     els.themeChips.forEach(c => c.classList.remove('active'));
     els.topicChips.forEach(c => c.classList.remove('active'));
@@ -1001,6 +1057,9 @@ registerProcessor('pcm-processor', PCMProcessor);
 
   // Home button (from complete)
   els.homeBtnComplete.addEventListener('click', () => {
+    if (reviewPending) {
+      if (!confirm('The review is still loading. Skip it?')) return;
+    }
     window.location.href = '../../index.html';
   });
 })();

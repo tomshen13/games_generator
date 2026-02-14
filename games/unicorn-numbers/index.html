@@ -21,6 +21,7 @@
 
     <!-- ===== MODE SELECT SCREEN ===== -->
     <div class="screen mode-select-screen active">
+      <button class="btn-back" onclick="window.location.href='../../index.html'" title="Home">🏠</button>
       <button class="btn-lang btn-lang-mode" title="Switch language">EN 🇬🇧</button>
       <div class="title-unicorn">🦄</div>
       <h2 class="mode-select-title">What do you want to learn?</h2>
@@ -115,7 +116,10 @@
       <div class="level-complete-unicorn">🦄</div>
       <h2 class="level-complete-title">Level Complete!</h2>
       <div class="level-stars"></div>
-      <button class="btn btn-primary btn-large btn-next-level">▶ Next Level!</button>
+      <div style="display: flex; gap: var(--space-md); flex-wrap: wrap; justify-content: center;">
+        <button class="btn btn-primary btn-large btn-next-level">▶ Next Level!</button>
+        <button class="btn btn-primary btn-home" onclick="window.location.href='../../index.html'">🏠 Home</button>
+      </div>
     </div>
 
     <!-- ===== GAME COMPLETE SCREEN ===== -->
@@ -136,6 +140,7 @@
 
   <!-- Shared JS -->
   <script src="../../shared/js/utils.js"></script>
+  <script src="../../shared/js/gemini-tts.js"></script>
   <script src="../../shared/js/audio.js"></script>
   <script src="../../shared/js/particles.js"></script>
   <script src="../../shared/js/storage.js"></script>
