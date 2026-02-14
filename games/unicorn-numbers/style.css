@@ -628,6 +628,219 @@
   font-size: var(--text-xs);
 }
 
+/* ===== COIN BADGE ===== */
+.coin-badge {
+  position: absolute;
+  z-index: 20;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-md);
+  background: rgba(255, 200, 0, 0.2);
+  border: 2px solid rgba(255, 200, 0, 0.4);
+  color: #ffd700;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+}
+
+.coin-badge-mode {
+  top: var(--space-md);
+  right: 80px;
+}
+
+.coin-badge-shop {
+  position: static;
+}
+
+.coin-counter {
+  font-size: var(--text-sm);
+  color: #ffd700;
+}
+
+.btn-shop-mode {
+  margin-top: var(--space-sm);
+  font-size: var(--text-sm) !important;
+  padding: var(--space-sm) var(--space-lg) !important;
+}
+
+/* ===== LEVEL COMPLETE COINS ===== */
+.lc-coins-earned {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  color: #ffd700;
+  animation: bounce-in 0.6s var(--ease-bounce);
+}
+
+/* ===== SHOP SCREEN ===== */
+.shop-screen {
+  gap: var(--space-md);
+  background: linear-gradient(135deg, #1a0a2e, #2d1052);
+  padding-top: 60px;
+  overflow-y: auto;
+}
+
+.shop-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-lg);
+}
+
+.shop-title {
+  font-size: var(--text-xl);
+  background: linear-gradient(135deg, #ffd700, #ffa500);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.shop-tabs {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 0 var(--space-md);
+}
+
+.shop-tab {
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-round);
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--text-xs);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.shop-tab.active {
+  background: rgba(196, 77, 255, 0.25);
+  border-color: rgba(196, 77, 255, 0.6);
+  color: white;
+}
+
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: var(--space-md);
+  padding: 0 var(--space-lg);
+  max-width: 500px;
+  width: 100%;
+}
+
+.shop-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-md) var(--space-sm);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-bounce);
+  text-align: center;
+}
+
+.shop-card:hover {
+  transform: translateY(-4px);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.shop-card:active {
+  transform: scale(0.95);
+}
+
+.shop-card-emoji {
+  font-size: clamp(36px, 10vw, 50px);
+  line-height: 1;
+}
+
+.shop-card-name {
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  color: white;
+}
+
+.shop-card-price {
+  font-size: var(--text-xs);
+  color: #ffd700;
+}
+
+.shop-card-status {
+  font-size: var(--text-xs);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+}
+
+.shop-card.equipped {
+  border-color: rgba(196, 77, 255, 0.7);
+  box-shadow: 0 0 20px rgba(196, 77, 255, 0.3);
+  background: rgba(196, 77, 255, 0.15);
+}
+
+.shop-card.equipped .shop-card-status {
+  background: rgba(196, 77, 255, 0.3);
+  color: #e0b0ff;
+}
+
+.shop-card.owned .shop-card-status {
+  color: #69f0ae;
+}
+
+.shop-card.locked {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.shop-card.locked:hover {
+  transform: none;
+}
+
+/* ===== ACCESSORY OVERLAY ===== */
+.unicorn-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+.accessory-overlay {
+  position: absolute;
+  top: -0.2em;
+  right: -0.3em;
+  font-size: 0.45em;
+  pointer-events: none;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.5));
+}
+
+/* ===== THEME OVERRIDES ===== */
+.game-container[data-theme="space"] {
+  --fire-bg-start: #0b0028;
+  --fire-bg-end: #1a0050;
+  --water-bg-start: #0b0028;
+  --water-bg-end: #1a0050;
+}
+
+.game-container[data-theme="candy"] {
+  --fire-bg-start: #4a0030;
+  --fire-bg-end: #2e0040;
+  --water-bg-start: #4a0030;
+  --water-bg-end: #2e0040;
+}
+
+.game-container[data-theme="ocean"] {
+  --fire-bg-start: #001a2e;
+  --fire-bg-end: #003040;
+  --water-bg-start: #001a2e;
+  --water-bg-end: #003040;
+}
+
+.game-container[data-theme="sunset"] {
+  --fire-bg-start: #2e1000;
+  --fire-bg-end: #3a0020;
+  --water-bg-start: #2e1000;
+  --water-bg-end: #3a0020;
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-height: 600px) {
   .sparky { font-size: 50px; }
@@ -646,4 +859,7 @@
   .mode-cards { gap: var(--space-md); }
   .mode-card { width: clamp(120px, 40vw, 160px); padding: var(--space-lg) var(--space-md); }
   .target-grid { gap: var(--space-sm); }
+  .shop-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: var(--space-sm); }
+  .shop-tabs { gap: 4px; }
+  .shop-tab { font-size: 11px; padding: 4px 8px; }
 }

@@ -8,7 +8,7 @@ const Game = (() => {
   // State
   let state = {
     mode: null,            // current MODES entry
-    screen: 'modeSelect',  // modeSelect | title | powerSelect | game | levelComplete | gameComplete
+    screen: 'modeSelect',  // modeSelect | title | powerSelect | shop | game | levelComplete | gameComplete
     level: 0,              // current level index
     round: 0,              // current round within level
     target: null,          // item the player needs to find (number for recognition/counting, bigger number for comparison, sum for addition)
@@ -16,10 +16,17 @@ const Game = (() => {
     power: 'fire',         // current power mode
     stars: 0,              // total stars earned
     levelStars: 0,         // stars earned this level
+    levelCoins: 0,         // coins earned this level
     answered: [],          // items already answered correctly in this round
     wrongAttempts: 0,      // wrong attempts this round (for star calculation)
     inputLocked: false,    // prevents rapid tapping
     problem: null,         // current problem for comparison/addition {a, b, answer} or {bigger, smaller}
+    // Shop state (shared across modes)
+    coins: 0,
+    owned: ['sparky', 'default'],  // default items are owned
+    equipped: { character: 'sparky', accessory: null, trail: 'default', theme: 'default' },
+    shopTab: 'characters',
+    shopFrom: 'modeSelect',       // where to go back to from shop
   };
 
   function gameId() { return state.mode.storageKey; }
@@ -30,6 +37,7 @@ const Game = (() => {
   function init() {
     Audio.init();
     cacheDOM();
+    loadShopState();
     bindEvents();
 
     // URL steering: ?mode=counting skips mode select and goes straight to that mode
@@ -61,6 +69,7 @@ const Game = (() => {
       modeSelect: document.querySelector('.mode-select-screen'),
       title: document.querySelector('.title-screen'),
       powerSelect: document.querySelector('.power-select-screen'),
+      shop: document.querySelector('.shop-screen'),
       game: document.querySelector('.game-screen'),
       levelComplete: document.querySelector('.level-complete-screen'),
       gameComplete: document.querySelector('.game-complete-screen'),
@@ -88,6 +97,12 @@ const Game = (() => {
     els.gcNumberRainbow = document.querySelector('.number-rainbow');
     els.gcTotalStars = document.querySelector('.total-stars');
     els.langBtns = document.querySelectorAll('.btn-lang');
+    els.shopGrid = document.querySelector('.shop-grid');
+    els.shopTabs = document.querySelectorAll('.shop-tab');
+    els.coinCountMode = document.querySelector('.coin-count-mode');
+    els.coinCountHud = document.querySelector('.coin-count-hud');
+    els.coinCountShop = document.querySelector('.coin-count-shop');
+    els.lcCoinsEarned = document.querySelector('.lc-coins-earned');
 
     Particles.init(els.particleCanvas);
   }
@@ -155,8 +170,8 @@ const Game = (() => {
       advanceLevel();
     });
 
-    // Back buttons
-    document.querySelectorAll('.btn-back').forEach(btn => {
+    // Back buttons (exclude shop-back which has its own handler)
+    document.querySelectorAll('.btn-back:not(.shop-back)').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         Audio.SFX.tap();
@@ -208,6 +223,36 @@ const Game = (() => {
         }
       });
     });
+
+    // Shop buttons
+    document.querySelector('.btn-shop-mode').addEventListener('click', () => {
+      Audio.SFX.tap();
+      state.shopFrom = 'modeSelect';
+      showScreen('shop');
+    });
+
+    document.querySelector('.btn-shop-lc').addEventListener('click', () => {
+      Audio.SFX.tap();
+      state.shopFrom = 'levelComplete';
+      showScreen('shop');
+    });
+
+    // Shop back button
+    document.querySelector('.shop-back').addEventListener('click', (e) => {
+      e.preventDefault();
+      Audio.SFX.tap();
+      showScreen(state.shopFrom);
+    });
+
+    // Shop tabs
+    els.shopTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        Audio.SFX.tap();
+        state.shopTab = tab.dataset.tab;
+        els.shopTabs.forEach(t => t.classList.toggle('active', t === tab));
+        renderShop();
+      });
+    });
   }
 
   // ===== LANGUAGE =====
@@ -244,12 +289,17 @@ const Game = (() => {
       el.classList.toggle('active', key === name);
     });
     Particles.clear();
+    applyCosmetics();
+    updateCoinDisplays();
 
     if (name === 'title') {
       updateTitleScreen();
     }
     if (name === 'modeSelect') {
       updateModeSelectLang();
+    }
+    if (name === 'shop') {
+      renderShop();
     }
   }
 
@@ -351,6 +401,7 @@ const Game = (() => {
   function startLevel() {
     state.round = 0;
     state.levelStars = 0;
+    state.levelCoins = 0;
     applyPowerTheme();
     showScreen('game');
     updateHUD();
@@ -561,20 +612,18 @@ const Game = (() => {
     // Visual effect on button
     btn.classList.add('correct');
 
-    // Particle effects based on power
+    // Earn coin
+    state.coins++;
+    state.levelCoins++;
+    saveShopState();
+    updateCoinDisplays();
+
+    // Particle effects based on power + trail
     const rect = btn.getBoundingClientRect();
     const cx = rect.left + rect.width / 2;
     const cy = rect.top + rect.height / 2;
 
-    if (state.power === 'fire') {
-      Particles.fireBurst(cx, cy, 35);
-      Audio.SFX.fire();
-    } else if (state.power === 'water') {
-      Particles.waterSplash(cx, cy, 35);
-      Audio.SFX.water();
-    } else {
-      Particles.rainbowExplosion(cx, cy);
-    }
+    playTrailEffect(cx, cy);
 
     // Screen shake on correct answer
     els.container.classList.add('animate-screen-shake');
@@ -620,6 +669,13 @@ const Game = (() => {
   }
 
   async function completedLevel() {
+    // Bonus coins for perfect level
+    const starCount = Math.min(state.levelStars, 3);
+    if (starCount >= 3) {
+      state.coins += 3;
+      state.levelCoins += 3;
+    }
+    saveShopState();
     saveProgress();
 
     // Show level complete screen
@@ -627,7 +683,6 @@ const Game = (() => {
     els.lcTitle.textContent = levelDef.title;
 
     // Stars display (up to 3 based on performance)
-    const starCount = Math.min(state.levelStars, 3);
     els.lcStars.innerHTML = '';
     for (let i = 0; i < 3; i++) {
       const span = document.createElement('span');
@@ -635,6 +690,9 @@ const Game = (() => {
       span.style.animationDelay = `${i * 0.3}s`;
       els.lcStars.appendChild(span);
     }
+
+    // Show coins earned
+    els.lcCoinsEarned.textContent = `🪙 +${state.levelCoins}`;
 
     // Button text
     const levels = state.mode.levels;
@@ -716,8 +774,10 @@ const Game = (() => {
   function applyPowerTheme() {
     els.container.setAttribute('data-power', state.power);
 
-    // Sparky glow
+    // Sparky glow — preserve unicorn-wrap class
+    const hadWrap = els.sparky.classList.contains('unicorn-wrap');
     els.sparky.className = 'sparky';
+    if (hadWrap) els.sparky.classList.add('unicorn-wrap');
     if (state.power === 'fire') els.sparky.classList.add('fire-glow');
     else if (state.power === 'water') els.sparky.classList.add('water-glow');
     else if (state.power === 'rainbow') els.sparky.classList.add('rainbow-glow');
@@ -751,6 +811,196 @@ const Game = (() => {
     const savedLevel = Storage.load(gameId(), 'level', 0);
     const savedStars = Storage.load(gameId(), 'stars', 0);
     return { level: savedLevel, stars: savedStars };
+  }
+
+  // ===== SHOP STATE =====
+
+  function loadShopState() {
+    state.coins = Storage.load('unicorn-numbers', 'coins', 0);
+    state.owned = Storage.load('unicorn-numbers', 'shopOwned', ['sparky', 'default']);
+    state.equipped = Storage.load('unicorn-numbers', 'shopEquipped', {
+      character: 'sparky', accessory: null, trail: 'default', theme: 'default',
+    });
+    // Ensure defaults are always owned
+    if (!state.owned.includes('sparky')) state.owned.push('sparky');
+    if (!state.owned.includes('default')) state.owned.push('default');
+  }
+
+  function saveShopState() {
+    Storage.save('unicorn-numbers', 'coins', state.coins);
+    Storage.save('unicorn-numbers', 'shopOwned', state.owned);
+    Storage.save('unicorn-numbers', 'shopEquipped', state.equipped);
+  }
+
+  function updateCoinDisplays() {
+    const txt = String(state.coins);
+    if (els.coinCountMode) els.coinCountMode.textContent = txt;
+    if (els.coinCountHud) els.coinCountHud.textContent = txt;
+    if (els.coinCountShop) els.coinCountShop.textContent = txt;
+  }
+
+  // ===== SHOP =====
+
+  function renderShop() {
+    const cat = state.shopTab;
+    const items = SHOP_ITEMS[cat];
+    if (!items || !els.shopGrid) return;
+
+    updateCoinDisplays();
+    els.shopGrid.innerHTML = '';
+
+    items.forEach(item => {
+      const isOwned = state.owned.includes(item.id);
+      const isEquipped = getEquippedId(cat) === item.id;
+      const canAfford = state.coins >= item.price;
+
+      const card = document.createElement('div');
+      card.className = 'shop-card';
+      if (isEquipped) card.classList.add('equipped');
+      else if (isOwned) card.classList.add('owned');
+      else if (!canAfford) card.classList.add('locked');
+
+      let statusText;
+      if (isEquipped) statusText = '✓ Equipped';
+      else if (isOwned) statusText = 'Tap to equip';
+      else if (item.price === 0) statusText = 'Free';
+      else statusText = `🪙 ${item.price}`;
+
+      card.innerHTML = `
+        <span class="shop-card-emoji">${item.emoji}</span>
+        <span class="shop-card-name">${item.name}</span>
+        <span class="shop-card-status">${statusText}</span>
+      `;
+
+      card.addEventListener('click', () => handleShopCardClick(item, cat));
+      els.shopGrid.appendChild(card);
+    });
+  }
+
+  function getEquippedId(category) {
+    if (category === 'characters') return state.equipped.character;
+    if (category === 'accessories') return state.equipped.accessory;
+    if (category === 'trails') return state.equipped.trail;
+    if (category === 'themes') return state.equipped.theme;
+    return null;
+  }
+
+  function handleShopCardClick(item, category) {
+    const isOwned = state.owned.includes(item.id);
+    const isEquipped = getEquippedId(category) === item.id;
+
+    if (isEquipped) {
+      // Already equipped — for accessories, unequip
+      if (category === 'accessories') {
+        Audio.SFX.tap();
+        state.equipped.accessory = null;
+        saveShopState();
+        applyCosmetics();
+        renderShop();
+      }
+      return;
+    }
+
+    if (isOwned || item.price === 0) {
+      // Equip it
+      Audio.SFX.tap();
+      equipItem(item, category);
+      return;
+    }
+
+    // Try to buy
+    if (state.coins >= item.price) {
+      Audio.SFX.correct();
+      state.coins -= item.price;
+      state.owned.push(item.id);
+      equipItem(item, category);
+    } else {
+      Audio.SFX.wrong();
+    }
+  }
+
+  function equipItem(item, category) {
+    if (category === 'characters') state.equipped.character = item.id;
+    else if (category === 'accessories') state.equipped.accessory = item.id;
+    else if (category === 'trails') state.equipped.trail = item.id;
+    else if (category === 'themes') state.equipped.theme = item.id;
+    saveShopState();
+    applyCosmetics();
+    renderShop();
+  }
+
+  // ===== COSMETICS =====
+
+  function applyCosmetics() {
+    // Character emoji
+    const charItem = SHOP_LOOKUP[state.equipped.character];
+    const charEmoji = charItem ? charItem.emoji : '🦄';
+    document.querySelectorAll('.title-unicorn, .sparky, .level-complete-unicorn').forEach(el => {
+      // Wrap in unicorn-wrap for accessory positioning
+      if (!el.querySelector('.unicorn-char')) {
+        el.textContent = '';
+        const span = document.createElement('span');
+        span.className = 'unicorn-char';
+        el.appendChild(span);
+      }
+      const charSpan = el.querySelector('.unicorn-char');
+      charSpan.textContent = charEmoji;
+
+      // Accessory overlay
+      let accSpan = el.querySelector('.accessory-overlay');
+      if (state.equipped.accessory) {
+        const accItem = SHOP_LOOKUP[state.equipped.accessory];
+        if (accItem) {
+          if (!accSpan) {
+            accSpan = document.createElement('span');
+            accSpan.className = 'accessory-overlay';
+            el.appendChild(accSpan);
+          }
+          accSpan.textContent = accItem.emoji;
+          el.classList.add('unicorn-wrap');
+        }
+      } else if (accSpan) {
+        accSpan.remove();
+        el.classList.remove('unicorn-wrap');
+      }
+    });
+
+    // Theme
+    const themeId = state.equipped.theme || 'default';
+    if (themeId === 'default') {
+      els.container.removeAttribute('data-theme');
+    } else {
+      els.container.setAttribute('data-theme', themeId);
+    }
+  }
+
+  function playTrailEffect(cx, cy) {
+    const trail = state.equipped.trail || 'default';
+
+    if (trail === 'hearts') {
+      Particles.confetti(25);
+      Audio.SFX.correct();
+    } else if (trail === 'stars') {
+      Particles.sparkle(cx, cy, 40, '#FFD700');
+      Audio.SFX.star();
+    } else if (trail === 'bolt') {
+      Particles.electricBolt(cx, cy);
+      Audio.SFX.fire();
+    } else if (trail === 'leaves') {
+      Particles.leafStorm(cx, cy);
+      Audio.SFX.water();
+    } else {
+      // Default: power-based
+      if (state.power === 'fire') {
+        Particles.fireBurst(cx, cy, 35);
+        Audio.SFX.fire();
+      } else if (state.power === 'water') {
+        Particles.waterSplash(cx, cy, 35);
+        Audio.SFX.water();
+      } else {
+        Particles.rainbowExplosion(cx, cy);
+      }
+    }
   }
 
   return { init };
