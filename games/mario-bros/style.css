@@ -460,6 +460,95 @@
   color: #3CB043;
 }
 
+/* ===== ENERGY GATE ===== */
+.energy-gate-screen {
+  gap: var(--space-lg);
+  text-align: center;
+  background: linear-gradient(135deg, #1a1a00, #2d2d00);
+}
+
+.energy-icon {
+  font-size: clamp(60px, 15vw, 100px);
+  animation: float 3s ease-in-out infinite;
+}
+
+.energy-title {
+  font-size: var(--text-2xl);
+  background: linear-gradient(135deg, #FFD700, #FFA500);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.energy-msg {
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
+}
+
+.energy-earn-hint {
+  font-size: var(--text-sm);
+  color: #FFD700;
+  font-family: var(--font-display);
+}
+
+.energy-buttons {
+  display: flex;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* ===== ENERGY DEPLETED OVERLAY ===== */
+.energy-depleted-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-lg);
+  background: rgba(0, 0, 0, 0.85);
+  text-align: center;
+}
+
+/* ===== ENERGY / COIN STATUS BAR ===== */
+.energy-status-bar {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-lg);
+  padding: var(--space-sm) var(--space-lg);
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-md);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+}
+
+.energy-status-time {
+  color: #FFD700;
+}
+
+.energy-status-coins {
+  color: #FFD700;
+}
+
+/* ===== HUD ENERGY ===== */
+.hud-energy {
+  font-size: var(--text-sm);
+  font-family: var(--font-display);
+  color: rgba(255, 215, 0, 0.7);
+}
+
+.hud-energy.energy-low {
+  color: #FF4444;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
 /* ===== RESPONSIVE ===== */
 @media (max-height: 600px) {
   .title-icon { font-size: 60px; }

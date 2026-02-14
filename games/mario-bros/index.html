@@ -36,6 +36,10 @@
         <button class="btn btn-primary btn-continue">▶ Continue</button>
         <span class="continue-info"></span>
       </div>
+      <div class="energy-status-bar">
+        <span class="energy-status-time">⚡ --</span>
+        <span class="energy-status-coins">🪙 --</span>
+      </div>
       <div class="controls-hint">
         <p><strong>1P:</strong> Arrows / WASD = Move · Space = Jump · X = Shoot · Q = Skill</p>
         <p><strong>Co-op:</strong> P1: WASD+Space+E+Q · P2: Arrows+Enter+Shift+/</p>
@@ -74,6 +78,10 @@
     <div class="screen level-select-screen">
       <a class="btn-back" href="#">←</a>
       <h2 class="ls-title">Select Level</h2>
+      <div class="energy-status-bar">
+        <span class="energy-status-time">⚡ --</span>
+        <span class="energy-status-coins">🪙 --</span>
+      </div>
       <div class="ls-levels"></div>
     </div>
 
@@ -126,6 +134,31 @@
       </div>
     </div>
 
+    <!-- ===== ENERGY GATE ===== -->
+    <div class="screen energy-gate-screen">
+      <div class="energy-icon">⚡</div>
+      <h2 class="energy-title">Out of Energy!</h2>
+      <p class="energy-msg">Play math games to earn more time</p>
+      <p class="energy-earn-hint">Each session = +5 minutes</p>
+      <div class="energy-buttons">
+        <button class="btn btn-primary btn-large btn-energy-edu">🎓 Play & Earn</button>
+        <button class="btn btn-primary btn-energy-pin">🔑 Parent Code</button>
+        <button class="btn btn-primary btn-energy-home">🏠 Home</button>
+      </div>
+    </div>
+
+    <!-- Energy depleted overlay (shown mid-game) -->
+    <div class="energy-depleted-overlay" style="display:none;">
+      <div class="energy-icon">⚡</div>
+      <h2 class="energy-title">Time's Up!</h2>
+      <p class="energy-msg">Play math games to earn more time</p>
+      <div class="energy-buttons">
+        <button class="btn btn-primary btn-large btn-depleted-edu">🎓 Play & Earn</button>
+        <button class="btn btn-primary btn-depleted-pin">🔑 Parent Code</button>
+        <button class="btn btn-primary btn-depleted-home">🏠 Home</button>
+      </div>
+    </div>
+
     <!-- ===== HUD (visible during gameplay) ===== -->
     <div class="hud game-hud" style="display: none;">
       <div class="hud-group">
@@ -137,6 +170,7 @@
         <span class="hud-score">Score: 0</span>
         <span class="hud-powerup"></span>
         <span class="hud-skill"></span>
+        <span class="hud-energy" style="display:none;"></span>
       </div>
       <div class="hud-p2" style="display: none;">
         <span class="hud-p2-lives">💚💚💚</span>
@@ -154,6 +188,8 @@
   <script src="../../shared/js/storage.js"></script>
   <script src="../../shared/js/supabase-sync.js"></script>
   <script src="../../shared/js/profile.js"></script>
+  <script src="../../shared/js/shared-coins.js"></script>
+  <script src="../../shared/js/energy.js"></script>
   <script>Profile.autoInit();</script>
 
   <!-- Game JS -->

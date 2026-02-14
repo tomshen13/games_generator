@@ -118,6 +118,96 @@ CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 CCCCCCCCCCCCCCCCCCCCC..CCCCCCCCCCLLLLCCCCCCC..CCCCCCCCCCCCCCCCCLLLLCCCCCCCCCCCCCCC..CCCCCCCCCCCCCCCCCCCCCCCCCCCCCC..CCCCCCCCCCCLLLLCCCCCC..CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 gggggggggggggggggggg...ggggggggggLLLLggggggg..ggggggggggggggggLLLLggggggggggggggg...gggggggggggggggggggggggggggggg..gggggggggggLLLLgggggg..gggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggggg`);
 
+  // ===== LEVEL 6: DESERT RUINS =====
+  const L6 = parseMap(
+`
+................................................................................................................................................................................
+................................................................................................................................................................................
+................................................................................................................................................................................
+................................................................................................................................................................................
+..............?..................................................Q..?..............................................................?.............................................
+................................................................................................................................................................................
+....................BB.BB.BB.......................BB.BB.BB.........................................BB.BB.BB.BB.......................BB.BB.BB........................................
+................................................................................................................................................................................
+................................................................................................................................................................................
+.......................................-.-.-.-.-.-.............................................-.-.-.-.-.-.-.........................................-.-.-.-.-.........................
+................................................................................................................................................................................
+..........PP......................................PP..................................PP......................................PP............................................PP......F.
+GGGGGGGGGGPPGGGGG.....GGGGGGGGGGGGG.....GGGGGGGGPPGGGGGGGGG.....GGGGGGGGGGGGGGG.....GGGGGGGGGPPGGGGGGGGG.....GGGGGGGGGGGGG.....GGGGGGGPPGGGGGGGGG.....GGGGGGGGGGGGGGGPPGGGGGGGGGGGGGG
+gggggggggggggggg......ggggggggggggg.....ggggggggggggggggggg.....ggggggggggggggg.....ggggggggggggggggggg......ggggggggggggg.....ggggggggggggggggggg.....ggggggggggggggggggggggggggggggg`);
+
+  // ===== LEVEL 7: TOXIC SWAMP =====
+  const L7 = parseMap(
+`
+BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB
+................................................................................................................................................................................
+................................................................................................................................................................................
+.............?...................................................Q..?..................................................................?.........................................
+................................................................................................................................................................................
+................................................................................................................................................................................
+..........-.-.-.-..........-.-.-.-.........-.-.-.-.-.........-.-.-.-.........-.-.-.-.-.........-.-.-.-.........-.-.-.-.-.........-.-.-.-.........-.-.-.-.-............................
+................................................................................................................................................................................
+................................................................................................................................................................................
+....-.-.-.-.........-.-.-.-.........-.-.-.-.........-.-.-.-.........-.-.-.-.........-.-.-.-.........-.-.-.-.........-.-.-.-.........-.-.-.-.........-.-.-.-...........................
+..........PP..................................PP..................................PP..................................PP..................................PP..........F.
+GGGGGGGGGGGPPGGGGG..GGGGGLLLLGGGGG..GGGGGGGGGGGPPGGGGGGG..GGGGGGLLLLGGGGGGG..GGGGGGGGGGGPPGGGGGGG..GGGGGGLLLLGGGGG..GGGGGGGGGGGPPGGGGGGG..GGGGGGGLLLLGGGGG..GGGGGGGGGGGPPGGGGGGGGGGG
+ggggggggggggggggg...gggggLLLLggggg..ggggggggggggggggggg...ggggggLLLLggggggg..ggggggggggggggggggg...ggggggLLLLggggg..ggggggggggggggggggg...ggggggLLLLggggg..ggggggggggggggggggggggg`);
+
+  // ===== LEVEL 8: CLOCKWORK TOWER =====
+  const L8 = parseMap(
+`
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+................................................................................................................................................................................
+...................?..........................................................Q..?..................................................................?.................................
+................................................................................................................................................................................
+........................BB.BB.BB..............................BB.BB.BB.............................................BB.BB.BB..............................BB.BB.BB....................
+................................................................................................................................................................................
+...............-.-.-.-.............-.-.-.-.............-.-.-.-.............-.-.-.-.............-.-.-.-.............-.-.-.-.............-.-.-.-.............-.-.-.-.......................
+................................................................................................................................................................................
+..........-.-.-.-.............-.-.-.-.............-.-.-.-.............-.-.-.-.............-.-.-.-.............-.-.-.-.............-.-.-.-.............-.-.-.-.-.........................
+................................................................................................................................................................................
+...............................................................................................................................................................................................................F.
+CCCCCCCCCCCCCCCCCCCCC...CCCCCCCCCCCCCCCCCCCC...CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC...CCCCCCCCCCCCCCCCCCCCCCCCCCCC...CCCCCCCCCCCCCCCCCCCC...CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+gggggggggggggggggggg....gggggggggggggggggggg...ggggggggggggggggggggggggggggggggggg...gggggggggggggggggggggggggggg...gggggggggggggggggggg...ggggggggggggggggggggggggggggggggggggggggggg`);
+
+  // ===== LEVEL 9: GHOST SHIP =====
+  const L9 = parseMap(
+`
+................................................................................................................................................................................
+................................................................................................................................................................................
+................................................................................................................................................................................
+.................?..........................................................Q..?..................................................................?.................................
+................................................................................................................................................................................
+.........CCCCCCCC.........CCCCCCCC.........CCCCCCCC.........CCCCCCCC.........CCCCCCCC.........CCCCCCCC.........CCCCCCCC.........CCCCCCCC.........CCCCCCCC........................
+................................................................................................................................................................................
+.....-.-.-.-.........-.-.-.-.........-.-.-.-.........-.-.-.-.........-.-.-.-.........-.-.-.-.........-.-.-.-.........-.-.-.-.........-.-.-.-.........-.-.-.-.........................
+..........PP..............PP..............PP..............PP..............PP..............PP..............PP..............PP..............PP........................................
+................................................................................................................................................................................
+...CCCCCCCC.........CCCCCCCC.........CCCCCCCC.........CCCCCCCC.........CCCCCCCC.........CCCCCCCC.........CCCCCCCC.........CCCCCCCC.........CCCCCCCC..............................
+..........pp..............pp..............pp..............pp..............pp..............pp..............pp..............pp..............pp......................................F.
+CCCCCCCCCCPPCCCCCCCCCCCCCCPPCCCCCCCCCCCCCCPPCCCCCCCCCCCCCCPPCCCCCCCCCCCCCCPPCCCCCCCCCCCCCCPPCCCCCCCCCCCCCCPPCCCCCCCCCCCCCCPPCCCCCCCCCCCCCCPPCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL`);
+
+  // ===== LEVEL 10: VOLCANO CORE =====
+  const L10 = parseMap(
+`
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+.................................................................................................................................................................................................................
+.................................................................................................................................................................................................................
+.............?............................?..............................Q..?............................?..............................?.............................................?................................
+.................................................................................................................................................................................................................
+...............BB.BB.BB.......................BB.BB.............................................BB.BB.BB.BB.......................BB.BB...............BB.BB.BB.....................BB.BB.............................................
+.................................................................................................................................................................................................................
+.................................................................................................................................................................................................................
+.......................................-.-.-.-.-.-.............................................-.-.-.-.-.-.-.............................................-.-.-.-.-.-.............................................-.-.-.-.-.-.-.........
+.................................................................................................................................................................................................................
+.............................................................................................................................................................................................................F.
+CCCCCCCCCCCCCCCCCCCCC..CCCCCCCCCCCLLLLCCCCC..CCCCCCCCCCCCCCCCLLLLCCCCCCCCCCCCCC..CCCCCCCCCCCCCCCCCCCCCCCCCCC..CCCCCCCCCCCLLLLCCCCC..CCCCCCCCCCCCCCCCCCCCC..CCCCCCCCCLLLLCCCCC..CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
+gggggggggggggggggggg...gggggggggggLLLLggggg..ggggggggggggggggLLLLgggggggggggg....ggggggggggggggggggggggggggg..gggggggggggLLLLggggg..ggggggggggggggggggggg..gggggggggLLLLggggg..ggggggggggggggggggggggggggggggggggggggggggggggggg`);
+
   // ===== ENTITY DEFINITIONS =====
 
   function buildLevel(parsed, meta) {
@@ -281,6 +371,217 @@ gggggggggggggggggggg...ggggggggggLLLLggggggg..ggggggggggggggggLLLLgggggggggggggg
         { type: 'gem', x: 45, y: 2 },
         { type: 'gem', x: 108, y: 3 },
         { type: 'gem', x: 158, y: 3 },
+      ],
+    }),
+
+    buildLevel(L6, {
+      id: 6,
+      name: 'Desert Ruins',
+      powerUp: 'mushroom',
+      bgColor: '#C2956B',
+      bgLayers: ['hills', 'bushes'],
+      entities: [
+        { type: 'spawn', x: 3, y: 11 },
+        { type: 'goomba', x: 18, y: 11 },
+        { type: 'goomba', x: 30, y: 11 },
+        { type: 'beetle', x: 38, y: 11 },
+        { type: 'coin_row', x: 22, y: 5, count: 3 },
+        { type: 'bobomb', x: 45, y: 11 },
+        { type: 'goomba', x: 55, y: 11 },
+        { type: 'koopa_fly', x: 60, y: 5 },
+        { type: 'coin_row', x: 50, y: 8, count: 4 },
+        { type: 'goomba', x: 70, y: 11 },
+        { type: 'beetle', x: 78, y: 11 },
+        { type: 'goomba', x: 88, y: 11 },
+        { type: 'koopa_fly', x: 95, y: 6 },
+        { type: 'coin_row', x: 85, y: 5, count: 3 },
+        { type: 'bobomb', x: 105, y: 11 },
+        { type: 'goomba', x: 112, y: 11 },
+        { type: 'beetle', x: 120, y: 11 },
+        { type: 'goomba', x: 128, y: 11 },
+        { type: 'koopa_fly', x: 135, y: 5 },
+        { type: 'bobomb', x: 142, y: 11 },
+        { type: 'coin_row', x: 118, y: 8, count: 5 },
+        { type: 'coin', x: 150, y: 5 },
+        // Gems
+        { type: 'gem', x: 22, y: 4 },
+        { type: 'gem', x: 85, y: 4 },
+        { type: 'gem', x: 148, y: 4 },
+      ],
+    }),
+
+    buildLevel(L7, {
+      id: 7,
+      name: 'Toxic Swamp',
+      powerUp: 'wings',
+      bgColor: '#1C3020',
+      bgLayers: ['cave_ceiling', 'stalactites'],
+      entities: [
+        { type: 'spawn', x: 3, y: 11 },
+        { type: 'piranha', x: 11, y: 11 },
+        { type: 'goomba', x: 22, y: 11 },
+        { type: 'piranha', x: 33, y: 11 },
+        { type: 'beetle', x: 40, y: 11 },
+        { type: 'boo', x: 48, y: 6 },
+        { type: 'coin_row', x: 25, y: 6, count: 4 },
+        { type: 'goomba', x: 55, y: 11 },
+        { type: 'piranha', x: 55, y: 11 },
+        { type: 'boo', x: 62, y: 5 },
+        { type: 'beetle', x: 70, y: 11 },
+        { type: 'piranha', x: 77, y: 11 },
+        { type: 'coin_row', x: 65, y: 9, count: 5 },
+        { type: 'goomba', x: 85, y: 11 },
+        { type: 'boo', x: 90, y: 6 },
+        { type: 'piranha', x: 99, y: 11 },
+        { type: 'beetle', x: 105, y: 11 },
+        { type: 'boo', x: 110, y: 5 },
+        { type: 'goomba', x: 118, y: 11 },
+        { type: 'piranha', x: 121, y: 11 },
+        { type: 'boo', x: 128, y: 6 },
+        { type: 'beetle', x: 135, y: 11 },
+        { type: 'goomba', x: 142, y: 11 },
+        { type: 'coin_row', x: 100, y: 6, count: 4 },
+        { type: 'coin_row', x: 135, y: 3, count: 3 },
+        // Gems
+        { type: 'gem', x: 25, y: 2 },
+        { type: 'gem', x: 90, y: 3 },
+        { type: 'gem', x: 140, y: 2 },
+      ],
+    }),
+
+    buildLevel(L8, {
+      id: 8,
+      name: 'Clockwork Tower',
+      powerUp: 'speed',
+      bgColor: '#2E2E4E',
+      bgLayers: ['clouds_near'],
+      entities: [
+        { type: 'spawn', x: 3, y: 11 },
+        { type: 'bobomb', x: 22, y: 11 },
+        { type: 'beetle', x: 30, y: 11 },
+        { type: 'coin_row', x: 16, y: 6, count: 3 },
+        { type: 'koopa_fly', x: 40, y: 5 },
+        { type: 'bobomb', x: 50, y: 11 },
+        { type: 'beetle', x: 58, y: 11 },
+        { type: 'boo', x: 65, y: 4 },
+        { type: 'coin_row', x: 42, y: 8, count: 4 },
+        { type: 'koopa_fly', x: 75, y: 6 },
+        { type: 'bobomb', x: 82, y: 11 },
+        { type: 'beetle', x: 88, y: 11 },
+        { type: 'goomba', x: 95, y: 11 },
+        { type: 'koopa_fly', x: 100, y: 4 },
+        { type: 'boo', x: 108, y: 5 },
+        { type: 'bobomb', x: 115, y: 11 },
+        { type: 'beetle', x: 122, y: 11 },
+        { type: 'koopa_fly', x: 130, y: 5 },
+        { type: 'bobomb', x: 138, y: 11 },
+        { type: 'goomba', x: 145, y: 11 },
+        { type: 'boo', x: 150, y: 4 },
+        { type: 'coin_row', x: 90, y: 6, count: 4 },
+        { type: 'coin_row', x: 130, y: 8, count: 3 },
+        { type: 'coin', x: 155, y: 5 },
+        // Gems
+        { type: 'gem', x: 16, y: 2 },
+        { type: 'gem', x: 82, y: 2 },
+        { type: 'gem', x: 150, y: 2 },
+      ],
+    }),
+
+    buildLevel(L9, {
+      id: 9,
+      name: 'Ghost Ship',
+      powerUp: 'shield',
+      bgColor: '#0A0A2A',
+      bgLayers: ['clouds_far', 'snowflakes'],
+      entities: [
+        { type: 'spawn', x: 1, y: 11 },
+        { type: 'boo', x: 12, y: 5 },
+        { type: 'boo', x: 20, y: 3 },
+        { type: 'beetle', x: 25, y: 11 },
+        { type: 'koopa_fly', x: 30, y: 4 },
+        { type: 'coin_row', x: 15, y: 6, count: 3 },
+        { type: 'boo', x: 38, y: 6 },
+        { type: 'piranha', x: 42, y: 11 },
+        { type: 'boo', x: 50, y: 3 },
+        { type: 'koopa_fly', x: 55, y: 5 },
+        { type: 'beetle', x: 60, y: 11 },
+        { type: 'coin_row', x: 45, y: 9, count: 4 },
+        { type: 'boo', x: 68, y: 4 },
+        { type: 'boo', x: 75, y: 6 },
+        { type: 'piranha', x: 80, y: 11 },
+        { type: 'koopa_fly', x: 85, y: 3 },
+        { type: 'bobomb', x: 90, y: 11 },
+        { type: 'coin_row', x: 72, y: 6, count: 4 },
+        { type: 'boo', x: 98, y: 5 },
+        { type: 'beetle', x: 105, y: 11 },
+        { type: 'boo', x: 110, y: 3 },
+        { type: 'koopa_fly', x: 115, y: 5 },
+        { type: 'piranha', x: 120, y: 11 },
+        { type: 'bobomb', x: 128, y: 11 },
+        { type: 'goomba', x: 135, y: 11 },
+        { type: 'goomba', x: 140, y: 11 },
+        { type: 'koopa_fly', x: 145, y: 4 },
+        { type: 'coin_row', x: 110, y: 9, count: 5 },
+        { type: 'coin', x: 150, y: 6 },
+        // Gems
+        { type: 'gem', x: 5, y: 4 },
+        { type: 'gem', x: 68, y: 2 },
+        { type: 'gem', x: 145, y: 2 },
+      ],
+    }),
+
+    buildLevel(L10, {
+      id: 10,
+      name: 'Volcano Core',
+      powerUp: 'star',
+      bgColor: '#4A0000',
+      bgLayers: ['lava_glow'],
+      entities: [
+        { type: 'spawn', x: 3, y: 11 },
+        // Zone 1: Entry Cavern
+        { type: 'goomba', x: 18, y: 11 },
+        { type: 'beetle', x: 25, y: 11 },
+        { type: 'bobomb', x: 32, y: 11 },
+        { type: 'koopa_fly', x: 38, y: 5 },
+        { type: 'coin_row', x: 20, y: 3, count: 3 },
+        { type: 'goomba', x: 45, y: 11 },
+        { type: 'piranha', x: 50, y: 11 },
+        // Zone 2: Thermal Shafts
+        { type: 'boo', x: 58, y: 4 },
+        { type: 'bobomb', x: 65, y: 11 },
+        { type: 'koopa_fly', x: 72, y: 5 },
+        { type: 'beetle', x: 78, y: 11 },
+        { type: 'coin_row', x: 60, y: 8, count: 4 },
+        { type: 'goomba', x: 85, y: 11 },
+        { type: 'bobomb', x: 92, y: 11 },
+        { type: 'boo', x: 98, y: 5 },
+        { type: 'koopa_fly', x: 105, y: 4 },
+        // Zone 3: Lava Falls
+        { type: 'piranha', x: 110, y: 11 },
+        { type: 'goomba', x: 118, y: 11 },
+        { type: 'bobomb', x: 125, y: 11 },
+        { type: 'koopa_fly', x: 130, y: 5 },
+        { type: 'beetle', x: 135, y: 11 },
+        { type: 'boo', x: 140, y: 4 },
+        { type: 'coin_row', x: 120, y: 6, count: 5 },
+        // Zone 4: Final Gauntlet
+        { type: 'piranha', x: 148, y: 11 },
+        { type: 'bobomb', x: 155, y: 11 },
+        { type: 'koopa_fly', x: 160, y: 5 },
+        { type: 'goomba', x: 165, y: 11 },
+        { type: 'beetle', x: 170, y: 11 },
+        { type: 'boo', x: 175, y: 4 },
+        { type: 'bobomb', x: 180, y: 11 },
+        { type: 'koopa_fly', x: 185, y: 5 },
+        { type: 'goomba', x: 190, y: 11 },
+        { type: 'boo', x: 195, y: 5 },
+        { type: 'piranha', x: 198, y: 11 },
+        { type: 'coin_row', x: 155, y: 8, count: 5 },
+        { type: 'coin_row', x: 180, y: 3, count: 4 },
+        // Gems
+        { type: 'gem', x: 20, y: 2 },
+        { type: 'gem', x: 98, y: 2 },
+        { type: 'gem', x: 185, y: 2 },
       ],
     }),
   ];

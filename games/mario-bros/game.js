@@ -43,13 +43,20 @@ const Game = (() => {
     bindEvents();
     renderCharPreviews();
 
+    SharedCoins.migrate();
+
     const unlocked = Storage.load(GAME_ID, 'unlockedLevel', 0);
     if (unlocked > 0) {
       els.continueWrapper.style.display = 'flex';
       els.continueInfo.textContent = `${unlocked + 1} of ${LEVELS.length} levels unlocked`;
     }
 
-    showScreen('title');
+    // Check energy — show gate if depleted
+    if (typeof Energy !== 'undefined' && Energy.getRemaining() <= 0) {
+      showScreen('energyGate');
+    } else {
+      showScreen('title');
+    }
   }
 
   function cacheDOM() {
@@ -64,7 +71,12 @@ const Game = (() => {
       gameOver: document.querySelector('.game-over-screen'),
       victory: document.querySelector('.victory-screen'),
       shop: document.querySelector('.shop-screen'),
+      energyGate: document.querySelector('.energy-gate-screen'),
     };
+    els.energyOverlay = document.querySelector('.energy-depleted-overlay');
+    els.hudEnergy = document.querySelector('.hud-energy');
+    els.statusTimes = document.querySelectorAll('.energy-status-time');
+    els.statusCoins = document.querySelectorAll('.energy-status-coins');
     els.lsLevels = document.querySelector('.ls-levels');
     els.shopCoinCount = document.querySelector('.shop-coin-count');
     els.shopItems = document.querySelector('.shop-items');
@@ -174,7 +186,6 @@ const Game = (() => {
     document.querySelector('.btn-retry').addEventListener('click', () => {
       Audio.SFX.tap();
       persistent.lives = 3;
-      persistent.coins = 0;
       // Keep purchased powers — they're permanent
       startLevel(state.currentLevel);
     });
@@ -182,7 +193,6 @@ const Game = (() => {
     document.querySelector('.btn-go-levels').addEventListener('click', () => {
       Audio.SFX.tap();
       persistent.lives = 3;
-      persistent.coins = 0;
       showLevelSelect();
     });
 
@@ -206,6 +216,32 @@ const Game = (() => {
         state.paused = !state.paused;
       }
     });
+
+    // Energy gate buttons
+    const energyEduBtn = document.querySelector('.btn-energy-edu');
+    if (energyEduBtn) energyEduBtn.addEventListener('click', () => { window.location.href = '../../index.html'; });
+    const energyPinBtn = document.querySelector('.btn-energy-pin');
+    if (energyPinBtn) energyPinBtn.addEventListener('click', async () => {
+      const ok = await Energy.parentBypass();
+      if (ok) showScreen('title');
+    });
+    const energyHomeBtn = document.querySelector('.btn-energy-home');
+    if (energyHomeBtn) energyHomeBtn.addEventListener('click', () => { window.location.href = '../../index.html'; });
+
+    // Energy depleted overlay buttons
+    const depEduBtn = document.querySelector('.btn-depleted-edu');
+    if (depEduBtn) depEduBtn.addEventListener('click', () => { window.location.href = '../../index.html'; });
+    const depPinBtn = document.querySelector('.btn-depleted-pin');
+    if (depPinBtn) depPinBtn.addEventListener('click', async () => {
+      const ok = await Energy.parentBypass();
+      if (ok) {
+        els.energyOverlay.style.display = 'none';
+        state.paused = false;
+        Engine.startLoop(update, render);
+      }
+    });
+    const depHomeBtn = document.querySelector('.btn-depleted-home');
+    if (depHomeBtn) depHomeBtn.addEventListener('click', () => { window.location.href = '../../index.html'; });
   }
 
   function renderCharPreviews() {
@@ -240,11 +276,27 @@ const Game = (() => {
     const isPlaying = name === 'playing';
     els.hud.style.display = isPlaying ? 'flex' : 'none';
     els.gameCanvas.style.opacity = isPlaying ? '1' : '0';
+    if (els.energyOverlay) els.energyOverlay.style.display = 'none';
 
     if (!isPlaying) {
+      if (typeof Energy !== 'undefined') Energy.stopTimer();
+      if (els.hudEnergy) els.hudEnergy.style.display = 'none';
       Engine.stopLoop();
       Particles.clear();
     }
+
+    updateStatusBars();
+  }
+
+  /** Update energy + coin status bars on title/level-select screens */
+  function updateStatusBars() {
+    if (typeof Energy !== 'undefined') {
+      const rem = Energy.getRemaining();
+      const text = rem === Infinity ? '⚡ Unlimited' : `⚡ ${Math.floor(rem)} min`;
+      els.statusTimes.forEach(el => { el.textContent = text; });
+    }
+    const coins = typeof SharedCoins !== 'undefined' ? SharedCoins.get() : 0;
+    els.statusCoins.forEach(el => { el.textContent = `🪙 ${coins}`; });
   }
 
   // ===== LEVEL LIFECYCLE =====
@@ -353,7 +405,6 @@ const Game = (() => {
     // Apply persistent state to player 1 (single player only)
     if (!state.coop) {
       const p1 = state.players[0];
-      p1.coins = persistent.coins;
       p1.score = persistent.score;
       p1.lives = persistent.lives;
       for (const power of persistent.powerStack) {
@@ -373,6 +424,26 @@ const Game = (() => {
 
     showScreen('playing');
     Engine.startLoop(update, render);
+
+    // Start energy timer
+    if (typeof Energy !== 'undefined') {
+      Energy.startTimer(
+        (remaining) => {
+          if (els.hudEnergy) {
+            const min = Math.floor(remaining);
+            const sec = Math.floor((remaining - min) * 60);
+            els.hudEnergy.textContent = `⚡ ${min}:${sec.toString().padStart(2, '0')}`;
+            els.hudEnergy.style.display = 'inline';
+            els.hudEnergy.classList.toggle('energy-low', remaining < 5);
+          }
+        },
+        () => {
+          state.paused = true;
+          Engine.stopLoop();
+          if (els.energyOverlay) els.energyOverlay.style.display = 'flex';
+        }
+      );
+    }
   }
 
   // ===== UPDATE =====
@@ -831,7 +902,7 @@ const Game = (() => {
     if (!p1) return;
 
     els.hudLives.textContent = '❤️'.repeat(Math.max(0, p1.lives));
-    els.hudCoins.textContent = `🪙 ${p1.coins}`;
+    els.hudCoins.textContent = `🪙 ${SharedCoins.get()}`;
     els.hudScore.textContent = `Score: ${p1.score}`;
     els.hudLevel.textContent = `${LEVELS[state.currentLevel].name}`;
 
@@ -855,7 +926,7 @@ const Game = (() => {
 
   // ===== LEVEL SELECT =====
 
-  const LEVEL_ICONS = ['🌿', '🕳️', '☁️', '🏰', '🔥'];
+  const LEVEL_ICONS = ['🌿', '🕳️', '☁️', '🏰', '🔥', '🏜️', '🍄', '⚙️', '👻', '🌋'];
 
   function showLevelSelect() {
     const unlocked = Storage.load(GAME_ID, 'unlockedLevel', 0);
@@ -903,12 +974,13 @@ const Game = (() => {
   }
 
   function updateShopUI() {
-    els.shopCoinCount.textContent = persistent.coins;
+    const sharedBal = SharedCoins.get();
+    els.shopCoinCount.textContent = sharedBal;
 
     els.shopItems.innerHTML = '';
     for (const item of SHOP_DATA) {
       const owned = item.type !== 'life' && persistent.powerStack.includes(item.type);
-      const tooExpensive = persistent.coins < item.price;
+      const tooExpensive = sharedBal < item.price;
 
       const btn = document.createElement('button');
       btn.className = 'shop-item';
@@ -924,8 +996,8 @@ const Game = (() => {
 
       if (!owned && !tooExpensive) {
         btn.addEventListener('click', () => {
+          if (!SharedCoins.spend(item.price)) return;
           Audio.SFX.powerup();
-          persistent.coins -= item.price;
           if (item.type === 'life') {
             persistent.lives++;
           } else {
@@ -954,7 +1026,6 @@ const Game = (() => {
 
     // Save player state to persistent (powerStack is permanent — only changed via shop)
     if (!state.coop) {
-      persistent.coins = p1.coins;
       persistent.score = p1.score;
       persistent.lives = p1.lives;
     }
@@ -970,7 +1041,7 @@ const Game = (() => {
       setTimeout(() => onVictory(), 1000);
     } else {
       els.lcTitle.textContent = `Level ${state.currentLevel + 1} Complete!`;
-      els.lcStats.textContent = `🪙 ${p1.coins} coins · 💎 ${p1.gems}/3 gems · Score: ${p1.score}`;
+      els.lcStats.textContent = `💎 ${p1.gems}/3 gems · Score: ${p1.score}`;
 
       const nextPower = LEVELS[state.currentLevel + 1].powerUp;
       const powerNames = { ice: '❄️ Ice Power', fire: '🔥 Fire Power', wings: '🪽 Wings', star: '⭐ Star Power', mushroom: '🍄 Super Mushroom', magnet: '🧲 Magnet', shield: '🛡️ Shield', speed: '⚡ Speed Boost' };
@@ -983,7 +1054,7 @@ const Game = (() => {
   function onGameOver() {
     Engine.stopLoop();
     const p1 = state.players[0];
-    els.goScore.textContent = `Score: ${p1.score} · 🪙 ${p1.coins} coins`;
+    els.goScore.textContent = `Score: ${p1.score}`;
     showScreen('gameOver');
   }
 
@@ -993,7 +1064,7 @@ const Game = (() => {
     Particles.confetti(100);
 
     const p1 = state.players[0];
-    els.vicStats.textContent = `Final Score: ${p1.score} · 🪙 ${p1.coins} coins`;
+    els.vicStats.textContent = `Final Score: ${p1.score}`;
     Storage.clearGame(GAME_ID);
     showScreen('victory');
 
