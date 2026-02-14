@@ -926,20 +926,65 @@ const Game = (() => {
 
   // ===== LEVEL SELECT =====
 
-  const LEVEL_ICONS = ['🌿', '🕳️', '☁️', '🏰', '🔥', '🏜️', '🍄', '⚙️', '👻', '🌋'];
+  const WORLDS = [
+    { name: 'Grasslands', icon: '🌿' },
+    { name: 'Wasteland', icon: '🏜️' },
+    { name: 'Dark Realm', icon: '👻' },
+    { name: 'Crystal Kingdom', icon: '💎' },
+    { name: 'Final Frontier', icon: '🌋' },
+  ];
+  const LEVELS_PER_WORLD = 4;
+
+  const LEVEL_ICONS = [
+    '🌿', '🕳️', '☁️', '🏰',
+    '🔥', '🏜️', '🍄', '⚙️',
+    '👻', '🌋', '🌲', '💀',
+    '💎', '🏔️', '🪞', '🏯',
+    '🌊', '⛈️', '🗼', '👑',
+  ];
 
   function showLevelSelect() {
     const unlocked = Storage.load(GAME_ID, 'unlockedLevel', 0);
-    els.lsLevels.innerHTML = '';
+    const activeWorld = Math.floor(Math.min(unlocked, LEVELS.length - 1) / LEVELS_PER_WORLD);
 
-    for (let i = 0; i < LEVELS.length; i++) {
+    // Render world tabs
+    const tabsEl = document.querySelector('.ls-world-tabs');
+    tabsEl.innerHTML = '';
+    for (let w = 0; w < WORLDS.length; w++) {
+      const firstLevel = w * LEVELS_PER_WORLD;
+      const worldLocked = firstLevel > unlocked;
+      const tab = document.createElement('button');
+      tab.className = 'ls-world-tab' + (w === activeWorld ? ' active' : '') + (worldLocked ? ' ls-world-locked' : '');
+      tab.textContent = `${WORLDS[w].icon} ${WORLDS[w].name}`;
+      if (!worldLocked) {
+        tab.addEventListener('click', () => {
+          Audio.SFX.tap();
+          renderWorldLevels(w, unlocked);
+          tabsEl.querySelectorAll('.ls-world-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+        });
+      }
+      tabsEl.appendChild(tab);
+    }
+
+    renderWorldLevels(activeWorld, unlocked);
+    showScreen('levelSelect');
+  }
+
+  function renderWorldLevels(worldIndex, unlocked) {
+    els.lsLevels.innerHTML = '';
+    const start = worldIndex * LEVELS_PER_WORLD;
+    const end = Math.min(start + LEVELS_PER_WORLD, LEVELS.length);
+
+    for (let i = start; i < end; i++) {
       const lvl = LEVELS[i];
       const locked = i > unlocked;
+      const levelInWorld = i - start + 1;
       const btn = document.createElement('button');
       btn.className = 'card ls-card' + (locked ? ' ls-locked' : '');
       btn.innerHTML = `
-        <span class="ls-icon">${locked ? '🔒' : LEVEL_ICONS[i]}</span>
-        <span class="ls-num">Level ${i + 1}</span>
+        <span class="ls-icon">${locked ? '🔒' : (LEVEL_ICONS[i] || '⭐')}</span>
+        <span class="ls-num">${worldIndex + 1}-${levelInWorld}</span>
         <span class="ls-name">${lvl.name}</span>
       `;
 
@@ -952,8 +997,6 @@ const Game = (() => {
 
       els.lsLevels.appendChild(btn);
     }
-
-    showScreen('levelSelect');
   }
 
   // ===== SHOP =====
