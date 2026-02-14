@@ -798,6 +798,19 @@ registerProcessor('pcm-processor', PCMProcessor);
     console.log('[VoiceTutor] Saved adaptive records:', records);
   }
 
+  function showCoinsEarned() {
+    if (typeof SharedCoins === 'undefined') return;
+    // Insert a coins earned badge before the review section
+    let badge = document.querySelector('.session-coins-badge');
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.className = 'session-coins-badge';
+      badge.style.cssText = 'text-align:center;font-size:1.2em;color:#ffd700;font-weight:bold;margin:8px 0;';
+      els.sessionReview.parentNode.insertBefore(badge, els.sessionReview);
+    }
+    badge.textContent = `🪙 +10 coins  ⚡ +5 min`;
+  }
+
   function showReviewLoading() {
     els.sessionReview.innerHTML = `
       <div class="review-loading">
@@ -865,6 +878,14 @@ registerProcessor('pcm-processor', PCMProcessor);
       session = null;
     }
 
+    // Earn shared coins and energy
+    if (typeof SharedCoins !== 'undefined') {
+      SharedCoins.add(10);
+    }
+    if (typeof Energy !== 'undefined') {
+      Energy.earnMinutes(5);
+    }
+
     // Render review
     if (assessmentData) {
       renderReview(assessmentData);
@@ -874,6 +895,9 @@ registerProcessor('pcm-processor', PCMProcessor);
       els.sessionReview.innerHTML = '';
       els.reviewSummary.textContent = '';
     }
+
+    // Show coins earned badge
+    showCoinsEarned();
 
     // Save session history
     if (typeof Storage !== 'undefined' && window.Storage) {

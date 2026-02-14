@@ -43,10 +43,10 @@ const Game = (() => {
     bindEvents();
     renderCharPreviews();
 
-    const saved = Storage.load(GAME_ID, 'level', 0);
-    if (saved > 0 && saved < LEVELS.length) {
+    const unlocked = Storage.load(GAME_ID, 'unlockedLevel', 0);
+    if (unlocked > 0) {
       els.continueWrapper.style.display = 'flex';
-      els.continueInfo.textContent = `Level ${saved + 1} of ${LEVELS.length}`;
+      els.continueInfo.textContent = `${unlocked + 1} of ${LEVELS.length} levels unlocked`;
     }
 
     showScreen('title');
@@ -59,11 +59,13 @@ const Game = (() => {
     els.screens = {
       title: document.querySelector('.title-screen'),
       charSelect: document.querySelector('.char-select-screen'),
+      levelSelect: document.querySelector('.level-select-screen'),
       levelComplete: document.querySelector('.level-complete-screen'),
       gameOver: document.querySelector('.game-over-screen'),
       victory: document.querySelector('.victory-screen'),
       shop: document.querySelector('.shop-screen'),
     };
+    els.lsLevels = document.querySelector('.ls-levels');
     els.shopCoinCount = document.querySelector('.shop-coin-count');
     els.shopItems = document.querySelector('.shop-items');
     els.shopInvIcons = document.querySelector('.shop-inv-icons');
@@ -107,21 +109,26 @@ const Game = (() => {
     if (contBtn) {
       contBtn.addEventListener('click', () => {
         Audio.SFX.tap();
-        const saved = Storage.load(GAME_ID, 'level', 0);
         state.charType = Storage.load(GAME_ID, 'charType', 'mario');
         persistent = Storage.load(GAME_ID, 'persistent', { coins: 0, score: 0, lives: 3, powerStack: [] });
         state.mode = '1p';
         state.coop = false;
-        startLevel(saved);
+        showLevelSelect();
       });
     }
 
-    // Back button (char select → title)
+    // Back buttons
     document.querySelectorAll('.btn-back').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         Audio.SFX.tap();
-        showScreen('title');
+        // Level select → char select, char select → title
+        const screen = btn.closest('.screen');
+        if (screen && screen.classList.contains('level-select-screen')) {
+          showScreen('charSelect');
+        } else {
+          showScreen('title');
+        }
       });
     });
 
@@ -130,7 +137,7 @@ const Game = (() => {
         Audio.SFX.tap();
         state.charType = card.dataset.char;
         resetPersistent();
-        startLevel(0);
+        showLevelSelect();
       });
     });
 
@@ -145,7 +152,7 @@ const Game = (() => {
 
     document.querySelector('.btn-switch-char').addEventListener('click', () => {
       Audio.SFX.tap();
-      // Go to char select but keep progress — re-bind cards to continue from next level
+      // Go to char select but keep progress — re-bind cards to go to level select
       showScreen('charSelect');
       document.querySelectorAll('.char-card').forEach(card => {
         const clone = card.cloneNode(true);
@@ -154,18 +161,14 @@ const Game = (() => {
           Audio.SFX.tap();
           state.charType = clone.dataset.char;
           Storage.save(GAME_ID, 'charType', state.charType);
-          if (!state.coop) {
-            showShop();
-          } else {
-            startLevel(state.currentLevel + 1);
-          }
+          showLevelSelect();
         });
       });
     });
 
     document.querySelector('.btn-start-level').addEventListener('click', () => {
       Audio.SFX.tap();
-      startLevel(state.currentLevel + 1);
+      showLevelSelect();
     });
 
     document.querySelector('.btn-retry').addEventListener('click', () => {
@@ -174,6 +177,13 @@ const Game = (() => {
       persistent.coins = 0;
       // Keep purchased powers — they're permanent
       startLevel(state.currentLevel);
+    });
+
+    document.querySelector('.btn-go-levels').addEventListener('click', () => {
+      Audio.SFX.tap();
+      persistent.lives = 3;
+      persistent.coins = 0;
+      showLevelSelect();
     });
 
     document.querySelectorAll('.btn-home').forEach(btn => {
@@ -352,7 +362,6 @@ const Game = (() => {
     }
 
     // Save progress
-    Storage.save(GAME_ID, 'level', levelIndex);
     Storage.save(GAME_ID, 'charType', state.charType);
     Storage.save(GAME_ID, 'persistent', persistent);
 
@@ -653,6 +662,12 @@ const Game = (() => {
         if (p.respawnTimer > 120) {
           const other = state.players.find(o => o !== p && o.alive);
           Entities.respawnPlayer(p, LEVELS[state.currentLevel], other);
+          // Re-apply shop-bought powers after respawn
+          if (!state.coop) {
+            for (const power of persistent.powerStack) {
+              Entities.applyPowerUp(p, power);
+            }
+          }
         }
       }
     }
@@ -838,6 +853,38 @@ const Game = (() => {
     }
   }
 
+  // ===== LEVEL SELECT =====
+
+  const LEVEL_ICONS = ['🌿', '🕳️', '☁️', '🏰', '🔥'];
+
+  function showLevelSelect() {
+    const unlocked = Storage.load(GAME_ID, 'unlockedLevel', 0);
+    els.lsLevels.innerHTML = '';
+
+    for (let i = 0; i < LEVELS.length; i++) {
+      const lvl = LEVELS[i];
+      const locked = i > unlocked;
+      const btn = document.createElement('button');
+      btn.className = 'card ls-card' + (locked ? ' ls-locked' : '');
+      btn.innerHTML = `
+        <span class="ls-icon">${locked ? '🔒' : LEVEL_ICONS[i]}</span>
+        <span class="ls-num">Level ${i + 1}</span>
+        <span class="ls-name">${lvl.name}</span>
+      `;
+
+      if (!locked) {
+        btn.addEventListener('click', () => {
+          Audio.SFX.tap();
+          startLevel(i);
+        });
+      }
+
+      els.lsLevels.appendChild(btn);
+    }
+
+    showScreen('levelSelect');
+  }
+
   // ===== SHOP =====
 
   const SHOP_DATA = [
@@ -912,7 +959,9 @@ const Game = (() => {
       persistent.lives = p1.lives;
     }
 
-    Storage.save(GAME_ID, 'level', state.currentLevel + 1);
+    // Unlock next level (keep the highest unlocked)
+    const prevUnlocked = Storage.load(GAME_ID, 'unlockedLevel', 0);
+    Storage.save(GAME_ID, 'unlockedLevel', Math.max(prevUnlocked, state.currentLevel + 1));
     Storage.save(GAME_ID, 'highScore',
       Math.max(Storage.load(GAME_ID, 'highScore', 0), p1.score));
     Storage.save(GAME_ID, 'persistent', persistent);

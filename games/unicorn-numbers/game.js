@@ -613,9 +613,8 @@ const Game = (() => {
     btn.classList.add('correct');
 
     // Earn coin
-    state.coins++;
+    state.coins = SharedCoins.add(1);
     state.levelCoins++;
-    saveShopState();
     updateCoinDisplays();
 
     // Particle effects based on power + trail
@@ -672,11 +671,13 @@ const Game = (() => {
     // Bonus coins for perfect level
     const starCount = Math.min(state.levelStars, 3);
     if (starCount >= 3) {
-      state.coins += 3;
+      state.coins = SharedCoins.add(3);
       state.levelCoins += 3;
     }
-    saveShopState();
     saveProgress();
+
+    // Earn energy for Mario
+    Energy.earnMinutes(5);
 
     // Show level complete screen
     const levelDef = state.mode.levels[state.level];
@@ -816,7 +817,8 @@ const Game = (() => {
   // ===== SHOP STATE =====
 
   function loadShopState() {
-    state.coins = Storage.load('unicorn-numbers', 'coins', 0);
+    SharedCoins.migrate();
+    state.coins = SharedCoins.get();
     state.owned = Storage.load('unicorn-numbers', 'shopOwned', ['sparky', 'default']);
     state.equipped = Storage.load('unicorn-numbers', 'shopEquipped', {
       character: 'sparky', accessory: null, trail: 'default', theme: 'default',
@@ -827,12 +829,13 @@ const Game = (() => {
   }
 
   function saveShopState() {
-    Storage.save('unicorn-numbers', 'coins', state.coins);
+    // Coins managed by SharedCoins — only save owned/equipped locally
     Storage.save('unicorn-numbers', 'shopOwned', state.owned);
     Storage.save('unicorn-numbers', 'shopEquipped', state.equipped);
   }
 
   function updateCoinDisplays() {
+    state.coins = SharedCoins.get();
     const txt = String(state.coins);
     if (els.coinCountMode) els.coinCountMode.textContent = txt;
     if (els.coinCountHud) els.coinCountHud.textContent = txt;
@@ -909,9 +912,9 @@ const Game = (() => {
     }
 
     // Try to buy
-    if (state.coins >= item.price) {
+    if (SharedCoins.spend(item.price)) {
       Audio.SFX.correct();
-      state.coins -= item.price;
+      state.coins = SharedCoins.get();
       state.owned.push(item.id);
       equipItem(item, category);
     } else {

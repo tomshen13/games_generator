@@ -174,9 +174,8 @@ const Game = (() => {
     els.btnPlay.addEventListener('click', () => {
       Audio.SFX.tap();
       if (state.starterPokemon) {
-        // Reset for new game but keep starter
+        // Reset for new game but keep starter (shared coins are NOT reset)
         state.currentTier = 0;
-        state.coins = 0;
         state.ownedPokemon = [state.starterPokemon];
         saveProgress();
         startSession();
@@ -304,8 +303,8 @@ const Game = (() => {
 
     state.starterPokemon = id;
     state.ownedPokemon = [id];
-    state.coins = 0;
     state.currentTier = 0;
+    // Shared coins are NOT reset when choosing a new starter
 
     Audio.SFX.fanfare();
     Audio.speak(`You chose ${pokemon.name}!`);
@@ -429,7 +428,7 @@ const Game = (() => {
     state.streak++;
     if (state.streak >= 5) earned += 2;
     else if (state.streak >= 3) earned += 1;
-    state.coins += earned;
+    state.coins = SharedCoins.add(earned);
     state.sessionCoins += earned;
 
     // Stars tracking
@@ -493,6 +492,7 @@ const Game = (() => {
   }
 
   function updateHUD() {
+    state.coins = SharedCoins.get();
     els.hudCoinCount.textContent = state.coins;
     els.hudStreakCount.textContent = state.streak;
     const pct = Math.round((state.round / SESSION_ROUNDS) * 100);
@@ -508,7 +508,7 @@ const Game = (() => {
     // Bonus coins for 3 stars
     const tierDef = activeLevels[Math.min(state.currentTier, activeLevels.length - 1)];
     if (starCount === 3) {
-      state.coins += tierDef.bonusCoins;
+      state.coins = SharedCoins.add(tierDef.bonusCoins);
       state.sessionCoins += tierDef.bonusCoins;
     }
 
@@ -517,6 +517,9 @@ const Game = (() => {
     // Check tier advancement
     checkTierAdvancement();
     saveProgress();
+
+    // Earn energy for Mario
+    Energy.earnMinutes(5);
 
     // Find battle encounter for current tier
     const encounterKey = findEncounterTier(state.currentTier);
@@ -596,7 +599,7 @@ const Game = (() => {
       els.gcParade.appendChild(img);
     });
 
-    els.gcStats.textContent = `🪙 ${state.coins} Coins  |  ${state.ownedPokemon.length} Pokemon collected`;
+    els.gcStats.textContent = `🪙 ${SharedCoins.get()} Coins  |  ${state.ownedPokemon.length} Pokemon collected`;
 
     Audio.SFX.celebration();
     setTimeout(() => Particles.confetti(100), 300);
@@ -758,7 +761,7 @@ const Game = (() => {
   async function battleWon() {
     state.inBattle = false;
     const bonusCoins = 10 + (state.currentTier) * 2;
-    state.coins += bonusCoins;
+    state.coins = SharedCoins.add(bonusCoins);
 
     Audio.SFX.fanfare();
     Particles.confetti(60);
@@ -806,6 +809,7 @@ const Game = (() => {
 
   // ─── Shop ──────────────────────────────────────────────
   function renderShop() {
+    state.coins = SharedCoins.get();
     els.shopCoinCount.textContent = state.coins;
     els.shopGrid.innerHTML = '';
 
@@ -859,10 +863,10 @@ const Game = (() => {
   }
 
   function buyPokemon(pokemon) {
-    if (state.coins < pokemon.price) return;
     if (state.ownedPokemon.includes(pokemon.id)) return;
+    if (!SharedCoins.spend(pokemon.price)) return;
 
-    state.coins -= pokemon.price;
+    state.coins = SharedCoins.get();
     state.ownedPokemon.push(pokemon.id);
 
     Audio.SFX.fanfare();
@@ -947,13 +951,13 @@ const Game = (() => {
   function saveProgress() {
     // Mode-specific: tier progression
     Storage.save(GAME_ID, modeKey('currentTier'), state.currentTier);
-    // Shared across all modes: coins, pokemon
-    Storage.save(GAME_ID, 'coins', state.coins);
+    // Coins managed by SharedCoins — only save pokemon-specific data
     Storage.save(GAME_ID, 'ownedPokemon', state.ownedPokemon);
     Storage.save(GAME_ID, 'starterPokemon', state.starterPokemon);
   }
 
   function loadProgress() {
+    SharedCoins.migrate();
     // Mode-specific — try currentTier first, fall back to old highestLevel for backward compat
     let tier = Storage.load(GAME_ID, modeKey('currentTier'), null);
     if (tier === null) {
@@ -962,8 +966,8 @@ const Game = (() => {
       tier = oldLevel;
     }
     state.currentTier = tier;
-    // Shared
-    state.coins = Storage.load(GAME_ID, 'coins', 0);
+    // Shared coins from unified pool
+    state.coins = SharedCoins.get();
     state.ownedPokemon = Storage.load(GAME_ID, 'ownedPokemon', []);
     state.starterPokemon = Storage.load(GAME_ID, 'starterPokemon', null);
   }
@@ -973,7 +977,7 @@ const Game = (() => {
       els.btnPlay.textContent = '🔄 NEW GAME';
       els.continueWrapper.style.display = 'flex';
       els.titleNav.style.display = 'flex';
-      els.continueInfo.textContent = `Tier ${state.currentTier + 1} • 🪙 ${state.coins} coins • ${state.ownedPokemon.length} Pokemon`;
+      els.continueInfo.textContent = `Tier ${state.currentTier + 1} • 🪙 ${SharedCoins.get()} coins • ${state.ownedPokemon.length} Pokemon`;
     }
   }
 
