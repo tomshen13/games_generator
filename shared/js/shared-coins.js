@@ -49,6 +49,12 @@ const SharedCoins = (() => {
       total += marioPersist.coins;
     }
 
+    // Space Invaders crystals (stored inside persistent object)
+    const spacePersist = Storage.load('space-invaders', 'persistent', null);
+    if (spacePersist && typeof spacePersist.crystals === 'number') {
+      total += spacePersist.crystals;
+    }
+
     if (total > 0) {
       const existing = get();
       set(existing + total);
