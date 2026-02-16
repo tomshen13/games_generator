@@ -165,6 +165,8 @@ const SPRITES = (() => {
     S: '#FFD700', s: '#FFA500', K: '#CC8800',
     // Mushroom
     M: '#E52521', m: '#B01A18', T: '#FFB900', t: '#CC8800',
+    // Potion
+    P: '#2ECC71', p: '#27AE60', g: '#1ABC9C', D: '#16A085',
   };
 
   const PROJ_PAL = {
@@ -172,6 +174,8 @@ const SPRITES = (() => {
     I: '#00BFFF', W: '#FFFFFF', L: '#80E0FF',
     // Fire projectile
     R: '#FF4500', O: '#FF8C00', Y: '#FFD700',
+    // Potion projectile
+    P: '#2ECC71', p: '#27AE60', D: '#16A085',
   };
 
   const PLATFORM_PAL = {
@@ -1204,6 +1208,24 @@ const SPRITES = (() => {
     '........YY......' +
     '................', POWERUP_PAL);
 
+  const POWERUP_POTION = parse(16, 16,
+    '......gggg......' +
+    '.....gggggg.....' +
+    '.....gg..gg.....' +
+    '.....gggggg.....' +
+    '....PPppppPP....' +
+    '...PPpppppPPP...' +
+    '..PPppppppppPP..' +
+    '..PPpppDDpppPP..' +
+    '.PPppDDDDDpppPP.' +
+    '.PPppDDDDDpppPP.' +
+    '.PPpppDDDppppPP.' +
+    '..PPppppppppPP..' +
+    '..PPPppppppPPP..' +
+    '...PPPppppPPP...' +
+    '....PPPPPPPP....' +
+    '.....PPPPPP.....', POWERUP_PAL);
+
   // ===== PROJECTILE SPRITES (8x8) =====
 
   const PROJ_ICE = parse(8, 8,
@@ -1225,6 +1247,16 @@ const SPRITES = (() => {
     'YORRRRRY' +
     '.YOORRY.' +
     '..YYYY..', PROJ_PAL);
+
+  const PROJ_POTION = parse(8, 8,
+    '..PPPP..' +
+    '.PPppPP.' +
+    'PPppppPP' +
+    'PpppDpPP' +
+    'PppDDppP' +
+    'PPppppPP' +
+    '.PPppPP.' +
+    '..PPPP..', PROJ_PAL);
 
   // ===== ANIMATION GROUPS =====
 
@@ -1325,8 +1357,10 @@ const SPRITES = (() => {
     POWERUP_MAGNET,
     POWERUP_SHIELD,
     POWERUP_SPEED,
+    POWERUP_POTION,
     PROJ_ICE,
     PROJ_FIRE,
+    PROJ_POTION,
     FLAG: FLAG_SPRITE,
     flipH,
   };

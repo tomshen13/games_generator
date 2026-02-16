@@ -906,7 +906,7 @@ const Game = (() => {
     els.hudScore.textContent = `Score: ${p1.score}`;
     els.hudLevel.textContent = `${LEVELS[state.currentLevel].name}`;
 
-    const powerIcons = { ice: '❄️', fire: '🔥', wings: '🪽', star: '⭐', mushroom: '🍄', magnet: '🧲', shield: '🛡️', speed: '⚡' };
+    const powerIcons = { ice: '❄️', fire: '🔥', wings: '🪽', star: '⭐', mushroom: '🍄', magnet: '🧲', shield: '🛡️', speed: '⚡', potion: '🧪' };
     els.hudPower.textContent = p1.powerStack.map(p => powerIcons[p] || '').join('');
 
     const skillIcons = { ground_pound: '💥', super_jump: '🦘', dash: '💨', heal: '💖' };
@@ -1002,6 +1002,7 @@ const Game = (() => {
   // ===== SHOP =====
 
   const SHOP_DATA = [
+    { type: 'potion',   icon: '🧪', name: 'Potion',     desc: 'Shoot green potions',     price: 1 },
     { type: 'mushroom', icon: '🍄', name: 'Mushroom',   desc: 'Start big every level',   price: 10 },
     { type: 'fire',     icon: '🔥', name: 'Fire Power',  desc: 'Shoot fireballs',         price: 15 },
     { type: 'ice',      icon: '❄️', name: 'Ice Power',   desc: 'Shoot ice balls',         price: 15 },
@@ -1054,7 +1055,7 @@ const Game = (() => {
     }
 
     // Show current inventory
-    const powerIcons = { ice: '❄️', fire: '🔥', wings: '🪽', star: '⭐', mushroom: '🍄', magnet: '🧲', shield: '🛡️', speed: '⚡' };
+    const powerIcons = { ice: '❄️', fire: '🔥', wings: '🪽', star: '⭐', mushroom: '🍄', magnet: '🧲', shield: '🛡️', speed: '⚡', potion: '🧪' };
     els.shopInvIcons.textContent = persistent.powerStack.map(p => powerIcons[p] || '').join(' ') || '(none)';
   }
 
@@ -1087,7 +1088,7 @@ const Game = (() => {
       els.lcStats.textContent = `💎 ${p1.gems}/3 gems · Score: ${p1.score}`;
 
       const nextPower = LEVELS[state.currentLevel + 1].powerUp;
-      const powerNames = { ice: '❄️ Ice Power', fire: '🔥 Fire Power', wings: '🪽 Wings', star: '⭐ Star Power', mushroom: '🍄 Super Mushroom', magnet: '🧲 Magnet', shield: '🛡️ Shield', speed: '⚡ Speed Boost' };
+      const powerNames = { ice: '❄️ Ice Power', fire: '🔥 Fire Power', wings: '🪽 Wings', star: '⭐ Star Power', mushroom: '🍄 Super Mushroom', magnet: '🧲 Magnet', shield: '🛡️ Shield', speed: '⚡ Speed Boost', potion: '🧪 Potion' };
       els.lcPowerPreview.textContent = `Next: ${powerNames[nextPower] || nextPower}`;
 
       showScreen('levelComplete');
