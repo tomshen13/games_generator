@@ -89,6 +89,8 @@ const Game = (() => {
     els.hudScore = document.querySelector('.hud-score');
     els.hudPower = document.querySelector('.hud-powerup');
     els.hudSkill = document.querySelector('.hud-skill');
+    els.hudFly = document.querySelector('.hud-fly');
+    els.hudFlyBar = document.querySelector('.hud-fly-bar');
     els.hudP2 = document.querySelector('.hud-p2');
     els.hudP2Lives = document.querySelector('.hud-p2-lives');
     els.lcTitle = document.querySelector('.lc-title');
@@ -916,6 +918,15 @@ const Game = (() => {
     } else {
       els.hudSkill.textContent = `${skillIcons[p1.skill] || ''} [Q]`;
       els.hudSkill.style.opacity = '1';
+    }
+
+    // Lakitu fly meter
+    if (p1.canFly) {
+      els.hudFly.style.display = '';
+      const pct = (p1.flyMeter / p1.flyMeterMax) * 100;
+      els.hudFlyBar.style.width = pct + '%';
+    } else {
+      els.hudFly.style.display = 'none';
     }
 
     if (state.coop && state.players[1]) {

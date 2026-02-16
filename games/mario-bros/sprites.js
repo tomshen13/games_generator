@@ -68,6 +68,17 @@ const SPRITES = (() => {
     Y: '#FFD700', // yellow
   };
 
+  const LAKITU_PAL = {
+    G: '#3CB043', // green shell
+    D: '#276D2E', // dark green
+    S: '#FFB900', // skin
+    K: '#1A1A1A', // black (eyes, outline)
+    W: '#FFFFFF', // white (cloud)
+    L: '#4FC3F7', // light blue (goggles)
+    c: '#D0D0D0', // cloud shadow
+    Y: '#FFD700', // yellow
+  };
+
   const GOOMBA_PAL = {
     B: '#8B4513', // brown body
     D: '#5C2E00', // dark brown
@@ -420,6 +431,200 @@ const SPRITES = (() => {
   const PEACH_BIG_IDLE = recolor(MARIO_BIG_IDLE, MARIO_PAL, PEACH_PAL);
   const PEACH_BIG_JUMP = recolor(MARIO_BIG_JUMP, MARIO_PAL, PEACH_PAL);
   const PEACH_BIG_RUN1 = recolor(MARIO_BIG_RUN1, MARIO_PAL, PEACH_PAL);
+
+  // ===== LAKITU SPRITES (custom – turtle on cloud) =====
+
+  const LAKITU_IDLE = parse(16, 16,
+    '......GGG.......' +
+    '.....GGGGG......' +
+    '....DGGGGGD.....' +
+    '....KSSLSSK.....' +
+    '...KLLLKLLLK....' +
+    '....KSSSSSK.....' +
+    '.....SSSS.......' +
+    '...WWWWWWWW.....' +
+    '..WWWWWWWWWW....' +
+    '.WWWWWWWWWWWW...' +
+    '.WWWWccWWWWWW...' +
+    '.WWWcccccWWWW...' +
+    '..WWcccccWWW....' +
+    '...WWWWWWWW.....' +
+    '....WWWWWW......' +
+    '................', LAKITU_PAL);
+
+  const LAKITU_RUN1 = parse(16, 16,
+    '......GGG.......' +
+    '.....GGGGG......' +
+    '....DGGGGGD.....' +
+    '....KSSLSSK.....' +
+    '...KLLLKLLLK....' +
+    '....KSSSSSK.....' +
+    '.....SSSS.......' +
+    '....WWWWWWWW....' +
+    '...WWWWWWWWWW...' +
+    '..WWWWWWWWWWWW..' +
+    '..WWWWccWWWWWW..' +
+    '..WWWcccccWWWW..' +
+    '...WWcccccWWW...' +
+    '....WWWWWWWW....' +
+    '.....WWWWWW.....' +
+    '................', LAKITU_PAL);
+
+  const LAKITU_RUN2 = parse(16, 16,
+    '......GGG.......' +
+    '.....GGGGG......' +
+    '....DGGGGGD.....' +
+    '....KSSLSSK.....' +
+    '...KLLLKLLLK....' +
+    '....KSSSSSK.....' +
+    '.....SSSS.......' +
+    '..WWWWWWWW......' +
+    '.WWWWWWWWWW.....' +
+    'WWWWWWWWWWWW....' +
+    'WWWWccWWWWWW....' +
+    'WWWcccccWWWW....' +
+    '.WWcccccWWW.....' +
+    '..WWWWWWWW......' +
+    '...WWWWWW.......' +
+    '................', LAKITU_PAL);
+
+  const LAKITU_JUMP = parse(16, 16,
+    '.....GGGG.......' +
+    '....GGGGGG......' +
+    '...DGGGGGDD.....' +
+    '...KSSLSSK......' +
+    '..KLLLKLLLK.....' +
+    '...KSSSSSK......' +
+    '....SSSS........' +
+    '...WWWWWWWW.....' +
+    '..WWWWWWWWWW....' +
+    '.WWWWWWWWWWWW...' +
+    '.WWWWccWWWWWW...' +
+    '.WWWcccccWWWW...' +
+    '..WWcccccWWW....' +
+    '...WWWWWWWW.....' +
+    '....WWWWWW......' +
+    '................', LAKITU_PAL);
+
+  const LAKITU_SHOOT = parse(16, 16,
+    '......GGG.......' +
+    '.....GGGGG......' +
+    '....DGGGGGD.....' +
+    '....KSSLSSK.....' +
+    '...KLLLKLLLK....' +
+    '....KSSSSSK.....' +
+    '.....SSSSY......' +
+    '...WWWWWWWW.....' +
+    '..WWWWWWWWWW....' +
+    '.WWWWWWWWWWWW...' +
+    '.WWWWccWWWWWW...' +
+    '.WWWcccccWWWW...' +
+    '..WWcccccWWW....' +
+    '...WWWWWWWW.....' +
+    '....WWWWWW......' +
+    '................', LAKITU_PAL);
+
+  const LAKITU_BIG_IDLE = parse(16, 32,
+    '................' +
+    '.....GGGGG......' +
+    '....GGGGGGG.....' +
+    '...GGGGGGGGG....' +
+    '...DGGGGGGGD....' +
+    '....KSSLLSSK....' +
+    '...KLLLLKLLKK...' +
+    '...KKLLKKLLLK...' +
+    '....KSSSSSSK....' +
+    '.....SSSSSS.....' +
+    '......SSSS......' +
+    '...WWWWWWWWW....' +
+    '..WWWWWWWWWWW...' +
+    '.WWWWWWWWWWWWW..' +
+    'WWWWWWWWWWWWWWW.' +
+    'WWWWWWWWWWWWWcW.' +
+    'WWWWWWWWWWWWWWW.' +
+    '.WWWWWccWWWWWW..' +
+    '.WWWWccccWWWWW..' +
+    '.WWWccccccWWWW..' +
+    '..WWccccccWWW...' +
+    '..WWWWWWWWWWW...' +
+    '...WWWWWWWWW....' +
+    '....WWWWWWW.....' +
+    '.....WWWWW......' +
+    '................' +
+    '................' +
+    '................' +
+    '................' +
+    '................' +
+    '................' +
+    '................', LAKITU_PAL);
+
+  const LAKITU_BIG_JUMP = parse(16, 32,
+    '................' +
+    '....GGGGGG......' +
+    '...GGGGGGGG.....' +
+    '..GGGGGGGGGG....' +
+    '..DGGGGGGGGD....' +
+    '...KKSSLLSSK....' +
+    '..KLLLLKKLLKK...' +
+    '..KKLLKKKLLLK...' +
+    '...KKSSSSSSK....' +
+    '....SSSSSSSS....' +
+    '.....SSSSS......' +
+    '...WWWWWWWWW....' +
+    '..WWWWWWWWWWW...' +
+    '.WWWWWWWWWWWWW..' +
+    'WWWWWWWWWWWWWWW.' +
+    'WWWWWWWWWWWWWcW.' +
+    'WWWWWWWWWWWWWWW.' +
+    '.WWWWWccWWWWWW..' +
+    '.WWWWccccWWWWW..' +
+    '.WWWccccccWWWW..' +
+    '..WWccccccWWW...' +
+    '..WWWWWWWWWWW...' +
+    '...WWWWWWWWW....' +
+    '....WWWWWWW.....' +
+    '.....WWWWW......' +
+    '................' +
+    '................' +
+    '................' +
+    '................' +
+    '................' +
+    '................' +
+    '................', LAKITU_PAL);
+
+  const LAKITU_BIG_RUN1 = parse(16, 32,
+    '................' +
+    '.....GGGGG......' +
+    '....GGGGGGG.....' +
+    '...GGGGGGGGG....' +
+    '...DGGGGGGGD....' +
+    '....KSSLLSSK....' +
+    '...KLLLLKLLKK...' +
+    '...KKLLKKLLLK...' +
+    '....KSSSSSSK....' +
+    '.....SSSSSS.....' +
+    '......SSSS......' +
+    '....WWWWWWWWW...' +
+    '...WWWWWWWWWWW..' +
+    '..WWWWWWWWWWWWW.' +
+    '.WWWWWWWWWWWWWWW' +
+    '.WWWWWWWWWWWWWcW' +
+    '.WWWWWWWWWWWWWWW' +
+    '..WWWWWccWWWWWW.' +
+    '..WWWWccccWWWWW.' +
+    '..WWWccccccWWWW.' +
+    '...WWccccccWWW..' +
+    '...WWWWWWWWWWW..' +
+    '....WWWWWWWWW...' +
+    '.....WWWWWWW....' +
+    '......WWWWW.....' +
+    '................' +
+    '................' +
+    '................' +
+    '................' +
+    '................' +
+    '................' +
+    '................', LAKITU_PAL);
 
   // ===== ENEMY SPRITES =====
 
@@ -1296,6 +1501,15 @@ const SPRITES = (() => {
       bigIdle: [PEACH_BIG_IDLE],
       bigRun: [PEACH_BIG_RUN1, PEACH_BIG_IDLE],
       bigJump: [PEACH_BIG_JUMP],
+    },
+    lakitu: {
+      idle: [LAKITU_IDLE],
+      run:  [LAKITU_RUN1, LAKITU_IDLE, LAKITU_RUN2, LAKITU_IDLE],
+      jump: [LAKITU_JUMP],
+      shoot: [LAKITU_SHOOT],
+      bigIdle: [LAKITU_BIG_IDLE],
+      bigRun: [LAKITU_BIG_RUN1, LAKITU_BIG_IDLE],
+      bigJump: [LAKITU_BIG_JUMP],
     },
     goomba: {
       walk: [GOOMBA_1, GOOMBA_2],

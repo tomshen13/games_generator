@@ -132,6 +132,11 @@
   box-shadow: 0 0 30px rgba(255, 105, 180, 0.3);
 }
 
+.char-card[data-char="lakitu"]:hover {
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+}
+
 .char-preview {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
@@ -475,6 +480,22 @@
   min-width: 48px;
   text-align: center;
   transition: opacity 0.2s;
+}
+
+.hud-fly {
+  width: 60px;
+  height: 8px;
+  background: rgba(0,0,0,0.4);
+  border-radius: 4px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.hud-fly-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #4FC3F7, #81D4FA);
+  border-radius: 4px;
+  transition: width 0.1s;
+  width: 100%;
 }
 
 .hud-p2 {

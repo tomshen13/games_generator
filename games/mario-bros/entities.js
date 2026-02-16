@@ -10,6 +10,7 @@ const Entities = (() => {
     luigi:  { runSpeed: 2.2, accel: 0.15, jumpForce: -10.5, maxSpeed: 2.2 },
     toad:   { runSpeed: 3.5, accel: 0.25, jumpForce: -7.5,  maxSpeed: 3.5 },
     peach:  { runSpeed: 2.5, accel: 0.18, jumpForce: -8.5,  maxSpeed: 2.5 },
+    lakitu: { runSpeed: 2.0, accel: 0.15, jumpForce: -7.0,  maxSpeed: 2.0 },
   };
 
   function createPlayer(charType, playerNum, x, y) {
@@ -45,11 +46,17 @@ const Entities = (() => {
       canFloat: charType === 'peach',
       floatTimer: 90,
 
+      // Lakitu fly
+      canFly: charType === 'lakitu',
+      flyMeter: 180,
+      flyMeterMax: 180,
+      isFlying: false,
+
       // Shield
       hasShield: false,
 
       // Skills
-      skill: charType === 'mario' ? 'ground_pound' : charType === 'luigi' ? 'super_jump' : charType === 'toad' ? 'dash' : 'heal',
+      skill: charType === 'mario' ? 'ground_pound' : charType === 'luigi' ? 'super_jump' : (charType === 'toad' || charType === 'lakitu') ? 'dash' : 'heal',
       skillCooldown: 0,
       skillMaxCooldown: charType === 'peach' ? 600 : charType === 'luigi' ? 240 : 180,
       skillActive: false,
@@ -164,6 +171,19 @@ const Entities = (() => {
         && Engine.Input.jumpHeld(pn, coop) && player.floatTimer > 0) {
       player.vy = Math.min(player.vy, 0.5);
       player.floatTimer--;
+    }
+
+    // Lakitu fly: hold jump while airborne to gain altitude
+    if (player.canFly && !player.onGround && Engine.Input.jumpHeld(pn, coop) && player.flyMeter > 0) {
+      player.vy = Math.max(player.vy - 0.8, -3.5);
+      player.flyMeter--;
+      player.isFlying = true;
+    } else {
+      player.isFlying = false;
+    }
+    // Recharge fly meter on ground
+    if (player.canFly && player.onGround) {
+      player.flyMeter = Math.min(player.flyMeter + 2, player.flyMeterMax);
     }
 
     // Move + collide
