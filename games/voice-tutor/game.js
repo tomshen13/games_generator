@@ -163,7 +163,12 @@
             .join(', ');
         }
         summary = s.assessment.summary || '';
-        details = s.assessment.studentDetails || '';
+        // Only include studentDetails if same focus+sub-topic to avoid topic bleed
+        const sameFocus = s.focus === selectedFocus;
+        const sameSub = (s.theme || s.topic || '') === (selectedTheme || selectedTopic || '');
+        if (sameFocus && sameSub) {
+          details = s.assessment.studentDetails || '';
+        }
       }
 
       let line = `- ${dateStr}: ${label}`;
@@ -207,7 +212,7 @@ RULES:
 - If the child insists a second time that they want to stop, say a quick warm goodbye and praise their effort.
 - When the session ends, you will receive a system message asking you to assess the student. Say a warm goodbye, then call the session_assessment function with honest ratings (1-5) for each skill practiced. Be encouraging in your spoken goodbye but accurate in the function call ratings.
 - If previous sessions exist below, review them. Avoid re-teaching words/topics the child already mastered (4-5★). Focus on areas rated 1-3★. Build on what they've learned.
-- Use student details from past sessions to personalize: reference their favorite characters, family, interests by name. Example: if they love Pikachu, say "Remember Pikachu? Is Pikachu fast or slow?" This makes the child feel known and excited.`;
+- Use student details from past sessions to personalize, BUT only if relevant to today's topic. Do NOT bring up characters or themes from a different topic. Example: if today's topic is Ninjago, do NOT mention Pokemon even if the child liked it before.`;
 
     let focusInstructions = '';
 

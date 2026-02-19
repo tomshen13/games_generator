@@ -80,9 +80,9 @@ const GeminiLive = (() => {
             realtimeInputConfig: {
               automaticActivityDetection: {
                 startOfSpeechSensitivity: 'START_SENSITIVITY_LOW',
-                endOfSpeechSensitivity: 'END_SENSITIVITY_HIGH',
-                prefixPaddingMs: 100,
-                silenceDurationMs: 200
+                endOfSpeechSensitivity: 'END_SENSITIVITY_LOW',
+                prefixPaddingMs: 200,
+                silenceDurationMs: 1000
               }
             },
             tools: [{
