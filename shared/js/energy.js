@@ -52,7 +52,7 @@ const Energy = (() => {
 
   /**
    * Start tracking elapsed time for a fun-game session.
-   * @param {function} onTick — called every 5s with remaining minutes
+   * @param {function} onTick — called every 1s with remaining minutes
    * @param {function} onDepleted — called when energy hits 0
    */
   function startTimer(onTick, onDepleted) {
@@ -76,7 +76,7 @@ const Energy = (() => {
         saveState(s);
         if (onDepletedCb) onDepletedCb();
       }
-    }, 5000);
+    }, 1000);
   }
 
   /** Stop the timer and persist elapsed time. */

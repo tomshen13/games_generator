@@ -26,6 +26,8 @@ const Game = (() => {
     screen: 'title',
     mode: '1p',
     shipType: 'falcon',
+    shipType2: 'falcon',
+    shipSelectPhase: 0, // 0 = P1 picking, 1 = P2 picking
     currentLevel: 0,
     players: [],
     enemies: [],
@@ -207,16 +209,20 @@ const Game = (() => {
       Audio.SFX.tap();
       state.mode = '1p';
       state.coop = false;
+      state.shipSelectPhase = 0;
+      updateShipSelectTitle();
       showScreen('shipSelect');
     });
 
-    // 2P → level select (skip ship select)
+    // 2P → ship select for both players
     document.querySelector('.btn-2p').addEventListener('click', () => {
       Audio.SFX.tap();
       state.mode = '2p';
       state.coop = true;
       resetPersistent();
-      showLevelSelect();
+      state.shipSelectPhase = 0;
+      updateShipSelectTitle();
+      showScreen('shipSelect');
     });
 
     // Continue → level select
@@ -241,13 +247,25 @@ const Game = (() => {
       });
     });
 
-    // Ship selection cards → level select
+    // Ship selection cards
     document.querySelectorAll('.ship-card').forEach(card => {
       card.addEventListener('click', () => {
         Audio.SFX.tap();
-        state.shipType = card.dataset.ship;
-        resetPersistent();
-        showLevelSelect();
+        if (state.coop && state.shipSelectPhase === 0) {
+          // P1 picked — now let P2 pick
+          state.shipType = card.dataset.ship;
+          state.shipSelectPhase = 1;
+          updateShipSelectTitle();
+        } else if (state.coop && state.shipSelectPhase === 1) {
+          // P2 picked — go to level select
+          state.shipType2 = card.dataset.ship;
+          showLevelSelect();
+        } else {
+          // 1P mode
+          state.shipType = card.dataset.ship;
+          resetPersistent();
+          showLevelSelect();
+        }
       });
     });
 
@@ -331,6 +349,18 @@ const Game = (() => {
         state.paused = !state.paused;
       }
     });
+  }
+
+  function updateShipSelectTitle() {
+    const titleEl = document.querySelector('.ship-select-title');
+    if (!titleEl) return;
+    if (state.coop && state.shipSelectPhase === 1) {
+      titleEl.textContent = 'Player 2 — Choose Your Ship!';
+    } else if (state.coop) {
+      titleEl.textContent = 'Player 1 — Choose Your Ship!';
+    } else {
+      titleEl.textContent = 'Choose Your Ship!';
+    }
   }
 
   function renderShipPreviews() {
@@ -549,8 +579,8 @@ const Game = (() => {
     // Create players
     if (state.coop) {
       state.players = [
-        Entities.createPlayer(1, 'falcon', cw, ch),
-        Entities.createPlayer(2, 'falcon', cw, ch),
+        Entities.createPlayer(1, state.shipType, cw, ch),
+        Entities.createPlayer(2, state.shipType2, cw, ch),
       ];
     } else {
       state.players = [
@@ -932,6 +962,8 @@ const Game = (() => {
       }
     }
 
+    updateHUD();
+
     // Check game over
     const allDead = state.players.every(p => !p.alive && p.lives <= 0);
     if (allDead && !state.gameOverPending) {
@@ -939,8 +971,6 @@ const Game = (() => {
       setTimeout(() => onGameOver(), 1500);
       return;
     }
-
-    updateHUD();
   }
 
   // ===== KILL HANDLERS =====

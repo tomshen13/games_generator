@@ -677,7 +677,7 @@ const Game = (() => {
     saveProgress();
 
     // Earn energy for Mario
-    Energy.earnMinutes(5);
+    Energy.earnMinutes(2);
 
     // Show level complete screen
     const levelDef = state.mode.levels[state.level];
