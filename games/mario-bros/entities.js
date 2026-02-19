@@ -10,6 +10,7 @@ const Entities = (() => {
     luigi:  { runSpeed: 2.2, accel: 0.15, jumpForce: -10.5, maxSpeed: 2.2 },
     toad:   { runSpeed: 3.5, accel: 0.25, jumpForce: -7.5,  maxSpeed: 3.5 },
     peach:  { runSpeed: 2.5, accel: 0.18, jumpForce: -8.5,  maxSpeed: 2.5 },
+    lakitu: { runSpeed: 2.0, accel: 0.15, jumpForce: -7.0,  maxSpeed: 2.0 },
   };
 
   function createPlayer(charType, playerNum, x, y) {
@@ -45,11 +46,17 @@ const Entities = (() => {
       canFloat: charType === 'peach',
       floatTimer: 90,
 
+      // Lakitu fly
+      canFly: charType === 'lakitu',
+      flyMeter: 180,
+      flyMeterMax: 180,
+      isFlying: false,
+
       // Shield
       hasShield: false,
 
       // Skills
-      skill: charType === 'mario' ? 'ground_pound' : charType === 'luigi' ? 'super_jump' : charType === 'toad' ? 'dash' : 'heal',
+      skill: charType === 'mario' ? 'ground_pound' : charType === 'luigi' ? 'super_jump' : (charType === 'toad' || charType === 'lakitu') ? 'dash' : 'heal',
       skillCooldown: 0,
       skillMaxCooldown: charType === 'peach' ? 600 : charType === 'luigi' ? 240 : 180,
       skillActive: false,
@@ -84,7 +91,7 @@ const Entities = (() => {
 
   function getShootPower(player) {
     for (let i = player.powerStack.length - 1; i >= 0; i--) {
-      if (player.powerStack[i] === 'ice' || player.powerStack[i] === 'fire') return player.powerStack[i];
+      if (player.powerStack[i] === 'ice' || player.powerStack[i] === 'fire' || player.powerStack[i] === 'potion') return player.powerStack[i];
     }
     return null;
   }
@@ -164,6 +171,19 @@ const Entities = (() => {
         && Engine.Input.jumpHeld(pn, coop) && player.floatTimer > 0) {
       player.vy = Math.min(player.vy, 0.5);
       player.floatTimer--;
+    }
+
+    // Lakitu fly: hold jump while airborne to gain altitude
+    if (player.canFly && !player.onGround && Engine.Input.jumpHeld(pn, coop) && player.flyMeter > 0) {
+      player.vy = Math.max(player.vy - 0.8, -3.5);
+      player.flyMeter--;
+      player.isFlying = true;
+    } else {
+      player.isFlying = false;
+    }
+    // Recharge fly meter on ground
+    if (player.canFly && player.onGround) {
+      player.flyMeter = Math.min(player.flyMeter + 2, player.flyMeterMax);
     }
 
     // Move + collide
@@ -439,6 +459,7 @@ const Entities = (() => {
     switch (type) {
       case 'ice':
       case 'fire':
+      case 'potion':
         break;
       case 'wings':
         player.hasDoubleJump = true;
@@ -877,6 +898,7 @@ const Entities = (() => {
       magnet: SPRITES.POWERUP_MAGNET,
       shield: SPRITES.POWERUP_SHIELD,
       speed: SPRITES.POWERUP_SPEED,
+      potion: SPRITES.POWERUP_POTION,
     };
     const sprite = spriteMap[pu.powerType];
     if (!sprite) return;
@@ -912,7 +934,7 @@ const Entities = (() => {
     proj.life--;
     if (proj.life <= 0) return false;
 
-    if (proj.projType === 'fire') {
+    if (proj.projType === 'fire' || proj.projType === 'potion') {
       proj.vy += 0.3;
     }
 
@@ -937,6 +959,8 @@ const Entities = (() => {
         proj.vy = -4;
         proj.bounces++;
         proj.y = vRow * Engine.TILE - proj.h;
+      } else if (proj.projType === 'potion') {
+        return false; // potion splashes on contact, no bounce
       } else {
         return false;
       }
@@ -947,7 +971,8 @@ const Entities = (() => {
 
   function renderProjectile(ctx, proj, cam) {
     if (!proj.alive) return;
-    const sprite = proj.projType === 'fire' ? SPRITES.PROJ_FIRE : SPRITES.PROJ_ICE;
+    const spriteMap = { fire: SPRITES.PROJ_FIRE, ice: SPRITES.PROJ_ICE, potion: SPRITES.PROJ_POTION };
+    const sprite = spriteMap[proj.projType];
     const [sx, sy] = Engine.Camera.worldToScreen(proj.x, proj.y);
     Engine.drawSprite(ctx, sprite, sx, sy, false);
   }

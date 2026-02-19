@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Super Mario Bros 🍄</title>
+  <title>Space Invaders 🚀</title>
 
   <!-- Shared CSS -->
   <link rel="stylesheet" href="../../shared/css/reset.css">
@@ -25,9 +25,9 @@
     <!-- ===== TITLE SCREEN ===== -->
     <div class="screen title-screen active">
       <button class="btn-back" onclick="window.location.href='../../index.html'" title="Home">🏠</button>
-      <div class="title-icon">🍄</div>
-      <h1 class="title-text mario-title">Super Mario Bros</h1>
-      <p class="title-subtitle">A platformer adventure!</p>
+      <div class="title-icon">🚀</div>
+      <h1 class="title-text space-title">Space Invaders</h1>
+      <p class="title-subtitle">Defend the Galaxy!</p>
       <div class="title-buttons">
         <button class="btn btn-primary btn-large btn-1p">1 Player</button>
         <button class="btn btn-primary btn-large btn-2p">2 Players</button>
@@ -41,40 +41,30 @@
         <span class="energy-status-coins">🪙 --</span>
       </div>
       <div class="controls-hint">
-        <p><strong>1P:</strong> Arrows / WASD = Move · Space = Jump · X = Shoot · Q = Skill</p>
-        <p><strong>Co-op:</strong> P1: WASD+Space+E+Q · P2: Arrows+Enter+Shift+/</p>
+        <p><strong>1P:</strong> Arrows / WASD = Move · Space/E = Shoot · Q = Bomb</p>
+        <p><strong>Co-op:</strong> P1: WASD+E+Q · P2: Arrows+Shift+/</p>
       </div>
     </div>
 
-    <!-- ===== CHARACTER SELECT ===== -->
-    <div class="screen char-select-screen">
+    <!-- ===== SHIP SELECT ===== -->
+    <div class="screen ship-select-screen">
       <a class="btn-back" href="#">←</a>
-      <h2 class="char-select-title">Choose Your Character!</h2>
-      <div class="char-cards">
-        <button class="card char-card" data-char="mario">
-          <canvas class="char-preview" width="64" height="64"></canvas>
-          <span class="char-name">Mario</span>
-          <span class="char-stat">Balanced speed & jump</span>
+      <h2 class="ship-select-title">Choose Your Ship!</h2>
+      <div class="ship-cards">
+        <button class="card ship-card" data-ship="falcon">
+          <canvas class="ship-preview" width="64" height="64"></canvas>
+          <span class="ship-name">Falcon</span>
+          <span class="ship-stat">Fast movement, balanced firepower</span>
         </button>
-        <button class="card char-card" data-char="luigi">
-          <canvas class="char-preview" width="64" height="64"></canvas>
-          <span class="char-name">Luigi</span>
-          <span class="char-stat">Higher jump, slower run</span>
+        <button class="card ship-card" data-ship="phantom">
+          <canvas class="ship-preview" width="64" height="64"></canvas>
+          <span class="ship-name">Phantom</span>
+          <span class="ship-stat">Rapid fire, normal speed</span>
         </button>
-        <button class="card char-card" data-char="toad">
-          <canvas class="char-preview" width="64" height="64"></canvas>
-          <span class="char-name">Toad</span>
-          <span class="char-stat">Fastest runner, low jump</span>
-        </button>
-        <button class="card char-card" data-char="peach">
-          <canvas class="char-preview" width="64" height="64"></canvas>
-          <span class="char-name">Peach</span>
-          <span class="char-stat">Can float while falling</span>
-        </button>
-        <button class="card char-card" data-char="lakitu">
-          <canvas class="char-preview" width="64" height="64"></canvas>
-          <span class="char-name">Lakitu</span>
-          <span class="char-stat">Can fly on cloud</span>
+        <button class="card ship-card" data-ship="titan">
+          <canvas class="ship-preview" width="64" height="64"></canvas>
+          <span class="ship-name">Titan</span>
+          <span class="ship-stat">Extra shield, slower movement</span>
         </button>
       </div>
     </div>
@@ -89,33 +79,30 @@
       </div>
       <div class="ls-world-tabs"></div>
       <div class="ls-levels"></div>
-      <button class="btn btn-primary btn-ls-shop">🛒 Shop</button>
-    </div>
-
-    <!-- ===== LEVEL COMPLETE ===== -->
-    <div class="screen level-complete-screen">
-      <div class="lc-icon">🏁</div>
-      <h2 class="lc-title">Level Complete!</h2>
-      <p class="lc-stats"></p>
-      <p class="lc-powerup-preview"></p>
-      <div style="display: flex; gap: var(--space-md); flex-wrap: wrap; justify-content: center;">
-        <button class="btn btn-primary btn-large btn-next-level">▶ Next Level</button>
-        <button class="btn btn-primary btn-switch-char">🔄 Switch Character</button>
-        <button class="btn btn-primary btn-home">🏠 Home</button>
-      </div>
     </div>
 
     <!-- ===== SHOP ===== -->
     <div class="screen shop-screen">
       <button class="btn-back btn-home" title="Home">🏠</button>
-      <h2 class="shop-title">Power-Up Shop</h2>
+      <h2 class="shop-title">Upgrade Shop</h2>
       <p class="shop-coins">🪙 <span class="shop-coin-count">0</span></p>
       <div class="shop-items"></div>
       <div class="shop-inventory">
-        <span class="shop-inv-label">Unlocked:</span>
+        <span class="shop-inv-label">Upgrades:</span>
         <span class="shop-inv-icons"></span>
       </div>
       <button class="btn btn-primary btn-large btn-start-level">Start Level ▶</button>
+    </div>
+
+    <!-- ===== LEVEL COMPLETE ===== -->
+    <div class="screen level-complete-screen">
+      <div class="lc-icon">🏆</div>
+      <h2 class="lc-title">Level Complete!</h2>
+      <p class="lc-stats"></p>
+      <div style="display: flex; gap: var(--space-md); flex-wrap: wrap; justify-content: center;">
+        <button class="btn btn-primary btn-large btn-next-level">▶ Next Level</button>
+        <button class="btn btn-primary btn-home">🏠 Home</button>
+      </div>
     </div>
 
     <!-- ===== GAME OVER ===== -->
@@ -133,7 +120,7 @@
     <!-- ===== VICTORY ===== -->
     <div class="screen victory-screen">
       <div class="vic-icon">🏆</div>
-      <h2 class="vic-title">You Won!</h2>
+      <h2 class="vic-title">Galaxy Saved!</h2>
       <p class="victory-stats"></p>
       <div class="vic-buttons">
         <button class="btn btn-primary btn-large btn-play-again">🔄 Play Again</button>
@@ -166,23 +153,35 @@
       </div>
     </div>
 
-    <!-- ===== HUD (visible during gameplay) ===== -->
+    <!-- ===== HUD ===== -->
     <div class="hud game-hud" style="display: none;">
-      <div class="hud-group">
-        <span class="hud-lives">❤️❤️❤️</span>
-        <span class="hud-coins">🪙 0</span>
+      <div class="hud-group hud-left">
+        <span class="hud-hp">🛡️🛡️🛡️</span>
+        <span class="hud-lives">x3</span>
+        <span class="hud-bomb"></span>
       </div>
-      <span class="hud-level">Green Hills</span>
-      <div class="hud-group">
+      <div class="hud-group hud-center">
+        <span class="hud-level">Asteroid Belt</span>
+        <span class="hud-wave">Wave 1/4</span>
+      </div>
+      <div class="hud-group hud-right">
         <span class="hud-score">Score: 0</span>
-        <span class="hud-powerup"></span>
-        <span class="hud-skill"></span>
+        <span class="hud-coins">🪙 0</span>
+        <span class="hud-weapon">⚡ Basic</span>
         <span class="hud-energy" style="display:none;"></span>
-        <div class="hud-fly" style="display:none"><div class="hud-fly-bar"></div></div>
       </div>
+      <!-- Boss HP bar -->
+      <div class="hud-boss-bar" style="display: none;">
+        <span class="hud-boss-name">BOSS</span>
+        <div class="hud-boss-track">
+          <div class="hud-boss-hp"></div>
+        </div>
+      </div>
+      <!-- P2 row -->
       <div class="hud-p2" style="display: none;">
-        <span class="hud-p2-lives">💚💚💚</span>
-        <span class="hud-p2-label">Luigi</span>
+        <span class="hud-p2-hp">🛡️🛡️🛡️</span>
+        <span class="hud-p2-lives">x3</span>
+        <span class="hud-p2-label">P2</span>
       </div>
     </div>
   </div>
@@ -202,9 +201,9 @@
 
   <!-- Game JS -->
   <script src="sprites.js"></script>
-  <script src="levels.js"></script>
   <script src="engine.js"></script>
   <script src="entities.js"></script>
+  <script src="levels.js"></script>
   <script src="game.js"></script>
 </body>
 </html>

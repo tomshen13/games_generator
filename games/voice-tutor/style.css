@@ -177,8 +177,16 @@
 .mic-denied-text,
 .connect-error-text {
   font-size: var(--text-md);
+  margin-bottom: var(--space-xs);
+  color: var(--color-text-muted);
+}
+
+.connect-error-detail {
+  font-size: var(--text-sm);
   margin-bottom: var(--space-lg);
   color: var(--color-text-muted);
+  opacity: 0.7;
+  font-family: monospace;
 }
 
 .connect-error-actions {

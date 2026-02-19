@@ -519,7 +519,7 @@ const Game = (() => {
     saveProgress();
 
     // Earn energy for Mario
-    Energy.earnMinutes(5);
+    Energy.earnMinutes(2);
 
     // Find battle encounter for current tier
     const encounterKey = findEncounterTier(state.currentTier);
@@ -760,7 +760,7 @@ const Game = (() => {
 
   async function battleWon() {
     state.inBattle = false;
-    const bonusCoins = 10 + (state.currentTier) * 2;
+    const bonusCoins = 5 + state.currentTier;
     state.coins = SharedCoins.add(bonusCoins);
 
     Audio.SFX.fanfare();

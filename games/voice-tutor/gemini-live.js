@@ -80,9 +80,9 @@ const GeminiLive = (() => {
             realtimeInputConfig: {
               automaticActivityDetection: {
                 startOfSpeechSensitivity: 'START_SENSITIVITY_LOW',
-                endOfSpeechSensitivity: 'END_SENSITIVITY_HIGH',
-                prefixPaddingMs: 100,
-                silenceDurationMs: 200
+                endOfSpeechSensitivity: 'END_SENSITIVITY_LOW',
+                prefixPaddingMs: 200,
+                silenceDurationMs: 500
               }
             },
             tools: [{
@@ -175,11 +175,12 @@ const GeminiLive = (() => {
         }
       };
 
-      ws.onerror = () => {
-        // Error handled in onclose
+      ws.onerror = (event) => {
+        console.error('[GeminiLive] WS error:', event);
       };
 
-      ws.onclose = () => {
+      ws.onclose = (event) => {
+        console.warn(`[GeminiLive] WS closed: code=${event.code} reason="${event.reason}"`);
         if (closed) return;
 
         if (!setupResolved) {
@@ -187,14 +188,15 @@ const GeminiLive = (() => {
           if (retries < MAX_RETRIES) {
             retries++;
             const delay = RETRY_BASE_MS * Math.pow(2, retries - 1);
+            console.log(`[GeminiLive] Retry ${retries}/${MAX_RETRIES} in ${delay}ms`);
             setTimeout(() => openSocket(resolve, reject), delay);
           } else {
-            if (reject) reject(new Error('Failed to connect after retries'));
-            if (opts.onError) opts.onError('connection_failed');
+            if (reject) reject(new Error(`Connection failed: code=${event.code} reason="${event.reason}"`));
+            if (opts.onError) opts.onError('connection_failed', event.code, event.reason);
           }
         } else {
           // Mid-session disconnect — try one reconnect
-          if (opts.onError) opts.onError('disconnected');
+          if (opts.onError) opts.onError('disconnected', event.code, event.reason);
         }
       };
     }

@@ -35,6 +35,7 @@
     micDenied:        $('.mic-denied'),
     retryMicBtn:      $('.retry-mic-btn'),
     connectError:     $('.connect-error'),
+    connectErrorDetail: $('.connect-error-detail'),
     retryConnectBtn:  $('.retry-connect-btn'),
     homeBtn:          $('.home-btn'),
     // Conversation
@@ -79,11 +80,6 @@
   let playbackQueue = [];
   let playbackTime = 0;
   let isModelSpeaking = false;
-
-  // Silence detection for "Thinking..." state
-  let hadAudioData = false;
-  let silenceSince = 0;
-  let isThinking = false;
 
   // Nudge timer — re-engage if child is silent too long
   const NUDGE_DELAY_MS = 4000;
@@ -162,7 +158,12 @@
             .join(', ');
         }
         summary = s.assessment.summary || '';
-        details = s.assessment.studentDetails || '';
+        // Only include studentDetails if same focus+sub-topic to avoid topic bleed
+        const sameFocus = s.focus === selectedFocus;
+        const sameSub = (s.theme || s.topic || '') === (selectedTheme || selectedTopic || '');
+        if (sameFocus && sameSub) {
+          details = s.assessment.studentDetails || '';
+        }
       }
 
       let line = `- ${dateStr}: ${label}`;
@@ -206,7 +207,7 @@ RULES:
 - If the child insists a second time that they want to stop, say a quick warm goodbye and praise their effort.
 - When the session ends, you will receive a system message asking you to assess the student. Say a warm goodbye, then call the session_assessment function with honest ratings (1-5) for each skill practiced. Be encouraging in your spoken goodbye but accurate in the function call ratings.
 - If previous sessions exist below, review them. Avoid re-teaching words/topics the child already mastered (4-5★). Focus on areas rated 1-3★. Build on what they've learned.
-- Use student details from past sessions to personalize: reference their favorite characters, family, interests by name. Example: if they love Pikachu, say "Remember Pikachu? Is Pikachu fast or slow?" This makes the child feel known and excited.`;
+- Use student details from past sessions to personalize, BUT only if relevant to today's topic. Do NOT bring up characters or themes from a different topic. Example: if today's topic is Ninjago, do NOT mention Pokemon even if the child liked it before.`;
 
     let focusInstructions = '';
 
@@ -434,24 +435,14 @@ registerProcessor('pcm-processor', PCMProcessor);
       }
       pcmBuffer = [];
 
-      // Silence detection via audio energy (RMS)
+      // Check for speech to reset nudge timer
       let sumSq = 0;
       for (let i = 0; i < merged.length; i++) {
         sumSq += merged[i] * merged[i];
       }
       const rms = Math.sqrt(sumSq / merged.length);
-      const isSpeech = rms > 2000; // threshold for speech vs ambient noise
-
-      if (isSpeech) {
-        hadAudioData = true;
-        silenceSince = 0;
-        if (isThinking) isThinking = false;
-        startNudgeTimer(); // reset nudge on speech
-      } else if (hadAudioData && !isModelSpeaking && !isThinking) {
-        if (!silenceSince) silenceSince = Date.now();
-        if (Date.now() - silenceSince > 300) {
-          setTutorThinking();
-        }
+      if (rms > 2000) {
+        startNudgeTimer();
       }
 
       // Base64 encode
@@ -608,12 +599,8 @@ registerProcessor('pcm-processor', PCMProcessor);
   // ===== UI STATE UPDATES =====
   function setTutorSpeaking(speaking) {
     isModelSpeaking = speaking;
-    isThinking = false;
-    hadAudioData = false;
-    silenceSince = 0;
     if (speaking) {
       clearNudgeTimer();
-      els.tutorAvatar.classList.remove('thinking');
       els.tutorAvatar.classList.add('speaking');
       els.tutorStatus.textContent = 'Speaking...';
       els.tutorStatus.className = 'tutor-status speaking';
@@ -621,22 +608,12 @@ registerProcessor('pcm-processor', PCMProcessor);
       els.micStatus.textContent = '';
     } else {
       startNudgeTimer();
-      els.tutorAvatar.classList.remove('speaking', 'thinking');
+      els.tutorAvatar.classList.remove('speaking');
       els.tutorStatus.textContent = 'Listening...';
       els.tutorStatus.className = 'tutor-status listening';
       els.micIndicator.classList.add('active');
       els.micStatus.textContent = 'Speak now!';
     }
-  }
-
-  function setTutorThinking() {
-    isThinking = true;
-    els.tutorAvatar.classList.remove('speaking');
-    els.tutorAvatar.classList.add('thinking');
-    els.tutorStatus.textContent = 'Thinking...';
-    els.tutorStatus.className = 'tutor-status thinking';
-    els.micIndicator.classList.remove('active');
-    els.micStatus.textContent = '';
   }
 
   // ===== CONNECT TO GEMINI =====
@@ -697,7 +674,8 @@ registerProcessor('pcm-processor', PCMProcessor);
           }
         },
 
-        onError(type) {
+        onError(type, code, reason) {
+          console.warn(`[VoiceTutor] Gemini error: type=${type} code=${code} reason="${reason}"`);
           if (type === 'disconnected' && session) {
             // Mid-session disconnect — try to reconnect once
             session.reconnect().catch(() => {
@@ -715,12 +693,17 @@ registerProcessor('pcm-processor', PCMProcessor);
 
     } catch (err) {
       // WebSocket connection failed after retries
+      console.error('[VoiceTutor] Connection failed:', err.message);
       stopMicCapture();
       closePlayback();
       els.connectSpinner.classList.add('hidden');
       els.connectText.classList.add('hidden');
       els.connectSubtext.classList.add('hidden');
       els.connectError.classList.remove('hidden');
+      // Show diagnostic detail if available
+      if (els.connectErrorDetail) {
+        els.connectErrorDetail.textContent = err.message || '';
+      }
     }
   }
 
@@ -808,7 +791,7 @@ registerProcessor('pcm-processor', PCMProcessor);
       badge.style.cssText = 'text-align:center;font-size:1.2em;color:#ffd700;font-weight:bold;margin:8px 0;';
       els.sessionReview.parentNode.insertBefore(badge, els.sessionReview);
     }
-    badge.textContent = `🪙 +10 coins  ⚡ +5 min`;
+    badge.textContent = `🪙 +10 coins  ⚡ +2 min`;
   }
 
   function showReviewLoading() {
@@ -883,7 +866,7 @@ registerProcessor('pcm-processor', PCMProcessor);
       SharedCoins.add(10);
     }
     if (typeof Energy !== 'undefined') {
-      Energy.earnMinutes(5);
+      Energy.earnMinutes(2);
     }
 
     // Render review

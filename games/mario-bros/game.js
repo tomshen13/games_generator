@@ -9,6 +9,8 @@ const Game = (() => {
     screen: 'title',
     mode: '1p',
     charType: 'mario',
+    charType2: 'luigi',
+    charSelectPhase: 0, // 0 = P1 picking, 1 = P2 picking
     currentLevel: 0,
     players: [],
     enemies: [],
@@ -89,6 +91,8 @@ const Game = (() => {
     els.hudScore = document.querySelector('.hud-score');
     els.hudPower = document.querySelector('.hud-powerup');
     els.hudSkill = document.querySelector('.hud-skill');
+    els.hudFly = document.querySelector('.hud-fly');
+    els.hudFlyBar = document.querySelector('.hud-fly-bar');
     els.hudP2 = document.querySelector('.hud-p2');
     els.hudP2Lives = document.querySelector('.hud-p2-lives');
     els.lcTitle = document.querySelector('.lc-title');
@@ -106,6 +110,8 @@ const Game = (() => {
       Audio.SFX.tap();
       state.mode = '1p';
       state.coop = false;
+      state.charSelectPhase = 0;
+      updateCharSelectTitle();
       showScreen('charSelect');
     });
 
@@ -114,7 +120,9 @@ const Game = (() => {
       state.mode = '2p';
       state.coop = true;
       resetPersistent();
-      startLevel(0);
+      state.charSelectPhase = 0;
+      updateCharSelectTitle();
+      showScreen('charSelect');
     });
 
     const contBtn = document.querySelector('.btn-continue');
@@ -147,19 +155,27 @@ const Game = (() => {
     document.querySelectorAll('.char-card').forEach(card => {
       card.addEventListener('click', () => {
         Audio.SFX.tap();
-        state.charType = card.dataset.char;
-        resetPersistent();
-        showLevelSelect();
+        if (state.coop && state.charSelectPhase === 0) {
+          // P1 picked — now let P2 pick
+          state.charType = card.dataset.char;
+          state.charSelectPhase = 1;
+          updateCharSelectTitle();
+        } else if (state.coop && state.charSelectPhase === 1) {
+          // P2 picked — go to level select
+          state.charType2 = card.dataset.char;
+          showLevelSelect();
+        } else {
+          // 1P mode
+          state.charType = card.dataset.char;
+          resetPersistent();
+          showLevelSelect();
+        }
       });
     });
 
     document.querySelector('.btn-next-level').addEventListener('click', () => {
       Audio.SFX.tap();
-      if (!state.coop) {
-        showShop();
-      } else {
-        startLevel(state.currentLevel + 1);
-      }
+      showShop();
     });
 
     document.querySelector('.btn-switch-char').addEventListener('click', () => {
@@ -181,6 +197,11 @@ const Game = (() => {
     document.querySelector('.btn-start-level').addEventListener('click', () => {
       Audio.SFX.tap();
       showLevelSelect();
+    });
+
+    document.querySelector('.btn-ls-shop').addEventListener('click', () => {
+      Audio.SFX.tap();
+      showShop();
     });
 
     document.querySelector('.btn-retry').addEventListener('click', () => {
@@ -242,6 +263,17 @@ const Game = (() => {
     });
     const depHomeBtn = document.querySelector('.btn-depleted-home');
     if (depHomeBtn) depHomeBtn.addEventListener('click', () => { window.location.href = '../../index.html'; });
+  }
+
+  function updateCharSelectTitle() {
+    const titleEl = document.querySelector('.char-select-title');
+    if (state.coop && state.charSelectPhase === 1) {
+      titleEl.textContent = 'Player 2 — Choose Your Character!';
+    } else if (state.coop) {
+      titleEl.textContent = 'Player 1 — Choose Your Character!';
+    } else {
+      titleEl.textContent = 'Choose Your Character!';
+    }
   }
 
   function renderCharPreviews() {
@@ -393,8 +425,8 @@ const Game = (() => {
     // Create players
     if (state.coop) {
       state.players = [
-        Entities.createPlayer('mario', 1, spawnX, spawnY),
-        Entities.createPlayer('luigi', 2, spawnX + 24, spawnY),
+        Entities.createPlayer(state.charType, 1, spawnX, spawnY),
+        Entities.createPlayer(state.charType2, 2, spawnX + 24, spawnY),
       ];
     } else {
       state.players = [
@@ -418,6 +450,10 @@ const Game = (() => {
 
     // Show co-op HUD
     els.hudP2.style.display = state.coop ? 'flex' : 'none';
+    if (state.coop) {
+      const p2Label = document.querySelector('.hud-p2-label');
+      if (p2Label) p2Label.textContent = state.charType2.charAt(0).toUpperCase() + state.charType2.slice(1);
+    }
 
     // Blur any focused button so Space/Enter go to the game, not the button
     if (document.activeElement) document.activeElement.blur();
@@ -906,7 +942,7 @@ const Game = (() => {
     els.hudScore.textContent = `Score: ${p1.score}`;
     els.hudLevel.textContent = `${LEVELS[state.currentLevel].name}`;
 
-    const powerIcons = { ice: '❄️', fire: '🔥', wings: '🪽', star: '⭐', mushroom: '🍄', magnet: '🧲', shield: '🛡️', speed: '⚡' };
+    const powerIcons = { ice: '❄️', fire: '🔥', wings: '🪽', star: '⭐', mushroom: '🍄', magnet: '🧲', shield: '🛡️', speed: '⚡', potion: '🧪' };
     els.hudPower.textContent = p1.powerStack.map(p => powerIcons[p] || '').join('');
 
     const skillIcons = { ground_pound: '💥', super_jump: '🦘', dash: '💨', heal: '💖' };
@@ -916,6 +952,15 @@ const Game = (() => {
     } else {
       els.hudSkill.textContent = `${skillIcons[p1.skill] || ''} [Q]`;
       els.hudSkill.style.opacity = '1';
+    }
+
+    // Lakitu fly meter
+    if (p1.canFly) {
+      els.hudFly.style.display = '';
+      const pct = (p1.flyMeter / p1.flyMeterMax) * 100;
+      els.hudFlyBar.style.width = pct + '%';
+    } else {
+      els.hudFly.style.display = 'none';
     }
 
     if (state.coop && state.players[1]) {
@@ -1002,6 +1047,7 @@ const Game = (() => {
   // ===== SHOP =====
 
   const SHOP_DATA = [
+    { type: 'potion',   icon: '🧪', name: 'Potion',     desc: 'Shoot green potions',     price: 1 },
     { type: 'mushroom', icon: '🍄', name: 'Mushroom',   desc: 'Start big every level',   price: 10 },
     { type: 'fire',     icon: '🔥', name: 'Fire Power',  desc: 'Shoot fireballs',         price: 15 },
     { type: 'ice',      icon: '❄️', name: 'Ice Power',   desc: 'Shoot ice balls',         price: 15 },
@@ -1054,7 +1100,7 @@ const Game = (() => {
     }
 
     // Show current inventory
-    const powerIcons = { ice: '❄️', fire: '🔥', wings: '🪽', star: '⭐', mushroom: '🍄', magnet: '🧲', shield: '🛡️', speed: '⚡' };
+    const powerIcons = { ice: '❄️', fire: '🔥', wings: '🪽', star: '⭐', mushroom: '🍄', magnet: '🧲', shield: '🛡️', speed: '⚡', potion: '🧪' };
     els.shopInvIcons.textContent = persistent.powerStack.map(p => powerIcons[p] || '').join(' ') || '(none)';
   }
 
@@ -1087,7 +1133,7 @@ const Game = (() => {
       els.lcStats.textContent = `💎 ${p1.gems}/3 gems · Score: ${p1.score}`;
 
       const nextPower = LEVELS[state.currentLevel + 1].powerUp;
-      const powerNames = { ice: '❄️ Ice Power', fire: '🔥 Fire Power', wings: '🪽 Wings', star: '⭐ Star Power', mushroom: '🍄 Super Mushroom', magnet: '🧲 Magnet', shield: '🛡️ Shield', speed: '⚡ Speed Boost' };
+      const powerNames = { ice: '❄️ Ice Power', fire: '🔥 Fire Power', wings: '🪽 Wings', star: '⭐ Star Power', mushroom: '🍄 Super Mushroom', magnet: '🧲 Magnet', shield: '🛡️ Shield', speed: '⚡ Speed Boost', potion: '🧪 Potion' };
       els.lcPowerPreview.textContent = `Next: ${powerNames[nextPower] || nextPower}`;
 
       showScreen('levelComplete');
