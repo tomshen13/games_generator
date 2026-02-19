@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>ידע כללי 🧠</title>
+
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="../../shared/css/reset.css">
+  <link rel="stylesheet" href="../../shared/css/base.css">
+  <link rel="stylesheet" href="../../shared/css/animations.css">
+  <link rel="stylesheet" href="../../shared/css/components.css">
+  <link rel="stylesheet" href="../../shared/css/profile.css">
+
+  <!-- Game CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="game-container">
+    <!-- Particle overlay -->
+    <canvas class="particle-canvas"></canvas>
+
+    <!-- ===== HOME SCREEN (Categories) ===== -->
+    <div class="screen home-screen active">
+      <button class="btn-back" onclick="window.location.href='../../index.html'" title="חזרה">🏠</button>
+      <div class="home-icon animate-float">🧠</div>
+      <h1 class="home-title">ידע כללי</h1>
+      <p class="home-subtitle">בואו ללמוד דברים מדהימים!</p>
+      <div class="category-grid" id="categoryGrid"></div>
+    </div>
+
+    <!-- ===== TOPICS SCREEN ===== -->
+    <div class="screen topics-screen">
+      <button class="btn-back topics-back-btn" title="חזרה">←</button>
+      <div class="topics-header">
+        <span class="topics-category-emoji" id="topicsCategoryEmoji"></span>
+        <h2 class="topics-title" id="topicsTitle"></h2>
+      </div>
+      <div class="topic-grid" id="topicGrid"></div>
+    </div>
+
+    <!-- ===== LEVEL SELECT SCREEN ===== -->
+    <div class="screen level-screen">
+      <button class="btn-back level-back-btn" title="חזרה">←</button>
+      <div class="level-header">
+        <span class="level-topic-emoji" id="levelTopicEmoji"></span>
+        <h2 class="level-topic-title" id="levelTopicTitle"></h2>
+      </div>
+      <p class="level-subtitle">בחרו שיעור</p>
+      <div class="level-grid" id="levelGrid"></div>
+    </div>
+
+    <!-- ===== LOADING SCREEN ===== -->
+    <div class="screen loading-screen">
+      <div class="loading-spinner animate-spin"></div>
+      <p class="loading-text">מכין את השיעור...</p>
+      <p class="loading-subtext">רגע אחד!</p>
+    </div>
+
+    <!-- ===== LESSON SCREEN ===== -->
+    <div class="screen lesson-screen">
+      <button class="btn-back lesson-back-btn" title="חזרה">←</button>
+      <div class="lesson-progress">
+        <div class="lesson-progress-bar">
+          <div class="lesson-progress-fill" id="lessonProgressFill"></div>
+        </div>
+        <span class="lesson-progress-label" id="lessonProgressLabel"></span>
+      </div>
+      <div class="fact-card" id="factCard">
+        <div class="fact-emoji" id="factEmoji"></div>
+        <p class="fact-text" id="factText"></p>
+      </div>
+      <div class="lesson-buttons">
+        <button class="btn btn-secondary lesson-replay-btn" id="lessonReplayBtn">🔊 שמע שוב</button>
+        <button class="btn btn-primary btn-large lesson-next-btn" id="lessonNextBtn">הבא ➡️</button>
+      </div>
+    </div>
+
+    <!-- ===== QUIZ SCREEN ===== -->
+    <div class="screen quiz-screen">
+      <div class="quiz-progress">
+        <div class="quiz-progress-bar">
+          <div class="quiz-progress-fill" id="quizProgressFill"></div>
+        </div>
+        <span class="quiz-progress-label" id="quizProgressLabel"></span>
+      </div>
+      <div class="quiz-question-area">
+        <p class="quiz-question-text" id="quizQuestionText"></p>
+      </div>
+      <div class="quiz-choices" id="quizChoices"></div>
+      <div class="quiz-feedback" id="quizFeedback"></div>
+    </div>
+
+    <!-- ===== RESULTS SCREEN ===== -->
+    <div class="screen results-screen">
+      <div class="results-emoji animate-victory" id="resultsEmoji">🎉</div>
+      <h2 class="results-title" id="resultsTitle">כל הכבוד!</h2>
+      <div class="results-score" id="resultsScore"></div>
+      <p class="results-message" id="resultsMessage"></p>
+      <div class="results-actions">
+        <button class="btn btn-primary btn-large results-topics-btn">📚 עוד נושאים</button>
+        <button class="btn-secondary results-home-btn">🏠 הביתה</button>
+      </div>
+    </div>
+
+    <!-- ===== ERROR SCREEN ===== -->
+    <div class="screen error-screen">
+      <div class="error-icon">😕</div>
+      <p class="error-text">אופס! משהו השתבש</p>
+      <p class="error-subtext">בדקו את החיבור לאינטרנט</p>
+      <div class="error-actions">
+        <button class="btn btn-primary error-retry-btn">🔄 נסו שוב</button>
+        <button class="btn-secondary error-home-btn">🏠 הביתה</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shared JS -->
+  <script src="../../shared/js/utils.js"></script>
+  <script src="../../shared/js/gemini-tts.js"></script>
+  <script src="../../shared/js/audio.js"></script>
+  <script src="../../shared/js/particles.js"></script>
+  <script src="../../shared/js/storage.js"></script>
+  <script src="../../shared/js/supabase-sync.js"></script>
+  <script src="../../shared/js/profile.js"></script>
+  <script src="../../shared/js/energy.js"></script>
+  <script>Profile.autoInit();</script>
+
+  <!-- Game JS -->
+  <script src="topics.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

@@ -22,7 +22,7 @@ const GeminiTTS = (() => {
   const pending = new Map();
   let enabled = true;
   let hardFailures = 0;       // non-429 failures
-  const MAX_HARD_FAILURES = 3;
+  const MAX_HARD_FAILURES = 6;
 
   // --- API Key ---
   async function fetchApiKey() {
@@ -56,7 +56,7 @@ const GeminiTTS = (() => {
   // --- REST TTS call with retry for 429 ---
   const LANG_NAMES = { en: 'English', he: 'Hebrew' };
 
-  async function generateSpeech(text, lang = 'en', retries = 2) {
+  async function generateSpeech(text, lang = 'en', retries = 3) {
     const key = await ensureKey();
     const url = `${API_BASE}/${MODEL}:generateContent?key=${key}`;
     const langName = LANG_NAMES[lang] || 'English';
@@ -80,11 +80,14 @@ const GeminiTTS = (() => {
     });
 
     if (res.status === 429 && retries > 0) {
-      // Rate limited — wait and retry
-      const waitMs = (3 - retries) * 2000 + 1000; // 1s, 3s
+      // Rate limited — wait and retry with increasing backoff
+      const waitMs = (4 - retries) * 2000 + 1000; // 1s, 3s, 5s
       await new Promise(r => setTimeout(r, waitMs));
       return generateSpeech(text, lang, retries - 1);
     }
+
+    // 429 with no retries left — return null (transient, not a hard failure)
+    if (res.status === 429) return null;
 
     if (!res.ok) throw new Error(`Gemini TTS ${res.status}`);
 
@@ -156,8 +159,9 @@ const GeminiTTS = (() => {
         console.warn('[GeminiTTS] Failed:', err.message);
         hardFailures++;
         if (hardFailures >= MAX_HARD_FAILURES) {
-          console.warn('[GeminiTTS] Too many failures, disabling');
+          console.warn('[GeminiTTS] Too many failures, pausing for 30s');
           enabled = false;
+          setTimeout(() => { enabled = true; hardFailures = 0; }, 30000);
         }
         pending.delete(cacheKey);
         return null;
