@@ -7,7 +7,7 @@
  *   session.close();
  */
 const GeminiLive = (() => {
-  const MODEL = 'models/gemini-live-2.5-flash-native-audio';
+  const MODEL = 'models/gemini-2.5-flash-native-audio-preview-12-2025';
   const WS_BASE = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent';
 
   // Fetch API key from Supabase Edge Function (falls back to hardcoded for local dev)
