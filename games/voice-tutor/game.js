@@ -35,6 +35,7 @@
     micDenied:        $('.mic-denied'),
     retryMicBtn:      $('.retry-mic-btn'),
     connectError:     $('.connect-error'),
+    connectErrorDetail: $('.connect-error-detail'),
     retryConnectBtn:  $('.retry-connect-btn'),
     homeBtn:          $('.home-btn'),
     // Conversation
@@ -697,7 +698,8 @@ registerProcessor('pcm-processor', PCMProcessor);
           }
         },
 
-        onError(type) {
+        onError(type, code, reason) {
+          console.warn(`[VoiceTutor] Gemini error: type=${type} code=${code} reason="${reason}"`);
           if (type === 'disconnected' && session) {
             // Mid-session disconnect — try to reconnect once
             session.reconnect().catch(() => {
@@ -715,12 +717,17 @@ registerProcessor('pcm-processor', PCMProcessor);
 
     } catch (err) {
       // WebSocket connection failed after retries
+      console.error('[VoiceTutor] Connection failed:', err.message);
       stopMicCapture();
       closePlayback();
       els.connectSpinner.classList.add('hidden');
       els.connectText.classList.add('hidden');
       els.connectSubtext.classList.add('hidden');
       els.connectError.classList.remove('hidden');
+      // Show diagnostic detail if available
+      if (els.connectErrorDetail) {
+        els.connectErrorDetail.textContent = err.message || '';
+      }
     }
   }
 
@@ -808,7 +815,7 @@ registerProcessor('pcm-processor', PCMProcessor);
       badge.style.cssText = 'text-align:center;font-size:1.2em;color:#ffd700;font-weight:bold;margin:8px 0;';
       els.sessionReview.parentNode.insertBefore(badge, els.sessionReview);
     }
-    badge.textContent = `🪙 +10 coins  ⚡ +5 min`;
+    badge.textContent = `🪙 +10 coins  ⚡ +2 min`;
   }
 
   function showReviewLoading() {
@@ -883,7 +890,7 @@ registerProcessor('pcm-processor', PCMProcessor);
       SharedCoins.add(10);
     }
     if (typeof Energy !== 'undefined') {
-      Energy.earnMinutes(5);
+      Energy.earnMinutes(2);
     }
 
     // Render review

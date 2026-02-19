@@ -7,7 +7,7 @@
  *   session.close();
  */
 const GeminiLive = (() => {
-  const MODEL = 'models/gemini-2.5-flash-native-audio-preview-12-2025';
+  const MODEL = 'models/gemini-live-2.5-flash-native-audio';
   const WS_BASE = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent';
 
   // Fetch API key from Supabase Edge Function (falls back to hardcoded for local dev)
@@ -175,11 +175,12 @@ const GeminiLive = (() => {
         }
       };
 
-      ws.onerror = () => {
-        // Error handled in onclose
+      ws.onerror = (event) => {
+        console.error('[GeminiLive] WS error:', event);
       };
 
-      ws.onclose = () => {
+      ws.onclose = (event) => {
+        console.warn(`[GeminiLive] WS closed: code=${event.code} reason="${event.reason}"`);
         if (closed) return;
 
         if (!setupResolved) {
@@ -187,14 +188,15 @@ const GeminiLive = (() => {
           if (retries < MAX_RETRIES) {
             retries++;
             const delay = RETRY_BASE_MS * Math.pow(2, retries - 1);
+            console.log(`[GeminiLive] Retry ${retries}/${MAX_RETRIES} in ${delay}ms`);
             setTimeout(() => openSocket(resolve, reject), delay);
           } else {
-            if (reject) reject(new Error('Failed to connect after retries'));
-            if (opts.onError) opts.onError('connection_failed');
+            if (reject) reject(new Error(`Connection failed: code=${event.code} reason="${event.reason}"`));
+            if (opts.onError) opts.onError('connection_failed', event.code, event.reason);
           }
         } else {
           // Mid-session disconnect — try one reconnect
-          if (opts.onError) opts.onError('disconnected');
+          if (opts.onError) opts.onError('disconnected', event.code, event.reason);
         }
       };
     }
