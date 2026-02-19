@@ -81,11 +81,6 @@
   let playbackTime = 0;
   let isModelSpeaking = false;
 
-  // Silence detection for "Thinking..." state
-  let hadAudioData = false;
-  let silenceSince = 0;
-  let isThinking = false;
-
   // Nudge timer — re-engage if child is silent too long
   const NUDGE_DELAY_MS = 4000;
   let nudgeTimer = null;
@@ -440,24 +435,14 @@ registerProcessor('pcm-processor', PCMProcessor);
       }
       pcmBuffer = [];
 
-      // Silence detection via audio energy (RMS)
+      // Check for speech to reset nudge timer
       let sumSq = 0;
       for (let i = 0; i < merged.length; i++) {
         sumSq += merged[i] * merged[i];
       }
       const rms = Math.sqrt(sumSq / merged.length);
-      const isSpeech = rms > 2000; // threshold for speech vs ambient noise
-
-      if (isSpeech) {
-        hadAudioData = true;
-        silenceSince = 0;
-        if (isThinking) isThinking = false;
-        startNudgeTimer(); // reset nudge on speech
-      } else if (hadAudioData && !isModelSpeaking && !isThinking) {
-        if (!silenceSince) silenceSince = Date.now();
-        if (Date.now() - silenceSince > 300) {
-          setTutorThinking();
-        }
+      if (rms > 2000) {
+        startNudgeTimer();
       }
 
       // Base64 encode
@@ -614,12 +599,8 @@ registerProcessor('pcm-processor', PCMProcessor);
   // ===== UI STATE UPDATES =====
   function setTutorSpeaking(speaking) {
     isModelSpeaking = speaking;
-    isThinking = false;
-    hadAudioData = false;
-    silenceSince = 0;
     if (speaking) {
       clearNudgeTimer();
-      els.tutorAvatar.classList.remove('thinking');
       els.tutorAvatar.classList.add('speaking');
       els.tutorStatus.textContent = 'Speaking...';
       els.tutorStatus.className = 'tutor-status speaking';
@@ -627,22 +608,12 @@ registerProcessor('pcm-processor', PCMProcessor);
       els.micStatus.textContent = '';
     } else {
       startNudgeTimer();
-      els.tutorAvatar.classList.remove('speaking', 'thinking');
+      els.tutorAvatar.classList.remove('speaking');
       els.tutorStatus.textContent = 'Listening...';
       els.tutorStatus.className = 'tutor-status listening';
       els.micIndicator.classList.add('active');
       els.micStatus.textContent = 'Speak now!';
     }
-  }
-
-  function setTutorThinking() {
-    isThinking = true;
-    els.tutorAvatar.classList.remove('speaking');
-    els.tutorAvatar.classList.add('thinking');
-    els.tutorStatus.textContent = 'Thinking...';
-    els.tutorStatus.className = 'tutor-status thinking';
-    els.micIndicator.classList.remove('active');
-    els.micStatus.textContent = '';
   }
 
   // ===== CONNECT TO GEMINI =====
