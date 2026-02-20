@@ -1085,11 +1085,20 @@ registerProcessor('pcm-processor', PCMProcessor);
   });
 
   // Tap-to-talk toggle
-  els.micIndicator.addEventListener('click', () => {
+  function toggleRecording() {
     if (isRecording) {
       stopRecording();
     } else {
       startRecording();
+    }
+  }
+  els.micIndicator.addEventListener('click', toggleRecording);
+
+  // Space bar to toggle recording
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && !e.repeat && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+      toggleRecording();
     }
   });
 
