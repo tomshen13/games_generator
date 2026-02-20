@@ -79,10 +79,7 @@ const GeminiLive = (() => {
             },
             realtimeInputConfig: {
               automaticActivityDetection: {
-                startOfSpeechSensitivity: 'START_SENSITIVITY_LOW',
-                endOfSpeechSensitivity: 'END_SENSITIVITY_LOW',
-                prefixPaddingMs: 200,
-                silenceDurationMs: 500
+                disabled: true
               }
             },
             tools: [{
@@ -213,6 +210,20 @@ const GeminiLive = (() => {
               }]
             }
           }));
+        }
+      },
+
+      /** Signal start of user speech (manual VAD) */
+      sendActivityStart() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ realtimeInput: { activityStart: {} } }));
+        }
+      },
+
+      /** Signal end of user speech (manual VAD) */
+      sendActivityEnd() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ realtimeInput: { activityEnd: {} } }));
         }
       },
 

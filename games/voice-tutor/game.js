@@ -41,7 +41,6 @@
     // Conversation
     endSessionBtn:  $('.end-session-btn'),
     timer:          $('.timer'),
-    muteBtn:        $('.mute-btn'),
     tutorAvatar:    $('.tutor-avatar'),
     tutorStatus:    $('.tutor-status'),
     promptText:     $('.prompt-text'),
@@ -65,7 +64,10 @@
   let session = null;        // GeminiLive session
   let timerInterval = null;
   let timerSeconds = 0;
-  let isMuted = false;
+  let isRecording = false;
+  let silenceStart = null;
+  const SILENCE_AUTO_STOP_MS = 3000;
+  const SILENCE_RMS_THRESHOLD = 2000;
   let sessionStartTime = null;
 
   // Audio pipeline state
@@ -409,9 +411,9 @@ registerProcessor('pcm-processor', PCMProcessor);
     const source = audioCtx.createMediaStreamSource(micStream);
     workletNode = new AudioWorkletNode(audioCtx, 'pcm-processor');
 
-    // Collect PCM chunks from worklet
+    // Collect PCM chunks from worklet (only while recording)
     workletNode.port.onmessage = (e) => {
-      if (!isMuted) {
+      if (isRecording) {
         pcmBuffer.push(new Int16Array(e.data));
       }
     };
@@ -419,9 +421,10 @@ registerProcessor('pcm-processor', PCMProcessor);
     source.connect(workletNode);
     workletNode.connect(audioCtx.destination); // needed for processing (silent)
 
-    // Send buffered audio to Gemini every ~100ms
+    // Send buffered audio to Gemini every ~100ms (only while recording)
     sendInterval = setInterval(() => {
       if (!session) return;
+      if (!isRecording) return;
       if (pcmBuffer.length === 0) return;
 
       // Merge all buffered chunks
@@ -435,17 +438,26 @@ registerProcessor('pcm-processor', PCMProcessor);
       }
       pcmBuffer = [];
 
-      // Check for speech to reset nudge timer
+      // Silence detection for auto-stop
       let sumSq = 0;
       for (let i = 0; i < merged.length; i++) {
         sumSq += merged[i] * merged[i];
       }
       const rms = Math.sqrt(sumSq / merged.length);
-      if (rms > 2000) {
-        startNudgeTimer();
+
+      if (rms > SILENCE_RMS_THRESHOLD) {
+        silenceStart = null; // speech detected, reset
+      } else {
+        if (!silenceStart) {
+          silenceStart = Date.now();
+        } else if (Date.now() - silenceStart >= SILENCE_AUTO_STOP_MS) {
+          console.log('[VoiceTutor] Auto-stop: silence for', SILENCE_AUTO_STOP_MS, 'ms');
+          stopRecording();
+          return;
+        }
       }
 
-      // Base64 encode
+      // Base64 encode and send
       const bytes = new Uint8Array(merged.buffer);
       let binary = '';
       for (let i = 0; i < bytes.length; i++) {
@@ -596,6 +608,48 @@ registerProcessor('pcm-processor', PCMProcessor);
     }
   }
 
+  // ===== TAP-TO-TALK =====
+  function startRecording() {
+    if (isRecording) return;
+    isRecording = true;
+    silenceStart = null;
+    pcmBuffer = [];
+
+    // Interrupt model if speaking
+    if (isModelSpeaking) {
+      stopPlayback();
+      setTutorSpeaking(false);
+    }
+
+    // Signal Gemini
+    if (session) session.sendActivityStart();
+
+    clearNudgeTimer();
+    updateMicUI();
+  }
+
+  function stopRecording() {
+    if (!isRecording) return;
+    isRecording = false;
+    silenceStart = null;
+
+    // Signal Gemini
+    if (session) session.sendActivityEnd();
+
+    startNudgeTimer();
+    updateMicUI();
+  }
+
+  function updateMicUI() {
+    if (isRecording) {
+      els.micIndicator.classList.add('recording');
+      els.micStatus.textContent = 'Tap when done';
+    } else {
+      els.micIndicator.classList.remove('recording');
+      els.micStatus.textContent = isModelSpeaking ? '' : 'Tap to talk';
+    }
+  }
+
   // ===== UI STATE UPDATES =====
   function setTutorSpeaking(speaking) {
     isModelSpeaking = speaking;
@@ -604,16 +658,13 @@ registerProcessor('pcm-processor', PCMProcessor);
       els.tutorAvatar.classList.add('speaking');
       els.tutorStatus.textContent = 'Speaking...';
       els.tutorStatus.className = 'tutor-status speaking';
-      els.micIndicator.classList.remove('active');
-      els.micStatus.textContent = '';
     } else {
-      startNudgeTimer();
       els.tutorAvatar.classList.remove('speaking');
-      els.tutorStatus.textContent = 'Listening...';
+      els.tutorStatus.textContent = 'Your turn!';
       els.tutorStatus.className = 'tutor-status listening';
-      els.micIndicator.classList.add('active');
-      els.micStatus.textContent = 'Speak now!';
+      if (!isRecording) startNudgeTimer();
     }
+    updateMicUI();
   }
 
   // ===== CONNECT TO GEMINI =====
@@ -687,9 +738,10 @@ registerProcessor('pcm-processor', PCMProcessor);
 
       // Success — show conversation screen
       sessionStartTime = Date.now();
+      isRecording = false;
       showScreen('conversation');
       startTimer();
-      setTutorSpeaking(false);
+      updateMicUI();
 
     } catch (err) {
       // WebSocket connection failed after retries
@@ -781,7 +833,7 @@ registerProcessor('pcm-processor', PCMProcessor);
     console.log('[VoiceTutor] Saved adaptive records:', records);
   }
 
-  function showCoinsEarned() {
+  function showCoinsEarned(energyEarned) {
     if (typeof SharedCoins === 'undefined') return;
     // Insert a coins earned badge before the review section
     let badge = document.querySelector('.session-coins-badge');
@@ -791,7 +843,9 @@ registerProcessor('pcm-processor', PCMProcessor);
       badge.style.cssText = 'text-align:center;font-size:1.2em;color:#ffd700;font-weight:bold;margin:8px 0;';
       els.sessionReview.parentNode.insertBefore(badge, els.sessionReview);
     }
-    badge.textContent = `🪙 +10 coins  ⚡ +2 min`;
+    badge.textContent = energyEarned > 0
+      ? `🪙 +10 coins  ⚡ +${energyEarned} min`
+      : `🪙 +10 coins`;
   }
 
   function showReviewLoading() {
@@ -806,6 +860,8 @@ registerProcessor('pcm-processor', PCMProcessor);
   // ===== END SESSION =====
   async function endSession() {
     isSessionEnding = true;
+    isRecording = false;
+    silenceStart = null;
     stopTimer();
     clearNudgeTimer();
     stopMicCapture();
@@ -815,6 +871,7 @@ registerProcessor('pcm-processor', PCMProcessor);
     // Calculate stats
     const elapsed = sessionStartTime ? Math.round((Date.now() - sessionStartTime) / 60000) : 0;
     const displayMin = Math.max(1, elapsed);
+    const earnedEnergy = Math.floor(elapsed / 3); // 1 min per 3 min played
     els.durationStat.textContent = displayMin;
 
     // Show complete screen immediately with loading state
@@ -865,8 +922,8 @@ registerProcessor('pcm-processor', PCMProcessor);
     if (typeof SharedCoins !== 'undefined') {
       SharedCoins.add(10);
     }
-    if (typeof Energy !== 'undefined') {
-      Energy.earnMinutes(2);
+    if (typeof Energy !== 'undefined' && earnedEnergy > 0) {
+      Energy.earnMinutes(earnedEnergy);
     }
 
     // Render review
@@ -880,7 +937,7 @@ registerProcessor('pcm-processor', PCMProcessor);
     }
 
     // Show coins earned badge
-    showCoinsEarned();
+    showCoinsEarned(earnedEnergy);
 
     // Save session history
     if (typeof Storage !== 'undefined' && window.Storage) {
@@ -1027,11 +1084,13 @@ registerProcessor('pcm-processor', PCMProcessor);
     endSession();
   });
 
-  // Mute toggle
-  els.muteBtn.addEventListener('click', () => {
-    isMuted = !isMuted;
-    els.muteBtn.textContent = isMuted ? '🔇' : '🎤';
-    els.muteBtn.classList.toggle('muted', isMuted);
+  // Tap-to-talk toggle
+  els.micIndicator.addEventListener('click', () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
   });
 
   // Play again
@@ -1044,6 +1103,8 @@ registerProcessor('pcm-processor', PCMProcessor);
     selectedTheme = null;
     selectedTopic = null;
     selectedDuration = 10;
+    isRecording = false;
+    silenceStart = null;
     assessmentData = null;
     assessmentResolve = null;
     reviewPending = false;

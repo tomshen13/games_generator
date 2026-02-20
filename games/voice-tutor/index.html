@@ -132,7 +132,6 @@
           <span class="timer">10:00</span>
         </div>
         <div class="hud-group">
-          <button class="btn-icon mute-btn" title="Mute">🎤</button>
         </div>
       </div>
 
@@ -150,12 +149,13 @@
         <p class="prompt-text"></p>
       </div>
 
-      <!-- Mic indicator -->
+      <!-- Mic indicator — tap-to-talk button -->
       <div class="mic-area">
-        <div class="mic-indicator">
+        <button class="mic-indicator" type="button" aria-label="Tap to talk">
           <div class="mic-ripple"></div>
+          <div class="mic-ripple mic-ripple-2"></div>
           <div class="mic-icon">🎤</div>
-        </div>
+        </button>
         <p class="mic-status">Tap to talk</p>
       </div>
     </div>

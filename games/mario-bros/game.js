@@ -977,6 +977,9 @@ const Game = (() => {
     { name: 'Dark Realm', icon: '👻' },
     { name: 'Crystal Kingdom', icon: '💎' },
     { name: 'Final Frontier', icon: '🌋' },
+    { name: 'Sunken Depths', icon: '🐙' },
+    { name: 'Clockwork Citadel', icon: '⚙️' },
+    { name: 'Chaos Dimension', icon: '👹' },
   ];
   const LEVELS_PER_WORLD = 4;
 
@@ -986,6 +989,9 @@ const Game = (() => {
     '👻', '🌋', '🌲', '💀',
     '💎', '🏔️', '🪞', '🏯',
     '🌊', '⛈️', '🗼', '👑',
+    '🐙', '🔧', '🌊', '🦑',
+    '⚙️', '🔩', '🔥', '🏭',
+    '👹', '🌀', '💀', '👑',
   ];
 
   function showLevelSelect() {
