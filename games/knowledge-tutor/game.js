@@ -506,6 +506,7 @@ Respond with ONLY valid JSON in this exact format:
 
     if (percentage >= 50) {
       markLevelCompleted(state.currentCategory.id, state.currentTopic.id, state.currentLevel);
+      Energy.earnMinutes(1);
     }
 
     showScreen('results');

@@ -132,7 +132,6 @@
           <span class="timer">10:00</span>
         </div>
         <div class="hud-group">
-          <button class="btn-icon mute-btn" title="Mute">🎤</button>
         </div>
       </div>
 
@@ -150,13 +149,14 @@
         <p class="prompt-text"></p>
       </div>
 
-      <!-- Mic indicator -->
+      <!-- Mic indicator — passive listening indicator -->
       <div class="mic-area">
-        <div class="mic-indicator">
+        <div class="mic-indicator" aria-label="Listening">
           <div class="mic-ripple"></div>
+          <div class="mic-ripple mic-ripple-2"></div>
           <div class="mic-icon">🎤</div>
         </div>
-        <p class="mic-status">Tap to talk</p>
+        <p class="mic-status">Listening...</p>
       </div>
     </div>
 

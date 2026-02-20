@@ -244,16 +244,6 @@
   background: rgba(255, 107, 107, 0.35);
 }
 
-/* Mute button */
-.mute-btn {
-  background: rgba(255, 255, 255, 0.1);
-  border: 2px solid rgba(255, 255, 255, 0.15);
-}
-
-.mute-btn.muted {
-  background: rgba(255, 107, 107, 0.2);
-  border-color: rgba(255, 107, 107, 0.3);
-}
 
 /* Tutor avatar */
 .tutor-avatar-area {
@@ -357,21 +347,41 @@
   opacity: 1;
 }
 
-/* Mic area */
+/* Mic area — tap-to-talk button */
 .mic-area {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-sm);
+  padding-bottom: var(--space-md);
 }
 
 .mic-indicator {
   position: relative;
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 212, 255, 0.12);
+  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.2);
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.3s ease, box-shadow 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+}
+
+.mic-indicator:active {
+  transform: scale(0.92);
+}
+
+/* RECORDING state */
+.mic-indicator.recording {
+  background: rgba(255, 80, 80, 0.25);
+  box-shadow: 0 0 0 4px rgba(255, 80, 80, 0.4),
+              0 0 30px rgba(255, 80, 80, 0.2);
 }
 
 .mic-ripple {
@@ -379,32 +389,55 @@
   inset: 0;
   border-radius: 50%;
   border: 3px solid rgba(0, 212, 255, 0.3);
+  pointer-events: none;
   transition: all var(--duration-normal);
 }
 
-.mic-indicator.active .mic-ripple {
-  animation: mic-ripple-anim 1.5s ease-out infinite;
+.mic-ripple-2 {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 3px solid rgba(0, 212, 255, 0.2);
+  pointer-events: none;
 }
 
-@keyframes mic-ripple-anim {
+/* Recording ripple animation */
+.mic-indicator.recording .mic-ripple {
+  border-color: rgba(255, 80, 80, 0.5);
+  animation: mic-ripple-recording 1.2s ease-out infinite;
+}
+
+.mic-indicator.recording .mic-ripple-2 {
+  border-color: rgba(255, 80, 80, 0.3);
+  animation: mic-ripple-recording 1.2s ease-out infinite 0.6s;
+}
+
+@keyframes mic-ripple-recording {
   0% {
     transform: scale(1);
     opacity: 0.6;
   }
   100% {
-    transform: scale(1.8);
+    transform: scale(2.0);
     opacity: 0;
   }
 }
 
 .mic-icon {
-  font-size: var(--text-xl);
+  font-size: var(--text-2xl);
   z-index: 1;
 }
 
 .mic-status {
-  font-size: var(--text-sm);
+  font-size: var(--text-md);
+  font-family: var(--font-display);
   color: var(--color-text-muted);
+  transition: color 0.3s ease;
+}
+
+/* Recording text highlight */
+.mic-indicator.recording ~ .mic-status {
+  color: #ff6b6b;
 }
 
 /* ===== COMPLETE SCREEN ===== */

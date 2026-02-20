@@ -42,6 +42,8 @@
     totalScore: 0,
   };
 
+  let energyDepleted = false;
+
   // Persistent data saved across sessions
   const persistent = {
     lives: 3,
@@ -251,7 +253,7 @@
     document.querySelector('.btn-energy-pin')?.addEventListener('click', async () => {
       if (typeof Energy !== 'undefined') {
         const ok = await Energy.parentBypass();
-        if (ok) showScreen('title');
+        if (ok) { energyDepleted = false; showScreen('title'); }
       }
     });
     document.querySelector('.btn-energy-home')?.addEventListener('click', () => {
@@ -266,6 +268,7 @@
       if (typeof Energy !== 'undefined') {
         const ok = await Energy.parentBypass();
         if (ok) {
+          energyDepleted = false;
           els.energyOverlay.style.display = 'none';
           state.paused = false;
           Engine.startLoop(update, render);
@@ -440,6 +443,10 @@
 
   // ===== START LEVEL =====
   function startLevel(idx) {
+    if (typeof Energy !== 'undefined' && !Energy.canPlay()) {
+      showScreen('energyGate');
+      return;
+    }
     const level = LEVELS[idx];
     if (!level) return;
 
@@ -615,6 +622,7 @@
           }
         },
         () => {
+          energyDepleted = true;
           state.paused = true;
           Engine.stopLoop();
           if (els.energyOverlay) els.energyOverlay.style.display = 'flex';

@@ -29,6 +29,7 @@ const Game = (() => {
 
   // Persists between levels (coins, score, lives, powers)
   let persistent = { coins: 0, score: 0, lives: 3, powerStack: [] };
+  let energyDepleted = false;
 
   function resetPersistent() {
     persistent = { coins: 0, score: 0, lives: 3, powerStack: [] };
@@ -233,7 +234,7 @@ const Game = (() => {
 
     // Pause on Escape
     window.addEventListener('keydown', e => {
-      if (e.code === 'Escape' && state.screen === 'playing') {
+      if (e.code === 'Escape' && state.screen === 'playing' && !energyDepleted) {
         state.paused = !state.paused;
       }
     });
@@ -244,7 +245,7 @@ const Game = (() => {
     const energyPinBtn = document.querySelector('.btn-energy-pin');
     if (energyPinBtn) energyPinBtn.addEventListener('click', async () => {
       const ok = await Energy.parentBypass();
-      if (ok) showScreen('title');
+      if (ok) { energyDepleted = false; showScreen('title'); }
     });
     const energyHomeBtn = document.querySelector('.btn-energy-home');
     if (energyHomeBtn) energyHomeBtn.addEventListener('click', () => { window.location.href = '../../index.html'; });
@@ -256,6 +257,7 @@ const Game = (() => {
     if (depPinBtn) depPinBtn.addEventListener('click', async () => {
       const ok = await Energy.parentBypass();
       if (ok) {
+        energyDepleted = false;
         els.energyOverlay.style.display = 'none';
         state.paused = false;
         Engine.startLoop(update, render);
@@ -334,6 +336,12 @@ const Game = (() => {
   // ===== LEVEL LIFECYCLE =====
 
   function startLevel(levelIndex) {
+    // Recheck energy before starting a level
+    if (typeof Energy !== 'undefined' && !Energy.canPlay()) {
+      showScreen('energyGate');
+      return;
+    }
+
     if (levelIndex >= LEVELS.length) {
       onVictory();
       return;
@@ -474,6 +482,7 @@ const Game = (() => {
           }
         },
         () => {
+          energyDepleted = true;
           state.paused = true;
           Engine.stopLoop();
           if (els.energyOverlay) els.energyOverlay.style.display = 'flex';
@@ -977,6 +986,9 @@ const Game = (() => {
     { name: 'Dark Realm', icon: '👻' },
     { name: 'Crystal Kingdom', icon: '💎' },
     { name: 'Final Frontier', icon: '🌋' },
+    { name: 'Sunken Depths', icon: '🐙' },
+    { name: 'Clockwork Citadel', icon: '⚙️' },
+    { name: 'Chaos Dimension', icon: '👹' },
   ];
   const LEVELS_PER_WORLD = 4;
 
@@ -986,6 +998,9 @@ const Game = (() => {
     '👻', '🌋', '🌲', '💀',
     '💎', '🏔️', '🪞', '🏯',
     '🌊', '⛈️', '🗼', '👑',
+    '🐙', '🔧', '🌊', '🦑',
+    '⚙️', '🔩', '🔥', '🏭',
+    '👹', '🌀', '💀', '👑',
   ];
 
   function showLevelSelect() {
