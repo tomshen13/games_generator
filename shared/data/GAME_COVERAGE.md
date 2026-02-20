@@ -57,6 +57,15 @@ Overview of which curriculum levels have games and which need development.
 | 4 | Mental Strategies | Missing addend (3+?=10); adds tens (20+30) | `[x]` pokemon-multiply (add) |
 | 5 | Word Problems | Commutativity; money problems; multiple ways to make 15 | `[ ]` |
 
+### Math: Subtraction Basics (`g1-math-subtraction`)
+| Level | Name | KPI | Game |
+|-------|------|-----|------|
+| 1 | Subtract within 5 | Solves 5-2 with objects; "take away" concept | `[x]` pokemon-multiply (subtract) |
+| 2 | Subtract within 10 | Solves 8-3 mentally; subtraction as inverse of addition | `[x]` pokemon-multiply (subtract) |
+| 3 | Subtract within 20 | Solves 15-7; uses number line for subtraction | `[x]` pokemon-multiply (subtract) |
+| 4 | Crossing Ten | Solves 13-8 by decomposing; "friends of 10" for sub | `[x]` pokemon-multiply (subtract) |
+| 5 | Subtract Tens | Solves 50-20; place value in subtraction | `[x]` pokemon-multiply (subtract) |
+
 ### Hebrew: Acquisition of the Code (`g1-hebrew-code`)
 | Level | Name | KPI | Game |
 |-------|------|-----|------|
@@ -96,6 +105,15 @@ Overview of which curriculum levels have games and which need development.
 | 3 | Regrouping Mastery | Solves 45+37 vertically; 3x5 as 5+5+5 | `[x]` pokemon-multiply (add) |
 | 4 | Early Multiplication | Recalls facts for 2, 5, 10; tells time | `[x]` pokemon-multiply |
 | 5 | Mental Flexibility | Solves 98+45 via 100+43; divides 12 into 3 groups | `[x]` pokemon-multiply (subtract) |
+
+### Math: Advanced Add & Subtract (`g2-math-addsub`)
+| Level | Name | KPI | Game |
+|-------|------|-----|------|
+| 1 | Two-Digit No Borrow | Solves 47-23; subtracts ones then tens | `[x]` pokemon-multiply (subtract) |
+| 2 | Two-Digit Borrow | Solves 63-28 vertically; checks with addition | `[x]` pokemon-multiply (subtract) |
+| 3 | Big Sums | Solves 67+48; carries across tens | `[x]` pokemon-multiply (add) |
+| 4 | Big Gaps | Solves 91-36; compensation strategy | `[x]` pokemon-multiply (subtract) |
+| 5 | Hundreds | Solves 145-67; works with 3-digit numbers | `[x]` pokemon-multiply (subtract) |
 
 ### Hebrew: Fluency & Comprehension (`g2-hebrew-fluency`)
 | Level | Name | KPI | Game |
@@ -210,11 +228,11 @@ Overview of which curriculum levels have games and which need development.
 
 | Subject | Total Levels | With Games | Coverage |
 |---------|-------------|------------|----------|
-| Math | 25 | 17 | 68% |
+| Math | 35 | 27 | 77% |
 | Hebrew | 25 | 1 | 4% |
 | English | 25 | 0 | 0% |
 | Logic | 25 | 0 | 0% |
-| **Total** | **100** | **18** | **18%** |
+| **Total** | **110** | **28** | **25%** |
 
 ### Existing Games → Mapped Levels
 
@@ -226,7 +244,7 @@ Overview of which curriculum levels have games and which need development.
 | unicorn-numbers | addition | K Math L5 (Decomposition), G1 Math L2 (Addition to 10) |
 | unicorn-hebrew | hebrew | G1 Hebrew L1 (Letter Identification) |
 | pokemon-math | multiply | G2 Math L4, G3 Math L2-L4 |
-| pokemon-math | add | G1 Math L3-L4, G2 Math L2-L3 |
-| pokemon-math | subtract | G2 Math L5 |
+| pokemon-math | add | G1 Math L3-L4, G2 Math L2-L3, G2 AddSub L3 |
+| pokemon-math | subtract | G1 Sub L1-L5, G2 AddSub L1-L2/L4-L5, G2 Math L5 |
 | pokemon-math | divide | G3 Math L5, G4 Math L2-L3 |
 | mario-bros | — | (not curriculum-mapped, standalone platformer) |

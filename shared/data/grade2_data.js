@@ -81,6 +81,70 @@ const GRADE_2_DATA = {
         ],
       },
       {
+        id: 'g2-math-addsub',
+        name: 'Advanced Add & Subtract',
+        hebrewName: 'חיבור וחיסור מתקדם',
+        subject: 'math',
+        icon: '🔢',
+        levels: [
+          {
+            level: 1,
+            name: 'Two-Digit No Borrow',
+            description: 'Subtract without regrouping',
+            kpi: 'Solves 47-23; Subtracts ones then tens; Uses place-value chart',
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'subtract',
+              subtractionRule: { maxMinuend: 50, maxOperand: 40, minOperand: 10 },
+            },
+          },
+          {
+            level: 2,
+            name: 'Two-Digit Borrow',
+            description: 'Subtract with regrouping',
+            kpi: 'Solves 63-28 vertically; Understands borrowing from tens; Checks answer with addition',
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'subtract',
+              subtractionRule: { maxMinuend: 80, maxOperand: 50, minOperand: 15 },
+            },
+          },
+          {
+            level: 3,
+            name: 'Big Sums',
+            description: 'Addition up to 150',
+            kpi: 'Solves 67+48; Carries across tens; Estimates sums before calculating',
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'add',
+              additionRule: { maxOperand: 80, maxSum: 150, minOperand: 20 },
+            },
+          },
+          {
+            level: 4,
+            name: 'Big Gaps',
+            description: 'Subtraction up to 100',
+            kpi: 'Solves 91-36; Uses compensation strategy (90-35); Multi-step word problems',
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'subtract',
+              subtractionRule: { maxMinuend: 100, maxOperand: 70, minOperand: 10 },
+            },
+          },
+          {
+            level: 5,
+            name: 'Hundreds',
+            description: 'Sums and differences to 200',
+            kpi: 'Solves 145-67; Works with 3-digit numbers; Applies strategies flexibly',
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'subtract',
+              subtractionRule: { maxMinuend: 200, maxOperand: 99, minOperand: 20 },
+            },
+          },
+        ],
+      },
+      {
         id: 'g2-hebrew-fluency',
         name: 'Fluency & Comprehension',
         hebrewName: 'שטף והבנה',

@@ -78,6 +78,70 @@ const GRADE_1_DATA = {
         ],
       },
       {
+        id: 'g1-math-subtraction',
+        name: 'Subtraction Basics',
+        hebrewName: 'חיסור בסיסי',
+        subject: 'math',
+        icon: '➖',
+        levels: [
+          {
+            level: 1,
+            name: 'Subtract within 5',
+            description: 'Take-away with small numbers',
+            kpi: 'Solves 5-2 with objects; Understands "take away" concept',
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'subtract',
+              subtractionRule: { maxMinuend: 5, maxOperand: 5 },
+            },
+          },
+          {
+            level: 2,
+            name: 'Subtract within 10',
+            description: 'Single-digit subtraction',
+            kpi: 'Solves 8-3 mentally; Understands subtraction as inverse of addition',
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'subtract',
+              subtractionRule: { maxMinuend: 10, maxOperand: 10 },
+            },
+          },
+          {
+            level: 3,
+            name: 'Subtract within 20',
+            description: 'Teen subtraction',
+            kpi: 'Solves 15-7; Uses number line for subtraction; Checks with addition',
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'subtract',
+              subtractionRule: { maxMinuend: 20, maxOperand: 15 },
+            },
+          },
+          {
+            level: 4,
+            name: 'Crossing Ten',
+            description: 'Regrouping across 10',
+            kpi: 'Solves 13-8 by decomposing; Uses "friends of 10" for subtraction',
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'subtract',
+              subtractionRule: { maxMinuend: 20, maxOperand: 15, minOperand: 3 },
+            },
+          },
+          {
+            level: 5,
+            name: 'Subtract Tens',
+            description: 'Subtracting multiples of 10',
+            kpi: 'Solves 50-20; Understands place value in subtraction; Mental strategies for tens',
+            gameMapping: {
+              gameId: 'pokemon-multiply',
+              mode: 'subtract',
+              subtractionRule: { maxMinuend: 60, maxOperand: 50, minOperand: 10 },
+            },
+          },
+        ],
+      },
+      {
         id: 'g1-hebrew-code',
         name: 'Acquisition of the Code',
         hebrewName: 'רכישת הקוד',

@@ -6,9 +6,10 @@
 const Energy = (() => {
   const GAME_ID = '_shared';
   const FIELD = 'energy';
-  const BASE_MINUTES = 15;
+  const BASE_MINUTES = 0;
   const MAX_MINUTES = 60;
   const EARN_PER_SESSION = 5;
+  const MIN_PLAY_MINUTES = 5;
 
   let timerInterval = null;
   let sessionStart = null;
@@ -98,6 +99,11 @@ const Energy = (() => {
     onDepletedCb = null;
   }
 
+  /** Check if there's enough energy to play a fun game. */
+  function canPlay() {
+    return getRemaining() >= MIN_PLAY_MINUTES;
+  }
+
   /** Earn energy from completing an educational session. */
   function earnMinutes(n) {
     if (typeof n !== 'number') n = EARN_PER_SESSION;
@@ -134,6 +140,7 @@ const Energy = (() => {
   return {
     getRemaining,
     isUnlimited,
+    canPlay,
     startTimer,
     stopTimer,
     earnMinutes,
@@ -141,5 +148,6 @@ const Energy = (() => {
     BASE_MINUTES,
     MAX_MINUTES,
     EARN_PER_SESSION,
+    MIN_PLAY_MINUTES,
   };
 })();

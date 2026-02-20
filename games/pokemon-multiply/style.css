@@ -582,6 +582,32 @@
   font-size: var(--text-xl);
 }
 
+.battle-timer-bar {
+  width: 100%;
+  max-width: 300px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-bottom: var(--space-xs);
+}
+
+.battle-timer-fill {
+  height: 100%;
+  width: 100%;
+  background: var(--color-primary, #4ade80);
+  border-radius: 3px;
+  transition: width linear;
+}
+
+.battle-timer-fill.warning {
+  background: #fbbf24;
+}
+
+.battle-timer-fill.danger {
+  background: #ef4444;
+}
+
 .battle-answers {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

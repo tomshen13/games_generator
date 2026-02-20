@@ -54,7 +54,7 @@ const Game = (() => {
     }
 
     // Check energy — show gate if depleted
-    if (typeof Energy !== 'undefined' && Energy.getRemaining() <= 0) {
+    if (typeof Energy !== 'undefined' && !Energy.canPlay()) {
       showScreen('energyGate');
     } else {
       showScreen('title');

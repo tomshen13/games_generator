@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Sonic Dash</title>
+
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="../../shared/css/reset.css">
+  <link rel="stylesheet" href="../../shared/css/base.css">
+  <link rel="stylesheet" href="../../shared/css/animations.css">
+  <link rel="stylesheet" href="../../shared/css/components.css">
+
+  <!-- Game CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="game-container">
+    <!-- Main game canvas -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Particle overlay -->
+    <canvas class="particle-canvas"></canvas>
+
+    <!-- ===== TITLE SCREEN ===== -->
+    <div class="screen title-screen active">
+      <button class="btn-back" onclick="window.location.href='../../index.html'" title="Home">🏠</button>
+      <div class="title-icon">💎</div>
+      <h1 class="title-text sonic-title">Sonic Dash</h1>
+      <p class="title-subtitle">Gotta go fast!</p>
+      <div class="title-buttons">
+        <button class="btn btn-primary btn-large btn-1p">1 Player</button>
+        <button class="btn btn-primary btn-large btn-2p">2 Players</button>
+      </div>
+      <div class="continue-wrapper" style="display: none;">
+        <button class="btn btn-primary btn-continue">▶ Continue</button>
+        <span class="continue-info"></span>
+      </div>
+      <div class="energy-status-bar">
+        <span class="energy-status-time">⚡ --</span>
+        <span class="energy-status-coins">🪙 --</span>
+      </div>
+      <div class="controls-hint">
+        <p><strong>1P:</strong> Arrows / WASD = Move · Space = Jump · Down+Jump = Spin Dash · X = Attack · Q = Special</p>
+        <p><strong>Specials:</strong> Sonic: Homing Attack · Tails: Tail Swipe · Knuckles: Power Punch · Shadow: Chaos Spear · Amy: Hammer Spin</p>
+        <p><strong>Co-op:</strong> P1: WASD+Space+E+Q · P2: Arrows+Enter+Shift+/</p>
+      </div>
+    </div>
+
+    <!-- ===== CHARACTER SELECT ===== -->
+    <div class="screen char-select-screen">
+      <a class="btn-back" href="#">←</a>
+      <h2 class="char-select-title">Choose Your Character!</h2>
+      <div class="char-cards">
+        <button class="card char-card" data-char="sonic">
+          <canvas class="char-preview" width="64" height="64"></canvas>
+          <span class="char-name">Sonic</span>
+          <span class="char-stat">Spin Dash + Speed</span>
+        </button>
+        <button class="card char-card" data-char="tails">
+          <canvas class="char-preview" width="64" height="64"></canvas>
+          <span class="char-name">Tails</span>
+          <span class="char-stat">Can fly in the air</span>
+        </button>
+        <button class="card char-card" data-char="knuckles">
+          <canvas class="char-preview" width="64" height="64"></canvas>
+          <span class="char-name">Knuckles</span>
+          <span class="char-stat">Glide + Wall Climb</span>
+        </button>
+        <button class="card char-card" data-char="shadow">
+          <canvas class="char-preview" width="64" height="64"></canvas>
+          <span class="char-name">Shadow</span>
+          <span class="char-stat">Chaos Warp + Speed</span>
+        </button>
+        <button class="card char-card" data-char="amy">
+          <canvas class="char-preview" width="64" height="64"></canvas>
+          <span class="char-name">Amy</span>
+          <span class="char-stat">Hammer Attack + High Jump</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ===== ZONE SELECT ===== -->
+    <div class="screen zone-select-screen">
+      <a class="btn-back" href="#">←</a>
+      <h2 class="zs-title">Select Zone</h2>
+      <div class="energy-status-bar">
+        <span class="energy-status-time">⚡ --</span>
+        <span class="energy-status-coins">🪙 --</span>
+      </div>
+      <div class="zs-zone-tabs"></div>
+      <div class="zs-levels"></div>
+      <button class="btn btn-primary btn-zs-shop">🛒 Shop</button>
+    </div>
+
+    <!-- ===== LEVEL COMPLETE ===== -->
+    <div class="screen level-complete-screen">
+      <div class="lc-icon">🏁</div>
+      <h2 class="lc-title">Act Complete!</h2>
+      <p class="lc-stats"></p>
+      <div style="display: flex; gap: var(--space-md); flex-wrap: wrap; justify-content: center;">
+        <button class="btn btn-primary btn-large btn-next-level">▶ Next Act</button>
+        <button class="btn btn-primary btn-switch-char">🔄 Switch Character</button>
+        <button class="btn btn-primary btn-home">🏠 Home</button>
+      </div>
+    </div>
+
+    <!-- ===== SHOP ===== -->
+    <div class="screen shop-screen">
+      <button class="btn-back btn-home" title="Home">🏠</button>
+      <h2 class="shop-title">Power-Up Shop</h2>
+      <p class="shop-coins">🪙 <span class="shop-coin-count">0</span></p>
+      <div class="shop-items"></div>
+      <div class="shop-inventory">
+        <span class="shop-inv-label">Ready:</span>
+        <span class="shop-inv-icons"></span>
+      </div>
+      <button class="btn btn-primary btn-large btn-start-level">Start Act ▶</button>
+    </div>
+
+    <!-- ===== GAME OVER ===== -->
+    <div class="screen game-over-screen">
+      <div class="go-icon">💀</div>
+      <h2 class="go-title">Game Over</h2>
+      <p class="go-score"></p>
+      <div class="go-buttons">
+        <button class="btn btn-primary btn-large btn-retry">🔄 Try Again</button>
+        <button class="btn btn-primary btn-go-zones">🗺️ Zones</button>
+        <button class="btn btn-primary btn-home">🏠 Home</button>
+      </div>
+    </div>
+
+    <!-- ===== VICTORY ===== -->
+    <div class="screen victory-screen">
+      <div class="vic-icon">🏆</div>
+      <h2 class="vic-title">You Won!</h2>
+      <p class="victory-stats"></p>
+      <div class="vic-buttons">
+        <button class="btn btn-primary btn-large btn-play-again">🔄 Play Again</button>
+        <button class="btn btn-primary btn-home">🏠 Home</button>
+      </div>
+    </div>
+
+    <!-- ===== ENERGY GATE ===== -->
+    <div class="screen energy-gate-screen">
+      <div class="energy-icon">⚡</div>
+      <h2 class="energy-title">Out of Energy!</h2>
+      <p class="energy-msg">Play math games to earn more time</p>
+      <p class="energy-earn-hint">Each session = +2 minutes</p>
+      <div class="energy-buttons">
+        <button class="btn btn-primary btn-large btn-energy-edu">🎓 Play & Earn</button>
+        <button class="btn btn-primary btn-energy-pin">🔑 Parent Code</button>
+        <button class="btn btn-primary btn-energy-home">🏠 Home</button>
+      </div>
+    </div>
+
+    <!-- Energy depleted overlay (shown mid-game) -->
+    <div class="energy-depleted-overlay" style="display:none;">
+      <div class="energy-icon">⚡</div>
+      <h2 class="energy-title">Time's Up!</h2>
+      <p class="energy-msg">Play math games to earn more time</p>
+      <div class="energy-buttons">
+        <button class="btn btn-primary btn-large btn-depleted-edu">🎓 Play & Earn</button>
+        <button class="btn btn-primary btn-depleted-pin">🔑 Parent Code</button>
+        <button class="btn btn-primary btn-depleted-home">🏠 Home</button>
+      </div>
+    </div>
+
+    <!-- ===== HUD (visible during gameplay) ===== -->
+    <div class="hud game-hud" style="display: none;">
+      <div class="hud-group">
+        <canvas class="hud-portrait" width="32" height="32"></canvas>
+        <span class="hud-rings">💍 0</span>
+        <span class="hud-score">Score: 0</span>
+      </div>
+      <div class="hud-group">
+        <div class="hud-speed"><div class="hud-speed-bar"></div></div>
+        <span class="hud-zone">Green Hill Act 1</span>
+      </div>
+      <div class="hud-group">
+        <span class="hud-lives">❤️❤️❤️</span>
+        <span class="hud-shield"></span>
+        <span class="hud-skill"></span>
+        <span class="hud-energy" style="display:none;"></span>
+        <div class="hud-fly" style="display:none"><div class="hud-fly-bar"></div></div>
+      </div>
+      <div class="hud-p2" style="display: none;">
+        <span class="hud-p2-lives">💚💚💚</span>
+        <span class="hud-p2-label">Tails</span>
+      </div>
+    </div>
+  </div>
+
+  <link rel="stylesheet" href="../../shared/css/profile.css">
+
+  <!-- Shared JS -->
+  <script src="../../shared/js/utils.js"></script>
+  <script src="../../shared/js/audio.js"></script>
+  <script src="../../shared/js/particles.js"></script>
+  <script src="../../shared/js/storage.js"></script>
+  <script src="../../shared/js/supabase-sync.js"></script>
+  <script src="../../shared/js/profile.js"></script>
+  <script src="../../shared/js/shared-coins.js"></script>
+  <script src="../../shared/js/energy.js"></script>
+  <script>Profile.autoInit();</script>
+
+  <!-- Game JS -->
+  <script src="sprites.js"></script>
+  <script src="levels.js"></script>
+  <script src="engine.js"></script>
+  <script src="entities.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

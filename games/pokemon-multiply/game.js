@@ -6,6 +6,7 @@
 const Game = (() => {
   const GAME_ID = 'pokemon-multiply';
   const SESSION_ROUNDS = 7;
+  const BATTLE_TIMER_MS = 8000;
 
   let state = {
     screen: 'title',
@@ -27,6 +28,7 @@ const Game = (() => {
     battlePlayerHP: 100,
     battleOpponentHP: 100,
     battleMaxOpponentHP: 100,
+    battleTimer: null,
     ownedPokemon: [],
     starterPokemon: null,
     inputLocked: false,
@@ -136,6 +138,7 @@ const Game = (() => {
     els.battleNum1 = document.querySelector('.battle-num1');
     els.battleNum2 = document.querySelector('.battle-num2');
     els.battleAnswers = document.querySelector('.battle-answers');
+    els.battleTimerFill = document.querySelector('.battle-timer-fill');
     els.battleMessage = document.querySelector('.battle-message');
     els.battleMessageText = document.querySelector('.battle-message-text');
 
@@ -476,10 +479,6 @@ const Game = (() => {
 
     updateHUD();
 
-    setTimeout(() => {
-      Audio.speak(`${state.num1} ${state.operationMode.verb} ${state.num2} equals ${state.correctAnswer}`);
-    }, 400);
-
     await Utils.wait(700);
     btn.classList.remove('wrong');
     state.inputLocked = false;
@@ -519,7 +518,7 @@ const Game = (() => {
     saveProgress();
 
     // Earn energy for Mario
-    Energy.earnMinutes(2);
+    Energy.earnMinutes(1);
 
     // Find battle encounter for current tier
     const encounterKey = findEncounterTier(state.currentTier);
@@ -544,11 +543,11 @@ const Game = (() => {
     let atBox2Plus = 0;
     for (const key of tierPool) {
       const rec = records[key];
-      if (rec && rec.box >= 2) atBox2Plus++;
+      if (rec && rec.box >= 1) atBox2Plus++;
     }
 
     const ratio = tierPool.length > 0 ? atBox2Plus / tierPool.length : 0;
-    if (ratio >= 0.6) {
+    if (ratio >= 0.5) {
       state.currentTier++;
     }
   }
@@ -645,6 +644,63 @@ const Game = (() => {
     setTimeout(() => generateBattleProblem(), 1500);
   }
 
+  function startBattleTimer() {
+    clearBattleTimer();
+    // Reset and animate the timer bar
+    els.battleTimerFill.style.transition = 'none';
+    els.battleTimerFill.style.width = '100%';
+    els.battleTimerFill.className = 'battle-timer-fill';
+    // Force reflow then animate
+    els.battleTimerFill.offsetWidth;
+    els.battleTimerFill.style.transition = `width ${BATTLE_TIMER_MS}ms linear`;
+    els.battleTimerFill.style.width = '0%';
+    // Color transitions
+    setTimeout(() => { els.battleTimerFill.classList.add('warning'); }, BATTLE_TIMER_MS * 0.5);
+    setTimeout(() => { els.battleTimerFill.classList.add('danger'); }, BATTLE_TIMER_MS * 0.75);
+    // Timeout — opponent attacks
+    state.battleTimer = setTimeout(() => battleTimeout(), BATTLE_TIMER_MS);
+  }
+
+  function clearBattleTimer() {
+    if (state.battleTimer) {
+      clearTimeout(state.battleTimer);
+      state.battleTimer = null;
+    }
+  }
+
+  async function battleTimeout() {
+    if (state.inputLocked || !state.inBattle) return;
+    state.inputLocked = true;
+
+    // Same damage as wrong answer
+    Adaptive.recordAnswer(state.currentKey, false);
+    const damage = 10 + Utils.randInt(0, 5);
+    state.battlePlayerHP = Math.max(0, state.battlePlayerHP - damage);
+
+    Audio.SFX.wrong();
+    els.opponentSprite.classList.add('animate-attack-backward');
+
+    await Utils.wait(300);
+    els.playerBattleSprite.classList.add('animate-damage');
+
+    await Utils.wait(400);
+    els.opponentSprite.classList.remove('animate-attack-backward');
+    els.playerBattleSprite.classList.remove('animate-damage');
+
+    updateHPBars();
+
+    if (state.battlePlayerHP <= 0) {
+      await Utils.wait(400);
+      await battleLost();
+      state.inputLocked = false;
+      return;
+    }
+
+    await Utils.wait(600);
+    generateBattleProblem();
+    state.inputLocked = false;
+  }
+
   function generateBattleProblem() {
     const op = state.operationMode;
     const pool = buildCombinedPool();
@@ -659,6 +715,7 @@ const Game = (() => {
     state.options = Utils.shuffle([state.correctAnswer, ...distractors]);
 
     renderBattleProblem();
+    startBattleTimer();
   }
 
   function renderBattleProblem() {
@@ -678,6 +735,7 @@ const Game = (() => {
   async function handleBattleAnswer(btn, value) {
     if (state.inputLocked) return;
     state.inputLocked = true;
+    clearBattleTimer();
 
     if (value === state.correctAnswer) {
       btn.classList.add('correct');
@@ -729,8 +787,6 @@ const Game = (() => {
 
       updateHPBars();
 
-      Audio.speak(`${state.num1} ${state.operationMode.verb} ${state.num2} is ${state.correctAnswer}`);
-
       if (state.battlePlayerHP <= 0) {
         await Utils.wait(400);
         await battleLost();
@@ -759,6 +815,7 @@ const Game = (() => {
   }
 
   async function battleWon() {
+    clearBattleTimer();
     state.inBattle = false;
     const bonusCoins = 5 + state.currentTier;
     state.coins = SharedCoins.add(bonusCoins);
@@ -788,6 +845,7 @@ const Game = (() => {
   }
 
   async function battleLost() {
+    clearBattleTimer();
     state.inBattle = false;
     showBattleMessage(`${state.battleOpponent.name} got away...\nBut you did great!`);
     Audio.speak('Nice try! Let\'s keep going!');
