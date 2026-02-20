@@ -50,6 +50,7 @@ const Game = (() => {
   };
 
   let els = {};
+  let energyDepleted = false;
 
   // Persists between levels (no more crystals — coins are in SharedCoins)
   let persistent = { score: 0, lives: 3, upgrades: [] };
@@ -321,6 +322,7 @@ const Game = (() => {
     if (energyPinBtn) energyPinBtn.addEventListener('click', async () => {
       const ok = await Energy.parentBypass();
       if (ok) {
+        energyDepleted = false;
         updateStatusBars();
         showScreen('title');
       }
@@ -335,6 +337,7 @@ const Game = (() => {
     if (depPinBtn) depPinBtn.addEventListener('click', async () => {
       const ok = await Energy.parentBypass();
       if (ok) {
+        energyDepleted = false;
         els.energyOverlay.style.display = 'none';
         state.paused = false;
         Engine.startLoop(update, render);
@@ -345,7 +348,7 @@ const Game = (() => {
 
     // Pause
     window.addEventListener('keydown', e => {
-      if (e.code === 'Escape' && state.screen === 'playing') {
+      if (e.code === 'Escape' && state.screen === 'playing' && !energyDepleted) {
         state.paused = !state.paused;
       }
     });
@@ -550,6 +553,10 @@ const Game = (() => {
   // ===== LEVEL LIFECYCLE =====
 
   function startLevel(levelIndex) {
+    if (typeof Energy !== 'undefined' && !Energy.canPlay()) {
+      showScreen('energyGate');
+      return;
+    }
     if (levelIndex >= LEVELS.ALL.length) {
       onVictory();
       return;
@@ -635,6 +642,7 @@ const Game = (() => {
           }
         },
         () => {
+          energyDepleted = true;
           state.paused = true;
           Engine.stopLoop();
           if (els.energyOverlay) els.energyOverlay.style.display = 'flex';

@@ -79,7 +79,7 @@ const GeminiLive = (() => {
             },
             realtimeInputConfig: {
               automaticActivityDetection: {
-                disabled: true
+                disabled: false
               }
             },
             tools: [{

@@ -64,10 +64,6 @@
   let session = null;        // GeminiLive session
   let timerInterval = null;
   let timerSeconds = 0;
-  let isRecording = false;
-  let silenceStart = null;
-  const SILENCE_AUTO_STOP_MS = 3000;
-  const SILENCE_RMS_THRESHOLD = 2000;
   let sessionStartTime = null;
 
   // Audio pipeline state
@@ -82,10 +78,6 @@
   let playbackQueue = [];
   let playbackTime = 0;
   let isModelSpeaking = false;
-
-  // Nudge timer — re-engage if child is silent too long
-  const NUDGE_DELAY_MS = 4000;
-  let nudgeTimer = null;
 
   // Assessment state
   let assessmentData = null;
@@ -411,20 +403,17 @@ registerProcessor('pcm-processor', PCMProcessor);
     const source = audioCtx.createMediaStreamSource(micStream);
     workletNode = new AudioWorkletNode(audioCtx, 'pcm-processor');
 
-    // Collect PCM chunks from worklet (only while recording)
+    // Collect PCM chunks from worklet (always — automatic VAD)
     workletNode.port.onmessage = (e) => {
-      if (isRecording) {
-        pcmBuffer.push(new Int16Array(e.data));
-      }
+      pcmBuffer.push(new Int16Array(e.data));
     };
 
     source.connect(workletNode);
     workletNode.connect(audioCtx.destination); // needed for processing (silent)
 
-    // Send buffered audio to Gemini every ~100ms (only while recording)
+    // Stream audio to Gemini every ~100ms (automatic VAD handles speech detection)
     sendInterval = setInterval(() => {
       if (!session) return;
-      if (!isRecording) return;
       if (pcmBuffer.length === 0) return;
 
       // Merge all buffered chunks
@@ -437,25 +426,6 @@ registerProcessor('pcm-processor', PCMProcessor);
         offset += chunk.length;
       }
       pcmBuffer = [];
-
-      // Silence detection for auto-stop
-      let sumSq = 0;
-      for (let i = 0; i < merged.length; i++) {
-        sumSq += merged[i] * merged[i];
-      }
-      const rms = Math.sqrt(sumSq / merged.length);
-
-      if (rms > SILENCE_RMS_THRESHOLD) {
-        silenceStart = null; // speech detected, reset
-      } else {
-        if (!silenceStart) {
-          silenceStart = Date.now();
-        } else if (Date.now() - silenceStart >= SILENCE_AUTO_STOP_MS) {
-          console.log('[VoiceTutor] Auto-stop: silence for', SILENCE_AUTO_STOP_MS, 'ms');
-          stopRecording();
-          return;
-        }
-      }
 
       // Base64 encode and send
       const bytes = new Uint8Array(merged.buffer);
@@ -590,81 +560,20 @@ registerProcessor('pcm-processor', PCMProcessor);
     els.timer.classList.remove('warning');
   }
 
-  // ===== NUDGE =====
-  function startNudgeTimer() {
-    clearNudgeTimer();
-    nudgeTimer = setTimeout(() => {
-      if (session && !isModelSpeaking && !isSessionEnding && timerSeconds > 5) {
-        console.log('[VoiceTutor] Nudging — child silent for', NUDGE_DELAY_MS, 'ms');
-        session.sendText('[The child has been silent. Gently encourage them or continue the activity.]');
-      }
-    }, NUDGE_DELAY_MS);
-  }
-
-  function clearNudgeTimer() {
-    if (nudgeTimer) {
-      clearTimeout(nudgeTimer);
-      nudgeTimer = null;
-    }
-  }
-
-  // ===== TAP-TO-TALK =====
-  function startRecording() {
-    if (isRecording) return;
-    isRecording = true;
-    silenceStart = null;
-    pcmBuffer = [];
-
-    // Interrupt model if speaking
-    if (isModelSpeaking) {
-      stopPlayback();
-      setTutorSpeaking(false);
-    }
-
-    // Signal Gemini
-    if (session) session.sendActivityStart();
-
-    clearNudgeTimer();
-    updateMicUI();
-  }
-
-  function stopRecording() {
-    if (!isRecording) return;
-    isRecording = false;
-    silenceStart = null;
-
-    // Signal Gemini
-    if (session) session.sendActivityEnd();
-
-    startNudgeTimer();
-    updateMicUI();
-  }
-
-  function updateMicUI() {
-    if (isRecording) {
-      els.micIndicator.classList.add('recording');
-      els.micStatus.textContent = 'Tap when done';
-    } else {
-      els.micIndicator.classList.remove('recording');
-      els.micStatus.textContent = isModelSpeaking ? '' : 'Tap to talk';
-    }
-  }
-
   // ===== UI STATE UPDATES =====
   function setTutorSpeaking(speaking) {
     isModelSpeaking = speaking;
     if (speaking) {
-      clearNudgeTimer();
       els.tutorAvatar.classList.add('speaking');
       els.tutorStatus.textContent = 'Speaking...';
       els.tutorStatus.className = 'tutor-status speaking';
+      els.micStatus.textContent = '';
     } else {
       els.tutorAvatar.classList.remove('speaking');
-      els.tutorStatus.textContent = 'Your turn!';
+      els.tutorStatus.textContent = 'Listening...';
       els.tutorStatus.className = 'tutor-status listening';
-      if (!isRecording) startNudgeTimer();
+      els.micStatus.textContent = 'Listening...';
     }
-    updateMicUI();
   }
 
   // ===== CONNECT TO GEMINI =====
@@ -738,10 +647,12 @@ registerProcessor('pcm-processor', PCMProcessor);
 
       // Success — show conversation screen
       sessionStartTime = Date.now();
-      isRecording = false;
       showScreen('conversation');
       startTimer();
-      updateMicUI();
+      els.micStatus.textContent = 'Listening...';
+
+      // Trigger tutor to greet the child first
+      session.sendText('[Session started — greet the child now.]');
 
     } catch (err) {
       // WebSocket connection failed after retries
@@ -860,10 +771,7 @@ registerProcessor('pcm-processor', PCMProcessor);
   // ===== END SESSION =====
   async function endSession() {
     isSessionEnding = true;
-    isRecording = false;
-    silenceStart = null;
     stopTimer();
-    clearNudgeTimer();
     stopMicCapture();
     stopPlayback();
     closePlayback();
@@ -1084,24 +992,6 @@ registerProcessor('pcm-processor', PCMProcessor);
     endSession();
   });
 
-  // Tap-to-talk toggle
-  function toggleRecording() {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
-    }
-  }
-  els.micIndicator.addEventListener('click', toggleRecording);
-
-  // Space bar to toggle recording
-  document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' && !e.repeat && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-      e.preventDefault();
-      toggleRecording();
-    }
-  });
-
   // Play again
   els.playAgainBtn.addEventListener('click', () => {
     if (reviewPending) {
@@ -1112,8 +1002,6 @@ registerProcessor('pcm-processor', PCMProcessor);
     selectedTheme = null;
     selectedTopic = null;
     selectedDuration = 10;
-    isRecording = false;
-    silenceStart = null;
     assessmentData = null;
     assessmentResolve = null;
     reviewPending = false;
