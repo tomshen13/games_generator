@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Space Words 🪐</title>
+
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="../../shared/css/reset.css">
+  <link rel="stylesheet" href="../../shared/css/base.css">
+  <link rel="stylesheet" href="../../shared/css/animations.css">
+  <link rel="stylesheet" href="../../shared/css/components.css">
+  <link rel="stylesheet" href="../../shared/css/profile.css">
+
+  <!-- Game CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="game-container">
+    <!-- Particle overlay -->
+    <canvas class="particle-canvas"></canvas>
+
+    <!-- ===== TITLE SCREEN ===== -->
+    <div class="screen title-screen active">
+      <button class="btn-back" onclick="window.location.href='../../index.html'" title="Home">🏠</button>
+      <div class="title-icon animate-float">🧑‍🚀</div>
+      <h1 class="title-heading">Space Words</h1>
+      <p class="title-subtitle">Explore planets, discover words!</p>
+      <div class="vocab-badge" id="titleVocabBadge">🌟 You know <span id="titleVocabCount">0</span> words!</div>
+      <div class="title-buttons">
+        <button class="btn btn-primary btn-large" id="btnPlay">🚀 Play</button>
+        <button class="btn btn-secondary" id="btnDashboard">📖 My Words</button>
+      </div>
+    </div>
+
+    <!-- ===== GALAXY MAP SCREEN ===== -->
+    <div class="screen galaxy-screen">
+      <button class="btn-back" id="btnGalaxyBack" title="Back">←</button>
+      <h2 class="galaxy-title">🌌 Choose a Planet</h2>
+      <div class="planet-grid" id="planetGrid"></div>
+    </div>
+
+    <!-- ===== GAME SCREEN ===== -->
+    <div class="screen game-screen">
+      <div class="game-hud">
+        <button class="btn-back" id="btnGameBack" title="Back">←</button>
+        <span class="hud-round" id="hudRound">1/8</span>
+        <span class="hud-streak" id="hudStreak"></span>
+        <span class="hud-coins" id="hudCoins">🪙 0</span>
+      </div>
+      <div class="game-prompt">
+        <div class="prompt-emoji" id="promptEmoji"></div>
+        <div class="prompt-hint" id="promptHint"></div>
+      </div>
+      <div class="choices-grid" id="choicesGrid"></div>
+    </div>
+
+    <!-- ===== SESSION COMPLETE SCREEN ===== -->
+    <div class="screen session-complete-screen">
+      <div class="complete-icon animate-float">🚀</div>
+      <h2 class="complete-title" id="completeTitle">Great Job!</h2>
+      <div class="complete-stars" id="completeStars"></div>
+      <div class="complete-stats">
+        <p class="complete-stat" id="completeNewWords"></p>
+        <p class="complete-stat" id="completeCoins"></p>
+        <p class="complete-stat" id="completeEnergy"></p>
+      </div>
+      <div class="complete-buttons">
+        <button class="btn btn-primary btn-large" id="btnPlayAgain">🚀 Play Again</button>
+        <button class="btn btn-secondary" id="btnBackToGalaxy">🌌 Galaxy Map</button>
+      </div>
+    </div>
+
+    <!-- ===== VOCABULARY DASHBOARD SCREEN ===== -->
+    <div class="screen dashboard-screen">
+      <button class="btn-back" id="btnDashboardBack" title="Back">←</button>
+      <h2 class="dashboard-title">📖 My Words</h2>
+      <div class="dashboard-total" id="dashboardTotal">
+        🌟 You know <span id="dashboardVocabCount">0</span> words!
+      </div>
+      <div class="dashboard-categories" id="dashboardCategories"></div>
+    </div>
+  </div>
+
+  <!-- Shared JS -->
+  <script src="../../shared/js/utils.js"></script>
+  <script src="../../shared/js/gemini-tts.js"></script>
+  <script src="../../shared/js/audio.js"></script>
+  <script src="../../shared/js/particles.js"></script>
+  <script src="../../shared/js/storage.js"></script>
+  <script src="../../shared/js/supabase-sync.js"></script>
+  <script src="../../shared/js/adaptive.js"></script>
+  <script src="../../shared/js/shared-coins.js"></script>
+  <script src="../../shared/js/profile.js"></script>
+  <script src="../../shared/js/energy.js"></script>
+  <script>Profile.autoInit();</script>
+
+  <!-- Game JS -->
+  <script src="words.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
