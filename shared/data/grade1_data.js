@@ -154,7 +154,9 @@ const GRADE_1_DATA = {
             description: 'Identifying letters with sound confusion',
             kpi: 'Matches sound to letter (50%); Writes name clearly; Reads letter-by-letter without blending',
             gameMapping: {
-              gameId: 'unicorn-hebrew',
+              gameId: 'unicorn-numbers',
+              mode: 'hebrew-letters',
+              storageKey: 'unicorn-hebrew',
               adaptiveKeys: ['א','ב','ג','ד','ה','ו','ז','ח','ט','י','כ','ל','מ','נ','ס','ע','פ','צ','ק','ר','ש','ת'],
             },
           },

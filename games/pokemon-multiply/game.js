@@ -5,13 +5,17 @@
  */
 const Game = (() => {
   const GAME_ID = 'pokemon-multiply';
-  const SESSION_ROUNDS = 7;
+  const SESSION_ROUNDS = 8;
   const BATTLE_TIMER_MS = 8000;
+  const OP_IDS = ['multiply', 'divide', 'add', 'subtract'];
 
   let state = {
     screen: 'title',
-    currentTier: 0,
+    tiers: { multiply: 0, divide: 0, add: 0, subtract: 0 },
     round: 0,
+    roundPlan: [],       // shuffled array of operation IDs for the session
+    currentOp: null,     // OPERATION_MODES[x] for current round
+    questionStartTime: 0,
     num1: 0,
     num2: 0,
     correctAnswer: 0,
@@ -37,53 +41,28 @@ const Game = (() => {
 
   let els = {};
 
-  // Active levels (set by operation mode) — used as tier definitions
-  let activeLevels = LEVELS;
+  /** Get the max tier across all operations (used for shop unlocks, encounters) */
+  function maxTier() {
+    return Math.max(...OP_IDS.map(id => state.tiers[id]));
+  }
 
   // ─── Init ───────────────────────────────────────────────
   function init() {
     Audio.init();
     cacheDOM();
 
-    // Read operation mode from URL query parameter
-    const params = new URLSearchParams(window.location.search);
-    const modeParam = params.get('mode');
-
-    if (modeParam && OPERATION_MODES[modeParam]) {
-      // Curriculum/direct launch — set mode, skip mode select
-      state.operationMode = OPERATION_MODES[modeParam];
-    } else {
-      // Hub launch — default to multiply, will show mode select
-      state.operationMode = OPERATION_MODES.multiply;
-    }
-
-    activeLevels = LEVELS_BY_MODE[state.operationMode.id] || LEVELS;
-
-    // Update title/subtitle to match mode
-    document.querySelector('.title-text').innerHTML = state.operationMode.title;
-    document.querySelector('.title-subtitle').textContent = state.operationMode.subtitle;
-
-    // Update operator symbols
-    document.querySelector('.problem-op').textContent = state.operationMode.symbol;
-    document.querySelector('.battle-op').textContent = state.operationMode.symbol;
+    // Title is generic — mixed operations
+    document.querySelector('.title-text').innerHTML = 'Pokemon<br>Math';
+    document.querySelector('.title-subtitle').textContent = "Catch 'em all with math!";
 
     bindEvents();
     loadProgress();
     Adaptive.load('pokemon-multiply');
 
-    if (modeParam && OPERATION_MODES[modeParam]) {
-      // Direct launch with mode — go straight to title
-      if (state.starterPokemon) updateContinueInfo();
-      showScreen('title');
-    } else {
-      // Hub launch — show mode select (or title if returning player)
-      if (state.starterPokemon) {
-        updateContinueInfo();
-        showScreen('title');
-      } else {
-        showScreen('modeSelect');
-      }
+    if (state.starterPokemon) {
+      updateContinueInfo();
     }
+    showScreen(state.starterPokemon ? 'title' : 'starter');
   }
 
   // ─── DOM Cache ──────────────────────────────────────────
@@ -94,7 +73,6 @@ const Game = (() => {
     els.screens = {
       title: document.querySelector('.title-screen'),
       starter: document.querySelector('.starter-screen'),
-      modeSelect: document.querySelector('.mode-select-screen'),
       game: document.querySelector('.game-screen'),
       battle: document.querySelector('.battle-screen'),
       shop: document.querySelector('.shop-screen'),
@@ -136,6 +114,7 @@ const Game = (() => {
     els.opponentHPText = document.querySelector('.opponent-hp-text');
     els.playerHPText = document.querySelector('.player-hp-text');
     els.battleNum1 = document.querySelector('.battle-num1');
+    els.battleOp = document.querySelector('.battle-op');
     els.battleNum2 = document.querySelector('.battle-num2');
     els.battleAnswers = document.querySelector('.battle-answers');
     els.battleTimerFill = document.querySelector('.battle-timer-fill');
@@ -177,8 +156,8 @@ const Game = (() => {
     els.btnPlay.addEventListener('click', () => {
       Audio.SFX.tap();
       if (state.starterPokemon) {
-        // Reset for new game but keep starter (shared coins are NOT reset)
-        state.currentTier = 0;
+        // Reset all tiers for new game but keep starter
+        state.tiers = { multiply: 0, divide: 0, add: 0, subtract: 0 };
         state.ownedPokemon = [state.starterPokemon];
         saveProgress();
         startSession();
@@ -191,29 +170,6 @@ const Game = (() => {
     els.btnContinue.addEventListener('click', () => {
       Audio.SFX.tap();
       startSession();
-    });
-
-    // Mode select cards
-    document.querySelectorAll('.mode-card').forEach(card => {
-      card.addEventListener('click', () => {
-        Audio.SFX.tap();
-        const modeId = card.dataset.mode;
-        if (OPERATION_MODES[modeId]) {
-          state.operationMode = OPERATION_MODES[modeId];
-          activeLevels = LEVELS_BY_MODE[modeId] || LEVELS;
-          // Update title/subtitle
-          document.querySelector('.title-text').innerHTML = state.operationMode.title;
-          document.querySelector('.title-subtitle').textContent = state.operationMode.subtitle;
-          document.querySelector('.problem-op').textContent = state.operationMode.symbol;
-          document.querySelector('.battle-op').textContent = state.operationMode.symbol;
-          // Reload mode-specific progress
-          loadProgress();
-          if (state.starterPokemon) {
-            updateContinueInfo();
-          }
-          showScreen('title');
-        }
-      });
     });
 
     // Starter selection
@@ -278,7 +234,7 @@ const Game = (() => {
     // Game complete
     els.btnPlayAgain.addEventListener('click', () => {
       Audio.SFX.tap();
-      state.currentTier = 0;
+      state.tiers = { multiply: 0, divide: 0, add: 0, subtract: 0 };
       saveProgress();
       startSession();
     });
@@ -306,8 +262,7 @@ const Game = (() => {
 
     state.starterPokemon = id;
     state.ownedPokemon = [id];
-    state.currentTier = 0;
-    // Shared coins are NOT reset when choosing a new starter
+    state.tiers = { multiply: 0, divide: 0, add: 0, subtract: 0 };
 
     Audio.SFX.fanfare();
     Audio.speak(`You chose ${pokemon.name}!`);
@@ -321,13 +276,13 @@ const Game = (() => {
     setTimeout(() => startSession(), 1200);
   }
 
-  // ─── Build combined pool from tiers 0..currentTier ─────
-  function buildCombinedPool() {
-    const op = state.operationMode;
+  // ─── Build combined pool for an operation using its tier ─────
+  function buildCombinedPool(op, opTier) {
+    const levels = LEVELS_BY_MODE[op.id] || LEVELS;
     const allKeys = new Set();
-    const maxTier = Math.min(state.currentTier, activeLevels.length - 1);
-    for (let t = 0; t <= maxTier; t++) {
-      const pool = op.buildPool(activeLevels[t]);
+    const max = Math.min(opTier, levels.length - 1);
+    for (let t = 0; t <= max; t++) {
+      const pool = op.buildPool(levels[t]);
       pool.forEach(k => allKeys.add(k));
     }
     return [...allKeys];
@@ -341,9 +296,8 @@ const Game = (() => {
     state.streak = 0;
     state.roundsCorrectFirstTry = 0;
 
-    // Apply theme from current tier
-    const tierDef = activeLevels[Math.min(state.currentTier, activeLevels.length - 1)];
-    els.container.dataset.type = tierDef.theme;
+    // Build mixed round plan: 2 rounds of each operation, shuffled
+    state.roundPlan = Utils.shuffle([...OP_IDS, ...OP_IDS]);
 
     // Set partner sprite
     const partner = getPokemonById(state.starterPokemon);
@@ -351,7 +305,6 @@ const Game = (() => {
     els.partnerSprite.alt = partner ? partner.name : 'Partner';
 
     // Update HUD
-    els.levelLabel.textContent = `${state.operationMode.symbol} Tier ${state.currentTier + 1}`;
     els.hudCoinCount.textContent = state.coins;
     els.hudStreakCount.textContent = '0';
     els.progressFill.style.width = '0%';
@@ -364,6 +317,21 @@ const Game = (() => {
   function startRound() {
     state.wrongAttempts = 0;
     state.inputLocked = false;
+
+    // Pick operation for this round
+    const opId = state.roundPlan[state.round];
+    state.currentOp = OPERATION_MODES[opId];
+
+    // Apply theme from this operation's current tier
+    const levels = LEVELS_BY_MODE[opId] || LEVELS;
+    const tierDef = levels[Math.min(state.tiers[opId], levels.length - 1)];
+    els.container.dataset.type = tierDef.theme;
+    els.levelLabel.textContent = `${state.currentOp.symbol} Tier ${state.tiers[opId] + 1}`;
+
+    // Update operator symbol in problem display
+    document.querySelector('.problem-op').textContent = state.currentOp.symbol;
+
+    state.questionStartTime = Date.now();
     generateProblem();
     renderProblem();
     renderAnswers();
@@ -371,8 +339,8 @@ const Game = (() => {
   }
 
   function generateProblem() {
-    const op = state.operationMode;
-    const pool = buildCombinedPool();
+    const op = state.currentOp;
+    const pool = buildCombinedPool(op, state.tiers[op.id]);
     const key = Adaptive.pickItem(pool);
     const [n1, n2] = op.keyToProblem(key);
 
@@ -422,11 +390,18 @@ const Game = (() => {
   async function handleCorrect(btn) {
     btn.classList.add('correct');
     els.problemAnswer.textContent = state.correctAnswer;
-    Adaptive.recordAnswer(state.currentKey, true);
+    const responseMs = Date.now() - state.questionStartTime;
+    Adaptive.recordAnswer(state.currentKey, true, responseMs);
+
+    // Real-time tier adjustment for this operation
+    const opId = state.currentOp.id;
+    checkTierAdvancement(opId);
+
     Audio.SFX.correct();
 
-    // Coins — use current tier's rate
-    const tierDef = activeLevels[Math.min(state.currentTier, activeLevels.length - 1)];
+    // Coins — use current operation's tier rate
+    const levels = LEVELS_BY_MODE[opId] || LEVELS;
+    const tierDef = levels[Math.min(state.tiers[opId], levels.length - 1)];
     let earned = tierDef.coinsPerCorrect;
     state.streak++;
     if (state.streak >= 5) earned += 2;
@@ -473,7 +448,13 @@ const Game = (() => {
   async function handleWrong(btn) {
     state.wrongAttempts++;
     state.streak = 0;
-    Adaptive.recordAnswer(state.currentKey, false);
+    const responseMs = Date.now() - state.questionStartTime;
+    Adaptive.recordAnswer(state.currentKey, false, responseMs);
+
+    // Real-time tier regression check for this operation
+    const opId = state.currentOp.id;
+    checkTierRegression(opId);
+
     btn.classList.add('wrong');
     Audio.SFX.wrong();
 
@@ -504,24 +485,23 @@ const Game = (() => {
     const ratio = state.roundsCorrectFirstTry / SESSION_ROUNDS;
     const starCount = ratio >= 0.8 ? 3 : ratio >= 0.5 ? 2 : 1;
 
-    // Bonus coins for 3 stars
-    const tierDef = activeLevels[Math.min(state.currentTier, activeLevels.length - 1)];
+    // Bonus coins for 3 stars (use max tier for rate)
+    const mt = maxTier();
+    const levels = LEVELS_BY_MODE['multiply'] || LEVELS;
+    const tierDef = levels[Math.min(mt, levels.length - 1)];
     if (starCount === 3) {
       state.coins = SharedCoins.add(tierDef.bonusCoins);
       state.sessionCoins += tierDef.bonusCoins;
     }
 
     state.sessionStars = starCount;
-
-    // Check tier advancement
-    checkTierAdvancement();
     saveProgress();
 
     // Earn energy for Mario
     Energy.earnMinutes(1);
 
-    // Find battle encounter for current tier
-    const encounterKey = findEncounterTier(state.currentTier);
+    // Find battle encounter based on max tier
+    const encounterKey = findEncounterTier(mt);
     if (encounterKey !== null && WILD_ENCOUNTERS[encounterKey]) {
       state.manualBattle = false;
       setTimeout(() => startBattle(encounterKey), 600);
@@ -531,24 +511,48 @@ const Game = (() => {
     showSessionComplete();
   }
 
-  function checkTierAdvancement() {
-    if (state.currentTier >= activeLevels.length - 1) return;
+  function checkTierAdvancement(opId) {
+    const levels = LEVELS_BY_MODE[opId] || LEVELS;
+    if (state.tiers[opId] >= levels.length - 1) return;
 
-    // Check if ≥60% of current tier items are at box ≥ 2
-    const op = state.operationMode;
-    const tierDef = activeLevels[state.currentTier];
+    // Check if ≥50% of current tier items are at box ≥ 1
+    const op = OPERATION_MODES[opId];
+    const tierDef = levels[state.tiers[opId]];
     const tierPool = op.buildPool(tierDef);
     const records = Adaptive.getRecords();
 
-    let atBox2Plus = 0;
+    let atBox1Plus = 0;
     for (const key of tierPool) {
       const rec = records[key];
-      if (rec && rec.box >= 1) atBox2Plus++;
+      if (rec && rec.box >= 1) atBox1Plus++;
     }
 
-    const ratio = tierPool.length > 0 ? atBox2Plus / tierPool.length : 0;
+    const ratio = tierPool.length > 0 ? atBox1Plus / tierPool.length : 0;
     if (ratio >= 0.5) {
-      state.currentTier++;
+      state.tiers[opId]++;
+      saveProgress();
+    }
+  }
+
+  function checkTierRegression(opId) {
+    if (state.tiers[opId] <= 0) return;
+
+    const levels = LEVELS_BY_MODE[opId] || LEVELS;
+    const op = OPERATION_MODES[opId];
+    const tierDef = levels[state.tiers[opId]];
+    const tierPool = op.buildPool(tierDef);
+    const records = Adaptive.getRecords();
+
+    let atBox0 = 0;
+    for (const key of tierPool) {
+      const rec = records[key];
+      if (!rec || rec.box === 0) atBox0++;
+    }
+
+    const ratio = tierPool.length > 0 ? atBox0 / tierPool.length : 0;
+    if (ratio >= 0.7) {
+      state.tiers[opId]--;
+      saveProgress();
     }
   }
 
@@ -585,7 +589,7 @@ const Game = (() => {
 
   // ─── Game Complete ─────────────────────────────────────
   function showGameComplete() {
-    document.querySelector('.gc-subtitle').textContent = state.operationMode.conqueredText;
+    document.querySelector('.gc-subtitle').textContent = "You've conquered all math challenges!";
     showScreen('gameComplete');
 
     els.gcParade.innerHTML = '';
@@ -603,12 +607,12 @@ const Game = (() => {
     Audio.SFX.celebration();
     setTimeout(() => Particles.confetti(100), 300);
     setTimeout(() => Particles.confetti(60), 1500);
-    Audio.speak(state.operationMode.masterSpeech);
+    Audio.speak("You're a math master!");
   }
 
   // ─── Battle System ─────────────────────────────────────
   function startManualBattle() {
-    const encounterKey = findEncounterTier(state.currentTier);
+    const encounterKey = findEncounterTier(maxTier());
     if (encounterKey === null) return;
     state.manualBattle = true;
     startBattle(encounterKey);
@@ -673,7 +677,8 @@ const Game = (() => {
     state.inputLocked = true;
 
     // Same damage as wrong answer
-    Adaptive.recordAnswer(state.currentKey, false);
+    const responseMs = Date.now() - state.questionStartTime;
+    Adaptive.recordAnswer(state.currentKey, false, responseMs);
     const damage = 10 + Utils.randInt(0, 5);
     state.battlePlayerHP = Math.max(0, state.battlePlayerHP - damage);
 
@@ -702,24 +707,29 @@ const Game = (() => {
   }
 
   function generateBattleProblem() {
-    const op = state.operationMode;
-    const pool = buildCombinedPool();
+    // Pick a random operation for battle problems
+    const opId = Utils.pickRandom(OP_IDS);
+    const op = OPERATION_MODES[opId];
+    const pool = buildCombinedPool(op, state.tiers[opId]);
     const key = Adaptive.pickItem(pool);
     const [n1, n2] = op.keyToProblem(key);
 
     state.num1 = n1;
     state.num2 = n2;
     state.currentKey = key;
+    state.currentOp = op;
     state.correctAnswer = op.compute(n1, n2);
     const distractors = op.generateDistractors(state.correctAnswer, n1, n2);
     state.options = Utils.shuffle([state.correctAnswer, ...distractors]);
 
+    state.questionStartTime = Date.now();
     renderBattleProblem();
     startBattleTimer();
   }
 
   function renderBattleProblem() {
     els.battleNum1.textContent = state.num1;
+    els.battleOp.textContent = state.currentOp.symbol;
     els.battleNum2.textContent = state.num2;
     els.battleAnswers.innerHTML = '';
 
@@ -739,7 +749,8 @@ const Game = (() => {
 
     if (value === state.correctAnswer) {
       btn.classList.add('correct');
-      Adaptive.recordAnswer(state.currentKey, true);
+      const responseMs = Date.now() - state.questionStartTime;
+      Adaptive.recordAnswer(state.currentKey, true, responseMs);
       const damage = 20 + Utils.randInt(0, 10);
       state.battleOpponentHP = Math.max(0, state.battleOpponentHP - damage);
 
@@ -770,7 +781,8 @@ const Game = (() => {
       }
     } else {
       btn.classList.add('wrong');
-      Adaptive.recordAnswer(state.currentKey, false);
+      const responseMs = Date.now() - state.questionStartTime;
+      Adaptive.recordAnswer(state.currentKey, false, responseMs);
       const damage = 10 + Utils.randInt(0, 5);
       state.battlePlayerHP = Math.max(0, state.battlePlayerHP - damage);
 
@@ -817,7 +829,7 @@ const Game = (() => {
   async function battleWon() {
     clearBattleTimer();
     state.inBattle = false;
-    const bonusCoins = 5 + state.currentTier;
+    const bonusCoins = 5 + maxTier();
     state.coins = SharedCoins.add(bonusCoins);
 
     Audio.SFX.fanfare();
@@ -879,7 +891,7 @@ const Game = (() => {
     ];
 
     tiers.forEach(tier => {
-      if (state.currentTier < tier.unlockTier) return;
+      if (maxTier() < tier.unlockTier) return;
 
       const label = document.createElement('div');
       label.className = 'shop-tier-label';
@@ -999,32 +1011,31 @@ const Game = (() => {
   }
 
   // ─── Persistence ───────────────────────────────────────
-  /** Storage key suffix for mode-specific progress (shared coins/pokemon, separate tiers) */
-  function modeKey(field) {
-    const modeId = state.operationMode ? state.operationMode.id : 'multiply';
-    if (modeId === 'multiply') return field; // backward compat: no suffix for multiply
-    return `${field}_${modeId}`;
-  }
-
   function saveProgress() {
-    // Mode-specific: tier progression
-    Storage.save(GAME_ID, modeKey('currentTier'), state.currentTier);
-    // Coins managed by SharedCoins — only save pokemon-specific data
+    Storage.save(GAME_ID, 'tiers', state.tiers);
     Storage.save(GAME_ID, 'ownedPokemon', state.ownedPokemon);
     Storage.save(GAME_ID, 'starterPokemon', state.starterPokemon);
   }
 
   function loadProgress() {
     SharedCoins.migrate();
-    // Mode-specific — try currentTier first, fall back to old highestLevel for backward compat
-    let tier = Storage.load(GAME_ID, modeKey('currentTier'), null);
-    if (tier === null) {
-      // Backward compat: migrate from old highestLevel
-      const oldLevel = Storage.load(GAME_ID, modeKey('highestLevel'), 0);
-      tier = oldLevel;
+    // Try unified tiers object first
+    const tiers = Storage.load(GAME_ID, 'tiers', null);
+    if (tiers) {
+      state.tiers = tiers;
+    } else {
+      // Backward compat: migrate from old per-mode currentTier fields
+      const multiTier = Storage.load(GAME_ID, 'currentTier', null)
+                     ?? Storage.load(GAME_ID, 'highestLevel', 0);
+      state.tiers = {
+        multiply: multiTier,
+        divide: Storage.load(GAME_ID, 'currentTier_divide', 0),
+        add: Storage.load(GAME_ID, 'currentTier_add', 0),
+        subtract: Storage.load(GAME_ID, 'currentTier_subtract', 0),
+      };
+      // Save migrated tiers in new format
+      Storage.save(GAME_ID, 'tiers', state.tiers);
     }
-    state.currentTier = tier;
-    // Shared coins from unified pool
     state.coins = SharedCoins.get();
     state.ownedPokemon = Storage.load(GAME_ID, 'ownedPokemon', []);
     state.starterPokemon = Storage.load(GAME_ID, 'starterPokemon', null);
@@ -1035,7 +1046,8 @@ const Game = (() => {
       els.btnPlay.textContent = '🔄 NEW GAME';
       els.continueWrapper.style.display = 'flex';
       els.titleNav.style.display = 'flex';
-      els.continueInfo.textContent = `Tier ${state.currentTier + 1} • 🪙 ${SharedCoins.get()} coins • ${state.ownedPokemon.length} Pokemon`;
+      const tierInfo = OP_IDS.map(id => `${OPERATION_MODES[id].symbol}${state.tiers[id] + 1}`).join(' ');
+      els.continueInfo.textContent = `${tierInfo} • 🪙 ${SharedCoins.get()} coins • ${state.ownedPokemon.length} Pokemon`;
     }
   }
 

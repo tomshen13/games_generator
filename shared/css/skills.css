@@ -358,3 +358,36 @@
 .skill-card.all-locked .level-path {
   opacity: 0.6;
 }
+
+/* ===== Pokemon Math Tier Badges ===== */
+.pm-tiers-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-md);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pm-tiers-label {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  font-weight: 600;
+  margin-right: var(--space-xs);
+}
+
+.pm-tier-badge {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  background: rgba(255, 255, 255, 0.06);
+  padding: 2px var(--space-sm);
+  border-radius: var(--radius-md);
+}
+
+.pm-tier-badge strong {
+  color: #facc15;
+}

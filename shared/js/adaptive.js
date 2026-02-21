@@ -2,10 +2,12 @@
  * Adaptive difficulty using a Leitner-box model.
  * Items start in box 0 (struggling) and move up on correct answers.
  * Lower boxes have higher selection weight for spaced repetition.
+ * Response time is factored in: correct but slow (>=5s) doesn't advance the box.
  */
 const Adaptive = (() => {
   const BOX_WEIGHTS = [8, 4, 2, 1];
   const MAX_BOX = 3;
+  const SLOW_THRESHOLD_MS = 5000;
   let records = {};
   let gameId = '';
 
@@ -29,11 +31,14 @@ const Adaptive = (() => {
       return records;
     },
 
-    recordAnswer(key, correct) {
+    recordAnswer(key, correct, responseMs) {
       const r = this.getRecord(key);
       if (correct) {
-        r.box = Math.min(r.box + 1, MAX_BOX);
         r.correct++;
+        // Only advance box if answered quickly (fluency signal)
+        if (responseMs == null || responseMs < SLOW_THRESHOLD_MS) {
+          r.box = Math.min(r.box + 1, MAX_BOX);
+        }
       } else {
         r.box = Math.max(r.box - 1, 0);
         r.wrong++;

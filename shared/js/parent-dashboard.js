@@ -243,6 +243,45 @@ const Dashboard = (() => {
       </div>`;
   }
 
+  // ── Pokemon Math progress card ──
+
+  function renderPokemonMathProgress(allGameData) {
+    const pmData = allGameData['pokemon-multiply'];
+    if (!pmData) return '';
+    const tiers = pmData.tiers;
+    if (!tiers) return '';
+
+    const MAX_TIERS = 10;
+    const ops = [
+      { id: 'multiply', symbol: '×', name: 'Multiplication' },
+      { id: 'divide', symbol: '÷', name: 'Division' },
+      { id: 'add', symbol: '+', name: 'Addition' },
+      { id: 'subtract', symbol: '−', name: 'Subtraction' },
+    ];
+
+    const barsHtml = ops.map(op => {
+      const tier = tiers[op.id] || 0;
+      const pct = ((tier + 1) / MAX_TIERS * 100).toFixed(0);
+      return `<div class="pm-tier-row">
+        <span class="pm-tier-symbol">${op.symbol}</span>
+        <span class="pm-tier-name">${op.name}</span>
+        <div class="pm-tier-bar"><div class="pm-tier-fill" style="width: ${pct}%"></div></div>
+        <span class="pm-tier-label">Tier ${tier + 1}</span>
+      </div>`;
+    }).join('');
+
+    const owned = pmData.ownedPokemon ? pmData.ownedPokemon.length : 0;
+
+    return `<div class="game-stat-card pokemon-math-progress">
+      <div class="game-stat-header">
+        <span class="game-stat-icon">⚡</span>
+        <span class="game-stat-title">Pokemon Math — Difficulty Tiers</span>
+      </div>
+      ${barsHtml}
+      <div class="pm-pokemon-count">🎮 ${owned} Pokemon collected</div>
+    </div>`;
+  }
+
   // ── Mario card (non-curriculum) ──
 
   function renderMarioCard(data) {
@@ -350,6 +389,11 @@ const Dashboard = (() => {
         const skillStats = Curriculum.computeSkillStats(allGameData, skill);
         hasData = true;
         subjectHtml += renderSkillCard(skill, skillStats, allGameData);
+      }
+
+      // Add Pokemon Math tier progress at top of math section
+      if (subjKey === 'math') {
+        subjectHtml = renderPokemonMathProgress(allGameData) + subjectHtml;
       }
 
       const stepperHtml = grades.length > 1 ? renderDashboardGradeStepper(subjKey, grades) : `<span style="font-size: var(--text-sm); color: var(--color-text-muted); margin-left: var(--space-md)">${grades[0].name}</span>`;

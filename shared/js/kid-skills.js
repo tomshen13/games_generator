@@ -115,6 +115,29 @@ const KidSkills = (() => {
     activeGrades[subject] = grades[0].id;
   }
 
+  function renderPokemonMathTiers(allGameData) {
+    const pmData = allGameData['pokemon-multiply'];
+    if (!pmData || !pmData.tiers) return '';
+
+    const tiers = pmData.tiers;
+    const ops = [
+      { id: 'multiply', symbol: '×' },
+      { id: 'divide', symbol: '÷' },
+      { id: 'add', symbol: '+' },
+      { id: 'subtract', symbol: '−' },
+    ];
+
+    const badges = ops.map(op => {
+      const tier = tiers[op.id] || 0;
+      return `<span class="pm-tier-badge">${op.symbol} <strong>${tier + 1}</strong></span>`;
+    }).join('');
+
+    return `<div class="pm-tiers-bar">
+      <span class="pm-tiers-label">⚡ Tier</span>
+      ${badges}
+    </div>`;
+  }
+
   function render() {
     const profileName = Storage.getProfile();
     if (!profileName) return;
@@ -164,6 +187,11 @@ const KidSkills = (() => {
     const skills = Curriculum.getSkillsForSubjectGrade(activeSubject, gradeId);
 
     let html = renderGradeStepper(activeSubject);
+
+    // Show Pokemon Math tier indicators for math tab
+    if (activeSubject === 'math') {
+      html += renderPokemonMathTiers(allGameData);
+    }
 
     for (const skill of skills) {
       const skillStats = Curriculum.computeSkillStats(allGameData, skill);
