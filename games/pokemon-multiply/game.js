@@ -708,7 +708,7 @@ const Game = (() => {
 
   function generateBattleProblem() {
     // Pick a random operation for battle problems
-    const opId = Utils.pickRandom(OP_IDS);
+    const opId = OP_IDS[Utils.randInt(0, OP_IDS.length - 1)];
     const op = OPERATION_MODES[opId];
     const pool = buildCombinedPool(op, state.tiers[opId]);
     const key = Adaptive.pickItem(pool);
