@@ -54,7 +54,7 @@ const GeminiTTS = (() => {
   }
 
   // --- REST TTS call with retry for 429 ---
-  const LANG_NAMES = { en: 'English', he: 'Hebrew' };
+  const LANG_NAMES = { en: 'English', he: 'Hebrew', it: 'Italian' };
 
   async function generateSpeech(text, lang = 'en', retries = 3) {
     const key = await ensureKey();
