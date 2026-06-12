@@ -195,6 +195,15 @@ Overview of which curriculum levels have games and which need development.
 | 4 | Mixed Numbers | Converts 1 1/2 to 3/2; solves 23x45 | `[ ]` |
 | 5 | Decimals & Order | 0.5 = 1/2; order of operations; estimation | `[ ]` |
 
+### Math: Powers & Exponents (`g4-math-powers`)
+| Level | Name | KPI | Game |
+|-------|------|-----|------|
+| 1 | Square Intro | Understands b² means b×b; computes 2²–5² | `[x]` ninjago-math (powers) |
+| 2 | All Squares | Computes any square up to 81 fluently | `[x]` ninjago-math (powers) |
+| 3 | Cubes | Understands b³; computes cubes to 216 | `[x]` ninjago-math (powers) |
+| 4 | Powers of Two | Computes 2² through 2¹⁰; doubling pattern | `[x]` ninjago-math (powers) |
+| 5 | Mixed Powers | Any b^e with b≤10, e≤4; powers of 10 | `[x]` ninjago-math (powers) |
+
 ### Hebrew: Information Processing (`g4-hebrew-info`)
 | Level | Name | KPI | Game |
 |-------|------|-----|------|
@@ -228,11 +237,11 @@ Overview of which curriculum levels have games and which need development.
 
 | Subject | Total Levels | With Games | Coverage |
 |---------|-------------|------------|----------|
-| Math | 35 | 27 | 77% |
+| Math | 40 | 32 | 80% |
 | Hebrew | 25 | 1 | 4% |
 | English | 25 | 0 | 0% |
 | Logic | 25 | 0 | 0% |
-| **Total** | **110** | **28** | **25%** |
+| **Total** | **115** | **33** | **29%** |
 
 ### Existing Games → Mapped Levels
 
@@ -247,4 +256,5 @@ Overview of which curriculum levels have games and which need development.
 | pokemon-math | add | G1 Math L3-L4, G2 Math L2-L3, G2 AddSub L3 |
 | pokemon-math | subtract | G1 Sub L1-L5, G2 AddSub L1-L2/L4-L5, G2 Math L5 |
 | pokemon-math | divide | G3 Math L5, G4 Math L2-L3 |
+| ninjago-math | powers | G4 Powers L1-L5 (multiplication play also mirrors into pokemon-math stats) |
 | mario-bros | — | (not curriculum-mapped, standalone platformer) |

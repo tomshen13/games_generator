@@ -73,6 +73,72 @@ const GRADE_4_DATA = {
         ],
       },
       {
+        id: 'g4-math-powers',
+        name: 'Powers & Exponents',
+        hebrewName: 'חזקות',
+        subject: 'math',
+        icon: '🌀',
+        // adaptiveKeys lists must stay aligned with the belt powers pools in
+        // games/ninjago-math/belts.js
+        levels: [
+          {
+            level: 1,
+            name: 'Square Intro',
+            description: 'First squares: 2²–5²',
+            kpi: 'Understands b² means b×b; Computes small squares',
+            gameMapping: {
+              gameId: 'ninjago-math',
+              mode: 'powers',
+              adaptiveKeys: ['2^2', '3^2', '4^2', '5^2'],
+            },
+          },
+          {
+            level: 2,
+            name: 'All Squares',
+            description: 'Squares through 9²',
+            kpi: 'Computes any square up to 81 fluently',
+            gameMapping: {
+              gameId: 'ninjago-math',
+              mode: 'powers',
+              adaptiveKeys: ['2^2', '3^2', '4^2', '5^2', '6^2', '7^2', '8^2', '9^2'],
+            },
+          },
+          {
+            level: 3,
+            name: 'Cubes',
+            description: 'Cubes: 2³–6³',
+            kpi: 'Understands b³ means b×b×b; Computes cubes to 216',
+            gameMapping: {
+              gameId: 'ninjago-math',
+              mode: 'powers',
+              adaptiveKeys: ['2^3', '3^3', '4^3', '5^3', '6^3'],
+            },
+          },
+          {
+            level: 4,
+            name: 'Powers of Two',
+            description: '2² through 2¹⁰',
+            kpi: 'Computes powers of 2 to 1024; Sees doubling pattern',
+            gameMapping: {
+              gameId: 'ninjago-math',
+              mode: 'powers',
+              adaptiveKeys: ['2^2', '2^3', '2^4', '2^5', '2^6', '2^7', '2^8', '2^9', '2^10'],
+            },
+          },
+          {
+            level: 5,
+            name: 'Mixed Powers',
+            description: 'Mixed bases and exponents',
+            kpi: 'Computes any b^e with b≤10, e≤4; Powers of 10',
+            gameMapping: {
+              gameId: 'ninjago-math',
+              mode: 'powers',
+              adaptiveKeys: ['3^3', '3^4', '4^3', '4^4', '5^3', '5^4', '6^2', '6^3', '10^2', '10^3'],
+            },
+          },
+        ],
+      },
+      {
         id: 'g4-hebrew-info',
         name: 'Information Processing',
         hebrewName: 'עיבוד מידע',
