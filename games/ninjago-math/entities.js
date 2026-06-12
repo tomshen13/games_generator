@@ -205,7 +205,7 @@ const Arena = (() => {
         e.lungeLeft -= step;
         if (e.lungeLeft <= 0) e.state = 'walk';
       } else {
-        e.x -= e.speed * (e.engaged && e.slowed ? 0.4 : 1);
+        e.x -= e.speed * (e.engaged && e.slowed ? 0.25 : 1);
       }
 
       if (e.x <= DOJO_LINE) {

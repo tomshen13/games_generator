@@ -10,9 +10,9 @@ const Game = (() => {
 
   // ===== PACING / TUNING — adjust these first when playtesting =====
   const TUNING = {
-    lungePx: 24,            // wrong answer: enemy jumps this far forward
+    lungePx: 14,            // wrong answer: enemy jumps this far forward
     meterSize: 5,           // first-try corrects to fill the Spinjitzu meter
-    powersTimerMs: 12000,   // soft timer for tornado powers question
+    powersTimerMs: 18000,   // soft timer for tornado powers question
     typingMsPerDigit: 400,  // response-time allowance per answer digit (typed input is slower than tapping a choice)
     engageDelayMs: 380,     // pause between kill and engaging the next enemy
     waveBannerMs: 1500,
@@ -566,7 +566,8 @@ const Game = (() => {
     } else {
       state.wrongOnCurrent++;
       state.streak = 0;
-      state.meter = 0;
+      // forgiving: a wrong answer drains one meter segment, not the whole chain
+      state.meter = Math.max(0, state.meter - 1);
       Adaptive.recordAnswer(e.key, false, Date.now() - state.questionStart);
       mirrorMultToPokemon(e.key, false, false);
       checkBeltRegression();
