@@ -201,7 +201,12 @@ const Game = (() => {
       if (state.screen !== 'game') return;
       if (e.key >= '0' && e.key <= '9') pushDigit(e.key);
       else if (e.key === 'Backspace') { e.preventDefault(); popDigit(); }
-      else if (e.key === 'Enter') submit();
+      else if (e.key === 'Enter') {
+        // preventDefault: a focused button (e.g. PLAY) would otherwise be
+        // re-activated by Enter and restart the session mid-game
+        e.preventDefault();
+        submit();
+      }
     });
   }
 
@@ -351,6 +356,9 @@ const Game = (() => {
   }
 
   function startSession() {
+    // drop focus from whichever button launched the session, so Enter
+    // during play can't re-trigger it
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
     state.sessionId++;
     buildPools();
     state.phase = 'waves';
