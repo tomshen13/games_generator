@@ -333,8 +333,10 @@ const Game = (() => {
     if (state.mode.id === 'hebrew-letters') {
       const names = HEBREW_LETTER_NAMES[item];
       if (!names) return Audio.speak(String(item), 0.8);
-      // Always speak Hebrew letters in Hebrew — they sound wrong in English TTS
-      return Audio.speak(names.he, 0.8, 'he-IL');
+      // Always speak Hebrew letters in Hebrew — they sound wrong in English TTS.
+      // "הָאוֹת <name>" ("the letter <name>") — a lone word gets misread by TTS;
+      // the phrase context forces the correct letter-name pronunciation.
+      return Audio.speak(`הָאוֹת ${names.he}`, 0.8, 'he-IL');
     }
     // Default: numbers
     return Audio.speakNumber(item);
