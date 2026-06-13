@@ -205,7 +205,10 @@ const Arena = (() => {
         e.lungeLeft -= step;
         if (e.lungeLeft <= 0) e.state = 'walk';
       } else {
-        e.x -= e.speed * (e.engaged && e.slowed ? 0.25 : 1);
+        // The enemy holding the ACTIVE problem barely creeps — Dan gets
+        // (effectively) unlimited time to think; only non-engaged enemies
+        // approach at the belt's pace, so there's still gentle motion.
+        e.x -= e.speed * (e.engaged ? 0.06 : 1);
       }
 
       if (e.x <= DOJO_LINE) {
