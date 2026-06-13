@@ -17,6 +17,10 @@ const Game = (() => {
     engageDelayMs: 380,     // pause between kill and engaging the next enemy
     waveBannerMs: 1500,
     speedJitter: 0.2,       // enemy speed varies ±this fraction
+    startHearts: 5,         // dojo hits before it falls (forgiving)
+    noSlowPenalty: true,    // a correct answer always builds mastery, even if slow
+    promoteRatio: 0.6,      // share of belt's mult facts that must be solid to advance
+    promoteBox: 2,          // ...at this Leitner box (≥2 = answered right twice) — keeps Dan on easy tables longer
   };
 
   const NINJA_ROSTER = [
@@ -37,7 +41,7 @@ const Game = (() => {
     phase: 'idle',         // waves | powers | boss | done
     wave: 0,
     spawnedInWave: 0,
-    hearts: 3,
+    hearts: 5,
     asked: 0,              // problems resolved (answered correctly or breached)
     firstTry: 0,
     wrongOnCurrent: 0,
@@ -363,7 +367,7 @@ const Game = (() => {
     buildPools();
     state.phase = 'waves';
     state.wave = 0;
-    state.hearts = 3;
+    state.hearts = TUNING.startHearts;
     state.asked = 0;
     state.firstTry = 0;
     state.wrongOnCurrent = 0;
@@ -542,8 +546,11 @@ const Game = (() => {
 
     if (val === e.problem.answer) {
       const ms = adjustedResponseMs(e.problem.answer);
-      Adaptive.recordAnswer(e.key, true, ms);
-      mirrorMultToPokemon(e.key, true, ms < 5000);
+      // noSlowPenalty: pass null so any correct answer advances the box,
+      // building recall without punishing a kid who's still slow
+      const recMs = TUNING.noSlowPenalty ? null : ms;
+      Adaptive.recordAnswer(e.key, true, recMs);
+      mirrorMultToPokemon(e.key, true, TUNING.noSlowPenalty || ms < 5000);
 
       const b = beltDef();
       let earned = b.coinsPerCorrect;
@@ -730,12 +737,15 @@ const Game = (() => {
     if (state.belt >= BELTS.length - 1) return false;
     const b = beltDef();
     const records = Adaptive.getRecords();
-    const ok = pool => {
+    const ok = (pool, box, ratio) => {
       if (!pool.length) return false;
-      const n = pool.filter(k => records[k] && records[k].box >= 1).length;
-      return n / pool.length >= 0.5;
+      const n = pool.filter(k => records[k] && records[k].box >= box).length;
+      return n / pool.length >= ratio;
     };
-    return ok(MATH_MODES.multiply.buildPool(b)) && ok(b.powers);
+    // Multiplication needs deeper mastery (keeps Dan on easy tables longer);
+    // powers stay at the gentler bar so the new content never hard-blocks him.
+    return ok(MATH_MODES.multiply.buildPool(b), TUNING.promoteBox, TUNING.promoteRatio)
+      && ok(b.powers, 1, 0.5);
   }
 
   function checkBeltRegression() {
@@ -945,7 +955,7 @@ const Game = (() => {
     const b = beltDef();
     els.hudBelt.textContent = b.name;
     els.hudBelt.style.setProperty('--belt-color', b.color);
-    els.hudHearts.textContent = '❤️'.repeat(Math.max(0, state.hearts)) + '🖤'.repeat(Math.max(0, 3 - state.hearts));
+    els.hudHearts.textContent = '❤️'.repeat(Math.max(0, state.hearts)) + '🖤'.repeat(Math.max(0, TUNING.startHearts - state.hearts));
     els.hudCoins.textContent = SharedCoins.get();
     els.hudWave.textContent = `Wave ${state.wave}/${b.wavesPerSession}`;
     els.hudStreak.textContent = state.streak;
