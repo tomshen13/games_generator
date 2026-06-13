@@ -10,6 +10,7 @@ const Dashboard = (() => {
   const GAME_DISPLAY = {
     'unicorn-numbers': { icon: '🦄', title: 'Unicorn Numbers' },
     'pokemon-multiply': { icon: '⚡', title: 'Pokemon Math' },
+    'ninjago-math': { icon: '🌀', title: 'Ninjago Spinjitzu Math' },
     'mario-bros': { icon: '🍄', title: 'Super Mario Bros' },
     'voice-tutor': { icon: '👩‍🏫', title: 'Voice Tutor' },
   };
@@ -80,6 +81,10 @@ const Dashboard = (() => {
   }
 
   function formatKeyReadable(key, gameId) {
+    if (key.includes('^')) {
+      const [b, e] = key.split('^');
+      return `${b}<sup>${e}</sup>`;
+    }
     if (key.includes('x')) return key.replace('x', ' \u00d7 ');
     if (key.includes('+')) return key.replace('+', ' + ');
     if (key.includes('-')) return key.replace('-', ' \u2212 ');
@@ -97,6 +102,7 @@ const Dashboard = (() => {
       'unicorn-addition': '🦄 Unicorn Addition',
       'unicorn-hebrew': '🦄 Unicorn Hebrew',
       'pokemon-multiply': '⚡ Pokemon Math',
+      'ninjago-math': '🌀 Ninjago Spinjitzu Math',
     };
     return titles[gameId] || gameId;
   }
@@ -115,6 +121,7 @@ const Dashboard = (() => {
       'unicorn-numbers': ['number', 'numbers'],
       'unicorn-hebrew': ['letter', 'letters'],
       'pokemon-multiply': ['fact', 'facts'],
+      'ninjago-math': ['power', 'powers'],
     };
     const pair = labels[gameId] || ['item', 'items'];
     return count === 1 ? pair[0] : pair[1];
@@ -158,7 +165,9 @@ const Dashboard = (() => {
       const itemGridHtml = stats.allItems.length ? `
         <div class="dashboard-item-grid">
           ${stats.allItems.map(item => {
-            const label = item.key.includes('x') ? item.key.replace('x', '\u00d7') : item.key.includes('-') ? item.key.replace('-', '\u2212') : item.key;
+            const label = item.key.includes('^') ? item.key.replace(/\^(\d+)/, '<sup>$1</sup>')
+              : item.key.includes('x') ? item.key.replace('x', '\u00d7')
+              : item.key.includes('-') ? item.key.replace('-', '\u2212') : item.key;
             const acc = item.record ? `${item.record.correct}/${item.record.correct + item.record.wrong}` : '';
             const tooltip = `${statusTitles[item.status]}${acc ? ' (' + acc + ')' : ''}`;
             return `<span class="item-badge item-${item.status}" title="${tooltip}">${label}</span>`;
