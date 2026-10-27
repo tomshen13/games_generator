@@ -35,11 +35,11 @@ const OPERATION_MODES = {
       set.add(n1 * (n2 - 1));
       set.add((n1 + 1) * n2);
       set.add((n1 - 1) * n2);
-      set.add(n1 + n2);
-      set.add(correct + Utils.randInt(1, 5));
-      set.add(correct - Utils.randInt(1, 5));
+      // Same last digit as the answer, so it can't be spotted from the ones place
       set.add(correct + 10);
       set.add(correct - 10);
+      set.add(correct + 20);
+      set.add(correct - 20);
       return _finalize(set, correct);
     },
   },

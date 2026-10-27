@@ -515,7 +515,7 @@ const Game = (() => {
     const levels = LEVELS_BY_MODE[opId] || LEVELS;
     if (state.tiers[opId] >= levels.length - 1) return;
 
-    // Check if ≥50% of current tier items are at box ≥ 1
+    // Check if ≥60% of current tier items are at box ≥ 1
     const op = OPERATION_MODES[opId];
     const tierDef = levels[state.tiers[opId]];
     const tierPool = op.buildPool(tierDef);
@@ -528,7 +528,7 @@ const Game = (() => {
     }
 
     const ratio = tierPool.length > 0 ? atBox1Plus / tierPool.length : 0;
-    if (ratio >= 0.5) {
+    if (ratio >= 0.6) {
       state.tiers[opId]++;
       saveProgress();
     }
