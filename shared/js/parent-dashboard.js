@@ -11,6 +11,7 @@ const Dashboard = (() => {
     'unicorn-numbers': { icon: '🦄', title: 'Unicorn Numbers' },
     'pokemon-multiply': { icon: '⚡', title: 'Pokemon Math' },
     'ninjago-math': { icon: '🌀', title: 'Ninjago Spinjitzu Math' },
+    'nikud-castle': { icon: '👸', title: 'Nikud Castle' },
     'mario-bros': { icon: '🍄', title: 'Super Mario Bros' },
     'voice-tutor': { icon: '👩‍🏫', title: 'Voice Tutor' },
   };
@@ -81,6 +82,7 @@ const Dashboard = (() => {
   }
 
   function formatKeyReadable(key, gameId) {
+    if (gameId === 'nikud-castle') return key.slice(2);
     if (key.includes('^')) {
       const [b, e] = key.split('^');
       return `${b}<sup>${e}</sup>`;
@@ -103,6 +105,7 @@ const Dashboard = (() => {
       'unicorn-hebrew': '🦄 Unicorn Hebrew',
       'pokemon-multiply': '⚡ Pokemon Math',
       'ninjago-math': '🌀 Ninjago Spinjitzu Math',
+      'nikud-castle': '👸 Nikud Castle',
     };
     return titles[gameId] || gameId;
   }
@@ -122,6 +125,7 @@ const Dashboard = (() => {
       'unicorn-hebrew': ['letter', 'letters'],
       'pokemon-multiply': ['fact', 'facts'],
       'ninjago-math': ['power', 'powers'],
+      'nikud-castle': ['syllable', 'syllables'],
     };
     const pair = labels[gameId] || ['item', 'items'];
     return count === 1 ? pair[0] : pair[1];
