@@ -89,7 +89,7 @@ const Game = (() => {
   }
 
   function bindEvents() {
-    document.addEventListener('click', () => Audio.init(), { once: true });
+    document.addEventListener('click', () => { Audio.init(); unlockClips(); }, { once: true });
     els.playBtn.addEventListener('click', () => { Audio.SFX.tap(); startLessons(); });
     els.memoryBtn.addEventListener('click', () => { Audio.SFX.tap(); startMemory(); });
     els.introGo.addEventListener('click', () => {
@@ -116,8 +116,50 @@ const Game = (() => {
   }
 
   // ─── Speech ──────────────────────────────────────────────
+  // Pre-recorded ElevenLabs clips first (audio/clips.js), live TTS for anything missing.
+  // One reused <audio> element: iOS only lets an element play without a tap
+  // once that element has been started by a tap (see unlockClips).
+  const clipPlayer = new window.Audio();
+  let clipDone = null;
+
+  function unlockClips() {
+    if (clipPlayer.src) return; // the tap already started a clip, which unlocks it
+    clipPlayer.muted = true;
+    clipPlayer.src = `audio/${Object.values(typeof AUDIO_CLIPS !== 'undefined' ? AUDIO_CLIPS : {})[0] || ''}`;
+    clipPlayer.play().then(() => clipPlayer.pause()).catch(() => {}).finally(() => { clipPlayer.muted = false; });
+  }
+
   function say(text) {
-    return Audio.speak(text, 0.8, 'he-IL');
+    const file = typeof AUDIO_CLIPS !== 'undefined' && AUDIO_CLIPS[text];
+    if (clipDone) clipDone();
+    clipPlayer.pause();
+    if (!file) return Audio.speak(text, 0.8, 'he-IL');
+    if (typeof GeminiTTS !== 'undefined') GeminiTTS.stop();
+    if (window.speechSynthesis) window.speechSynthesis.cancel();
+    return new Promise(resolve => {
+      const finish = () => {
+        if (clipDone !== finish) return;
+        clipDone = null;
+        clipPlayer.onended = clipPlayer.onerror = null;
+        resolve();
+      };
+      clipDone = finish;
+      clipPlayer.onended = finish;
+      clipPlayer.onerror = () => { finish(); Audio.speak(text, 0.8, 'he-IL'); };
+      clipPlayer.muted = false;
+      clipPlayer.src = `audio/${file}`;
+      clipPlayer.play().catch(finish);
+    });
+  }
+
+  function preload(texts) {
+    const missing = [];
+    texts.forEach(t => {
+      const file = typeof AUDIO_CLIPS !== 'undefined' && AUDIO_CLIPS[t];
+      if (file) new window.Audio(`audio/${file}`).preload = 'auto';
+      else missing.push(t);
+    });
+    if (missing.length) Audio.preloadTTS(missing, 'he-IL');
   }
 
   /** Speak, but never block the game for more than maxMs */
@@ -181,7 +223,7 @@ const Game = (() => {
       const card = document.createElement('button');
       card.className = 'intro-mark';
       card.innerHTML = `<span class="intro-mark-glyph he">${nk.display}</span><span class="intro-mark-name he">${nk.name}</span>`;
-      card.addEventListener('click', () => say(introSpeech(id)));
+      card.addEventListener('click', () => say(SPEECH.intro(id)));
       els.introMarks.appendChild(card);
     });
 
@@ -202,17 +244,9 @@ const Game = (() => {
     (async () => {
       for (const id of room.nikud) {
         if (state.screen !== 'intro') return;
-        await say(introSpeech(id));
+        await say(SPEECH.intro(id));
       }
     })();
-  }
-
-  function introSpeech(id) {
-    const nk = NIKUD[id];
-    let text = `זֶה ${nk.name}. ${nk.name} אוֹמֵר ${VOWEL_SOUNDS[nk.sound].alone}.`;
-    if (nk.sameAs) text += ` בְּדִיּוּק כְּמוֹ ${nk.sameAs}!`;
-    if (id === 'shva') text += ' וְלִפְעָמִים הוּא שׁוֹתֵק.';
-    return text;
   }
 
   // ─── Lessons session ─────────────────────────────────────
@@ -226,7 +260,7 @@ const Game = (() => {
     state.firstTryCorrect = 0;
     state.sessionCoins = 0;
     state.rounds = planRounds();
-    Audio.preloadTTS(state.rounds.map(r => r.speech), 'he-IL');
+    preload(state.rounds.flatMap(r => r.reward ? [r.speech, r.reward] : [r.speech]));
     const room = ROOMS[state.room];
     els.roomLabel.textContent = `${room.icon} ${room.name}`;
     showScreen('game');
@@ -298,7 +332,7 @@ const Game = (() => {
       return {
         type: 'hear', key,
         prompt: 'אֵיפֹה כָּתוּב?',
-        speech: `אֵיפֹה כָּתוּב ${target.spoken}?`,
+        speech: SPEECH.hear(target),
         showcase: { text: '👂', cls: 'emoji' },
         options: Utils.shuffle(options).map(s => ({ label: s.text, cls: 'he', correct: s === target })),
       };
@@ -308,11 +342,10 @@ const Game = (() => {
       const key = pickFresh(ctx.nikudIds.map(id => `n:${id}`), used);
       const id = key.slice(2);
       const distractors = Utils.shuffle(ctx.nikudIds.filter(n => n !== id)).slice(0, 2);
-      const nk = NIKUD[id];
       return {
         type: 'name', key,
-        prompt: `אֵיפֹה ${nk.withHa}?`,
-        speech: `אֵיפֹה ${nk.withHa}?`,
+        prompt: SPEECH.name(id),
+        speech: SPEECH.name(id),
         showcase: { text: '👑', cls: 'emoji' },
         options: Utils.shuffle([id, ...distractors]).map(n => ({ label: NIKUD[n].display, cls: 'he mark', correct: n === id })),
       };
@@ -327,8 +360,8 @@ const Game = (() => {
       const distractors = pickDistinct(pool, 2, (a, b) => a.emoji === b.emoji || a.first.sound === b.first.sound);
       return {
         type: 'picture', key,
-        prompt: 'אֵיזוֹ תְּמוּנָה מַתְחִילָה כָּכָה?',
-        speech: 'אֵיזוֹ תְּמוּנָה מַתְחִילָה כָּכָה?',
+        prompt: SPEECH.picture,
+        speech: SPEECH.picture,
         showcase: { text: target.first.text, cls: 'he' },
         reward: target.word,
         options: Utils.shuffle([target, ...distractors]).map(w => ({ label: w.emoji, cls: 'emoji', correct: w === target })),
@@ -347,8 +380,8 @@ const Game = (() => {
         (a, b) => a.emoji === b.emoji, distractors));
       return {
         type: 'word', key,
-        prompt: 'אֵיזוֹ תְּמוּנָה כְּתוּבָה כָּאן?',
-        speech: 'אֵיזוֹ תְּמוּנָה כְּתוּבָה כָּאן?',
+        prompt: SPEECH.word,
+        speech: SPEECH.word,
         showcase: { text: target.word, cls: 'he word' },
         reward: target.word,
         options: Utils.shuffle([target, ...distractors]).map(w => ({ label: w.emoji, cls: 'emoji', correct: w === target })),
@@ -491,7 +524,7 @@ const Game = (() => {
     });
     updateMemoryMoves();
     showScreen('memory');
-    say('מִצְאִי אֶת הַזּוּגוֹת: מִלָּה וּתְמוּנָה!');
+    say(SPEECH.memory);
   }
 
   async function flipCard(btn, card) {
@@ -555,7 +588,7 @@ const Game = (() => {
     showScreen('end');
     Audio.SFX.fanfare();
     Particles.confetti(unlocked ? 120 : 60);
-    say(unlocked ? 'וָואו! נִפְתַּח חֶדֶר חָדָשׁ בָּאַרְמוֹן!' : Utils.pickRandom(PRAISE, 1)[0]);
+    say(unlocked ? SPEECH.unlock : Utils.pickRandom(PRAISE, 1)[0]);
   }
 
   // ─── Helpers ─────────────────────────────────────────────

@@ -120,6 +120,23 @@ const WORDS = [
 
 const PRAISE = ['כָּל הַכָּבוֹד!', 'מְצֻיָּן!', 'יָפֶה מְאוֹד!', 'אֵיזוֹ נְסִיכָה חֲכָמָה!', 'וָואו!'];
 
+/** Everything the game says. Pre-recorded clips (audio/clips.js) are keyed by these exact strings. */
+const SPEECH = {
+  hear: s => `אֵיפֹה כָּתוּב ${s.spoken}?`,
+  name: id => `אֵיפֹה ${NIKUD[id].withHa}?`,
+  picture: 'אֵיזוֹ תְּמוּנָה מַתְחִילָה כָּכָה?',
+  word: 'אֵיזוֹ תְּמוּנָה כְּתוּבָה כָּאן?',
+  memory: 'מִצְאִי אֶת הַזּוּגוֹת: מִלָּה וּתְמוּנָה!',
+  unlock: 'וָואו! נִפְתַּח חֶדֶר חָדָשׁ בָּאַרְמוֹן!',
+  intro(id) {
+    const nk = NIKUD[id];
+    let text = `זֶה ${nk.name}. ${nk.name} אוֹמֵר ${VOWEL_SOUNDS[nk.sound].alone}.`;
+    if (nk.sameAs) text += ` בְּדִיּוּק כְּמוֹ ${nk.sameAs}!`;
+    if (id === 'shva') text += ' וְלִפְעָמִים הוּא שׁוֹתֵק.';
+    return text;
+  },
+};
+
 // ── Helpers derived from the data ──
 
 const NikudData = (() => {
@@ -239,5 +256,17 @@ const NikudData = (() => {
     return ids;
   }
 
-  return { clusters, wordNikud, firstSyllable, syllablesFor, unlockedNikud, consonantSound };
+  /** Every phrase the game can speak (used by scripts/gen-nikud-audio.mjs) */
+  function allPhrases() {
+    const set = new Set([SPEECH.picture, SPEECH.word, SPEECH.memory, SPEECH.unlock, ...PRAISE]);
+    Object.keys(NIKUD).forEach(id => {
+      set.add(SPEECH.name(id));
+      set.add(SPEECH.intro(id));
+      syllablesFor(id).forEach(s => { set.add(s.spoken); set.add(SPEECH.hear(s)); });
+    });
+    WORDS.forEach(w => set.add(w.word));
+    return [...set];
+  }
+
+  return { clusters, wordNikud, firstSyllable, syllablesFor, unlockedNikud, consonantSound, allPhrases };
 })();
