@@ -222,7 +222,10 @@ const NikudData = (() => {
       text += 'י';
     }
     if (!nikud) return null;
-    return { text, nikud, sound: consonantSound(first) + NIKUD[nikud].sound };
+    // Spoken like the practice syllables: consonant (with dagesh / shin dot) + open vowel
+    const consonant = first.letter + [...first.marks].filter(m => !MARK_TO_NIKUD[m]).join('');
+    const vowel = NIKUD[nikud].sound;
+    return { text, nikud, sound: consonantSound(first) + vowel, spoken: consonant + VOWEL_SOUNDS[vowel].suffix };
   }
 
   /** All practice syllables for one nikud: { key, text, spoken, sound, nikud } */
@@ -264,7 +267,11 @@ const NikudData = (() => {
       set.add(SPEECH.intro(id));
       syllablesFor(id).forEach(s => { set.add(s.spoken); set.add(SPEECH.hear(s)); });
     });
-    WORDS.forEach(w => set.add(w.word));
+    WORDS.forEach(w => {
+      set.add(w.word);
+      const first = firstSyllable(w.word);
+      if (first) set.add(first.spoken);
+    });
     return [...set];
   }
 

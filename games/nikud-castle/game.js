@@ -15,7 +15,8 @@ const Game = (() => {
 
   const state = {
     screen: 'castle',
-    room: 0,               // highest unlocked room index
+    room: 0,               // furthest room she's ready for (progress)
+    playRoom: 0,           // room she chose to play; all rooms are open
     introSeen: {},         // roomIdx → true
     coins: 0,
     rounds: [],            // planned rounds for this session
@@ -26,7 +27,6 @@ const Game = (() => {
     inputLocked: false,
     roundStart: 0,
     introRoom: 0,
-    introThenPlay: false,
     roomOverride: false,   // ?room=N steering is never saved
     // memory game
     memory: { cards: [], open: [], matched: 0, pairs: 0, moves: 0, locked: false },
@@ -42,10 +42,10 @@ const Game = (() => {
     SharedCoins.migrate();
     loadProgress();
 
-    // Parent/test steering: ?room=4 plays as if rooms 1–4 are open (not saved)
+    // Parent/test steering: ?room=4 plays room 4 (not saved)
     const urlRoom = parseInt(new URLSearchParams(window.location.search).get('room'), 10);
     if (urlRoom >= 1 && urlRoom <= ROOMS.length) {
-      state.room = urlRoom - 1;
+      state.playRoom = urlRoom - 1;
       state.roomOverride = true;
     }
 
@@ -92,13 +92,17 @@ const Game = (() => {
     document.addEventListener('click', () => { Audio.init(); unlockClips(); }, { once: true });
     els.playBtn.addEventListener('click', () => { Audio.SFX.tap(); startLessons(); });
     els.memoryBtn.addEventListener('click', () => { Audio.SFX.tap(); startMemory(); });
-    els.introGo.addEventListener('click', () => {
-      Audio.SFX.tap();
-      if (state.introThenPlay) startSession(); else showCastle();
-    });
+    els.introGo.addEventListener('click', () => { Audio.SFX.tap(); startSession(); });
     els.replayBtn.addEventListener('click', () => {
       const r = state.rounds[state.round];
       if (r) say(r.speech);
+    });
+    els.showcase.addEventListener('click', () => {
+      const r = state.rounds[state.round];
+      if (r && r.tapSpeech && state.screen === 'game') {
+        say(r.tapSpeech);
+        if (els.showcase.classList.contains('tappable')) sparkleAt(els.showcase);
+      }
     });
     document.querySelectorAll('.btn-castle').forEach(b => b.addEventListener('click', () => {
       Audio.SFX.tap();
@@ -172,19 +176,21 @@ const Game = (() => {
     updateCoins();
     els.roomGrid.innerHTML = '';
     ROOMS.forEach((room, i) => {
-      const unlocked = i <= state.room;
       const card = document.createElement('button');
-      card.className = 'room-card' + (unlocked ? '' : ' locked') + (i === state.room ? ' current' : '');
+      card.className = 'room-card' + (i === state.playRoom ? ' current' : '') + (i === state.room ? ' frontier' : '');
       const marks = room.nikud.map(id => NIKUD[id].display).join(' ');
-      const stars = unlocked ? '⭐'.repeat(roomStars(i)) + '☆'.repeat(3 - roomStars(i)) : '🔒';
+      const stars = '⭐'.repeat(roomStars(i)) + '☆'.repeat(3 - roomStars(i));
       card.innerHTML = `
         <span class="room-icon">${room.icon}</span>
-        <span class="room-marks he">${unlocked ? marks : ''}</span>
+        <span class="room-marks he">${marks}</span>
         <span class="room-name">${room.name}</span>
         <span class="room-stars">${stars}</span>`;
-      if (unlocked) {
-        card.addEventListener('click', () => { Audio.SFX.tap(); showIntro(i, false); });
-      }
+      card.addEventListener('click', () => {
+        Audio.SFX.tap();
+        state.playRoom = i;
+        saveProgress();
+        showIntro(i);
+      });
       els.roomGrid.appendChild(card);
     });
     showScreen('castle');
@@ -210,12 +216,10 @@ const Game = (() => {
   }
 
   // ─── Intro (learn a room's nikud) ────────────────────────
-  function showIntro(roomIdx, thenPlay) {
+  function showIntro(roomIdx) {
     state.introRoom = roomIdx;
-    state.introThenPlay = thenPlay;
     const room = ROOMS[roomIdx];
     els.introRoom.textContent = `${room.icon} ${room.name}`;
-    els.introGo.textContent = thenPlay ? '▶ יאללה!' : '🏰 חזרה לארמון';
 
     els.introMarks.innerHTML = '';
     room.nikud.forEach(id => {
@@ -251,7 +255,7 @@ const Game = (() => {
 
   // ─── Lessons session ─────────────────────────────────────
   function startLessons() {
-    if (!state.introSeen[state.room]) showIntro(state.room, true);
+    if (!state.introSeen[state.playRoom]) showIntro(state.playRoom);
     else startSession();
   }
 
@@ -260,8 +264,8 @@ const Game = (() => {
     state.firstTryCorrect = 0;
     state.sessionCoins = 0;
     state.rounds = planRounds();
-    preload(state.rounds.flatMap(r => r.reward ? [r.speech, r.reward] : [r.speech]));
-    const room = ROOMS[state.room];
+    preload(state.rounds.flatMap(r => [r.speech, r.reward, r.tapSpeech].filter(Boolean)));
+    const room = ROOMS[state.playRoom];
     els.roomLabel.textContent = `${room.icon} ${room.name}`;
     showScreen('game');
     showRound();
@@ -290,7 +294,7 @@ const Game = (() => {
   }
 
   function buildContext() {
-    const nikudIds = NikudData.unlockedNikud(state.room);
+    const nikudIds = NikudData.unlockedNikud(state.playRoom);
     const unlocked = new Set(nikudIds);
     const syllables = nikudIds.flatMap(id => NikudData.syllablesFor(id));
     const readable = WORDS.filter(w => NikudData.wordNikud(w.word).every(id => unlocked.has(id)));
@@ -334,6 +338,7 @@ const Game = (() => {
         prompt: 'אֵיפֹה כָּתוּב?',
         speech: SPEECH.hear(target),
         showcase: { text: '👂', cls: 'emoji' },
+        tapSpeech: SPEECH.hear(target),
         options: Utils.shuffle(options).map(s => ({ label: s.text, cls: 'he', correct: s === target })),
       };
     },
@@ -347,6 +352,7 @@ const Game = (() => {
         prompt: SPEECH.name(id),
         speech: SPEECH.name(id),
         showcase: { text: '👑', cls: 'emoji' },
+        tapSpeech: SPEECH.name(id),
         options: Utils.shuffle([id, ...distractors]).map(n => ({ label: NIKUD[n].display, cls: 'he mark', correct: n === id })),
       };
     },
@@ -362,7 +368,9 @@ const Game = (() => {
         type: 'picture', key,
         prompt: SPEECH.picture,
         speech: SPEECH.picture,
-        showcase: { text: target.first.text, cls: 'he' },
+        // A lone syllable: tapping it (or its 🔊 badge) says how it sounds
+        showcase: { text: target.first.text, cls: 'he tappable' },
+        tapSpeech: target.first.spoken,
         reward: target.word,
         options: Utils.shuffle([target, ...distractors]).map(w => ({ label: w.emoji, cls: 'emoji', correct: w === target })),
       };
@@ -485,25 +493,30 @@ const Game = (() => {
     showEnd({ mode: 'lessons', stars, coins: state.sessionCoins, unlocked });
   }
 
-  /** Open the next room once most of this room's items have been answered right */
+  /**
+   * Once most of the played room's items are answered right, move on: the
+   * progress marker advances, and if she was on her furthest room she plays
+   * the next one from now on. Returns the room she moves to, if any.
+   */
   function checkAdvance() {
-    if (state.room >= ROOMS.length - 1) return null;
-    const keys = roomKeys(state.room);
+    const played = state.playRoom;
+    if (played >= ROOMS.length - 1) return null;
+    const keys = roomKeys(played);
     const records = Adaptive.getRecords();
     const learned = keys.filter(k => records[k] && records[k].box >= 1).length;
-    if (keys.length && learned / keys.length >= ADVANCE_RATIO) {
-      state.room++;
-      saveProgress();
-      return ROOMS[state.room];
-    }
-    return null;
+    if (!keys.length || learned / keys.length < ADVANCE_RATIO) return null;
+    const wasFrontier = played >= state.room;
+    state.room = Math.max(state.room, played + 1);
+    if (wasFrontier) state.playRoom = played + 1;
+    saveProgress();
+    return wasFrontier ? ROOMS[state.playRoom] : null;
   }
 
   // ─── Memory game ─────────────────────────────────────────
   function startMemory() {
-    const unlocked = new Set(NikudData.unlockedNikud(state.room));
+    const unlocked = new Set(NikudData.unlockedNikud(state.playRoom));
     const readable = WORDS.filter(w => NikudData.wordNikud(w.word).every(id => unlocked.has(id)));
-    const pairs = state.room >= 3 ? 6 : 4;
+    const pairs = state.playRoom >= 3 ? 6 : 4;
     const chosen = pickDistinct(readable, pairs, (a, b) => a.emoji === b.emoji);
     const cards = [];
     chosen.forEach((w, i) => {
@@ -580,7 +593,7 @@ const Game = (() => {
     els.endCoins.textContent = `🪙 +${coins}`;
     els.endAgain.dataset.mode = mode;
     if (unlocked) {
-      els.endUnlock.innerHTML = `נפתח חדר חדש בארמון!<br><span class="end-unlock-room">${unlocked.icon} ${unlocked.name}</span>`;
+      els.endUnlock.innerHTML = `עוברים לחדר הבא בארמון!<br><span class="end-unlock-room">${unlocked.icon} ${unlocked.name}</span>`;
       els.endUnlock.style.display = '';
     } else {
       els.endUnlock.style.display = 'none';
@@ -603,12 +616,16 @@ const Game = (() => {
   }
 
   function saveProgress() {
-    if (!state.roomOverride) Storage.save(GAME_ID, 'room', state.room);
+    if (!state.roomOverride) {
+      Storage.save(GAME_ID, 'room', state.room);
+      Storage.save(GAME_ID, 'playRoom', state.playRoom);
+    }
     Storage.save(GAME_ID, 'introSeen', state.introSeen);
   }
 
   function loadProgress() {
     state.room = Math.min(Storage.load(GAME_ID, 'room', 0), ROOMS.length - 1);
+    state.playRoom = Math.min(Storage.load(GAME_ID, 'playRoom', state.room), ROOMS.length - 1);
     state.introSeen = Storage.load(GAME_ID, 'introSeen', {});
   }
 
