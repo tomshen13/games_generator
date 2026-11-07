@@ -61,6 +61,9 @@ const MARK_TO_NIKUD = {
   'ָ': 'kamatz', 'ֹ': 'holam', 'ֻ': 'kubutz',
 };
 
+/** On-screen keyboard, in alef-bet order (no final forms) */
+const KEYBOARD_LETTERS = ['א','ב','ג','ד','ה','ו','ז','ח','ט','י','כ','ל','מ','נ','ס','ע','פ','צ','ק','ר','ש','ת'];
+
 /** Castle rooms = levels. Each unlocks new nikud. */
 const ROOMS = [
   { id: 1,  name: 'שער הארמון',   icon: '🚪', nikud: ['kamatz'] },
@@ -126,6 +129,8 @@ const SPEECH = {
   name: id => `אֵיפֹה ${NIKUD[id].withHa}?`,
   picture: 'אֵיזוֹ תְּמוּנָה מַתְחִילָה כָּכָה?',
   word: 'אֵיזוֹ תְּמוּנָה כְּתוּבָה כָּאן?',
+  read: 'אֵיךְ קוֹרְאִים אֶת זֶה?',
+  keyboard: 'אֵיזוֹ אוֹת שׁוֹמְעִים?',
   memory: 'מִצְאִי אֶת הַזּוּגוֹת: מִלָּה וּתְמוּנָה!',
   unlock: 'וָואו! נִפְתַּח חֶדֶר חָדָשׁ בָּאַרְמוֹן!',
   intro(id) {
@@ -244,12 +249,28 @@ const NikudData = (() => {
           text: l.ch + form,
           spoken: l.ch + VOWEL_SOUNDS[nk.sound].suffix,
           sound: l.sound + nk.sound,
+          consonant: l.sound,
           letter: l.ch,
           nikud: nikudId,
         });
       });
     });
     return out;
+  }
+
+  /** Consonant sounds a bare keyboard letter can make (ב is b or v, ש is sh or s…) */
+  function letterSounds(ch) {
+    const both = { 'ב': ['b', 'v'], 'כ': ['k', 'ch'], 'פ': ['p', 'f'], 'ש': ['sh', 's'] };
+    return both[ch] || [consonantSound({ letter: ch, marks: '' })];
+  }
+
+  /** Ways to say a letter with each vowel sound it has syllables for: [{ sound, spoken }] */
+  function soundsOfLetter(letter) {
+    const bySound = new Map();
+    Object.keys(NIKUD).forEach(id => syllablesFor(id).forEach(s => {
+      if (s.letter === letter && !bySound.has(s.sound)) bySound.set(s.sound, { sound: s.sound, spoken: s.spoken });
+    }));
+    return [...bySound.values()];
   }
 
   /** Nikud ids unlocked up to and including room index */
@@ -261,7 +282,7 @@ const NikudData = (() => {
 
   /** Every phrase the game can speak (used by scripts/gen-nikud-audio.mjs) */
   function allPhrases() {
-    const set = new Set([SPEECH.picture, SPEECH.word, SPEECH.memory, SPEECH.unlock, ...PRAISE]);
+    const set = new Set([SPEECH.picture, SPEECH.word, SPEECH.read, SPEECH.keyboard, SPEECH.memory, SPEECH.unlock, ...PRAISE]);
     Object.keys(NIKUD).forEach(id => {
       set.add(SPEECH.name(id));
       set.add(SPEECH.intro(id));
@@ -275,5 +296,5 @@ const NikudData = (() => {
     return [...set];
   }
 
-  return { clusters, wordNikud, firstSyllable, syllablesFor, unlockedNikud, consonantSound, allPhrases };
+  return { clusters, wordNikud, firstSyllable, syllablesFor, soundsOfLetter, letterSounds, unlockedNikud, consonantSound, allPhrases };
 })();
