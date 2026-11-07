@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nikud Castle — clip review</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@500;700&display=swap">
+  <style>
+    body { font-family: 'Noto Sans Hebrew', sans-serif; background: #2a0f3d; color: #fff; margin: 0; padding: 16px; }
+    h1 { font-size: 1.3rem; }
+    p { color: #e6c8f0; direction: ltr; text-align: left; }
+    input { width: 100%; max-width: 420px; padding: 8px; font-size: 1rem; border-radius: 8px; border: 0; }
+    ul { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+    li { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.1); border-radius: 10px; padding: 6px 10px; }
+    button { font-size: 1.1rem; border: 0; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; flex-shrink: 0; }
+    li.bad { outline: 2px solid #ff7eb9; }
+    span { font-size: 1.2rem; }
+    textarea { width: 100%; max-width: 640px; height: 70px; direction: ltr; font-family: monospace; }
+  </style>
+</head>
+<body>
+  <h1>🔊 Nikud Castle clips</h1>
+  <p>Click ▶ to listen. Click a phrase to mark it as wrong; the command below re-records the marked ones.</p>
+  <input class="filter" placeholder="סינון…">
+  <ul class="list"></ul>
+  <p>Re-record command:</p>
+  <textarea class="cmd" readonly></textarea>
+  <script src="clips.js"></script>
+  <script>
+    const list = document.querySelector('.list');
+    const cmd = document.querySelector('.cmd');
+    const bad = new Set();
+    let player = null;
+    function render(filter = '') {
+      list.innerHTML = '';
+      Object.entries(AUDIO_CLIPS).filter(([t]) => t.includes(filter)).forEach(([text, file]) => {
+        const li = document.createElement('li');
+        li.classList.toggle('bad', bad.has(text));
+        const btn = document.createElement('button');
+        btn.textContent = '▶';
+        btn.onclick = () => { if (player) player.pause(); player = new Audio(file); player.play(); };
+        const span = document.createElement('span');
+        span.textContent = text;
+        span.onclick = () => { bad.has(text) ? bad.delete(text) : bad.add(text); li.classList.toggle('bad'); updateCmd(); };
+        li.append(btn, span);
+        list.appendChild(li);
+      });
+    }
+    function updateCmd() {
+      cmd.value = bad.size ? 'node scripts/gen-nikud-audio.mjs ' + [...bad].map(t => `--only "${t}"`).join(' ') : '';
+    }
+    document.querySelector('.filter').oninput = e => render(e.target.value.trim());
+    render();
+  </script>
+</body>
+</html>

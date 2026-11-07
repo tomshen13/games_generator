@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>ארמון הניקוד 👸</title>
+
+  <!-- Shared CSS -->
+  <link rel="stylesheet" href="../../shared/css/reset.css">
+  <link rel="stylesheet" href="../../shared/css/base.css">
+  <link rel="stylesheet" href="../../shared/css/animations.css">
+  <link rel="stylesheet" href="../../shared/css/components.css">
+
+  <!-- Hebrew font with proper nikud positioning -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Hebrew:wght@500;700;800&display=swap">
+
+  <!-- Game CSS -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="game-container">
+    <canvas class="particle-canvas"></canvas>
+
+    <!-- ===== CASTLE (HOME) SCREEN ===== -->
+    <div class="screen castle-screen active">
+      <button class="btn-back" onclick="window.location.href='../../index.html'" title="Home">🏠</button>
+      <span class="coin-badge">🪙 <span class="coin-count">0</span></span>
+      <div class="castle-header">
+        <div class="princess animate-float">👸</div>
+        <h1 class="castle-title">ארמון הניקוד</h1>
+      </div>
+      <div class="castle-actions">
+        <button class="btn btn-primary btn-large btn-play">▶ שחקי</button>
+        <button class="btn btn-primary btn-large btn-memory">🃏 משחק זיכרון</button>
+      </div>
+      <div class="room-grid"></div>
+    </div>
+
+    <!-- ===== INTRO SCREEN (new nikud) ===== -->
+    <div class="screen intro-screen">
+      <button class="btn-back btn-castle" title="Castle">🏰</button>
+      <h2 class="intro-room"></h2>
+      <div class="intro-marks"></div>
+      <div class="intro-examples"></div>
+      <button class="btn btn-primary btn-large btn-intro-go">▶ יאללה!</button>
+    </div>
+
+    <!-- ===== GAME SCREEN ===== -->
+    <div class="screen game-screen">
+      <div class="hud">
+        <div class="hud-group">
+          <button class="btn-back btn-castle" style="position:static;width:36px;height:36px;">🏰</button>
+          <span class="room-label"></span>
+        </div>
+        <div class="progress-bar"><div class="progress-fill" style="width: 0%"></div></div>
+        <div class="hud-group">
+          <span class="coin-badge coin-badge-hud">🪙 <span class="coin-count">0</span></span>
+        </div>
+      </div>
+      <div class="prompt-row">
+        <div class="princess">👸</div>
+        <div class="prompt-text he"></div>
+        <button class="btn-replay" title="Hear again">🔊</button>
+      </div>
+      <div class="showcase"></div>
+      <div class="options"></div>
+    </div>
+
+    <!-- ===== MEMORY SCREEN ===== -->
+    <div class="screen memory-screen">
+      <div class="hud">
+        <div class="hud-group">
+          <button class="btn-back btn-castle" style="position:static;width:36px;height:36px;">🏰</button>
+          <span class="room-label">🃏 משחק זיכרון</span>
+        </div>
+        <div class="hud-group">
+          <span class="memory-moves">🔄 0</span>
+          <span class="coin-badge coin-badge-hud">🪙 <span class="coin-count">0</span></span>
+        </div>
+      </div>
+      <div class="memory-grid"></div>
+    </div>
+
+    <!-- ===== END SCREEN ===== -->
+    <div class="screen end-screen">
+      <div class="princess animate-float">👸</div>
+      <h2 class="end-title"></h2>
+      <div class="end-stars"></div>
+      <div class="end-coins"></div>
+      <div class="end-unlock" style="display:none"></div>
+      <div class="end-actions">
+        <button class="btn btn-primary btn-large btn-again">🔄 עוד פעם</button>
+        <button class="btn btn-primary btn-castle">🏰 לארמון</button>
+      </div>
+    </div>
+  </div>
+
+  <link rel="stylesheet" href="../../shared/css/profile.css">
+
+  <!-- Shared JS -->
+  <script src="../../shared/js/utils.js"></script>
+  <script src="../../shared/js/gemini-tts.js"></script>
+  <script src="../../shared/js/audio.js"></script>
+  <script src="../../shared/js/particles.js"></script>
+  <script src="../../shared/js/storage.js"></script>
+  <script src="../../shared/js/supabase-sync.js"></script>
+  <script src="../../shared/js/profile.js"></script>
+  <script src="../../shared/js/adaptive.js"></script>
+  <script src="../../shared/js/shared-coins.js"></script>
+  <script src="../../shared/js/energy.js"></script>
+  <script>Profile.autoInit();</script>
+
+  <!-- Game JS -->
+  <script src="nikud-data.js"></script>
+  <script src="audio/clips.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

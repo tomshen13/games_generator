@@ -165,7 +165,11 @@ const GRADE_1_DATA = {
             name: 'Basic Decoding',
             description: 'Slow decoding with simple vowels',
             kpi: 'Decodes CVC with Kamatz/Patach; Copies short sentences accurately; Understands single words',
-            gameMapping: null,
+            gameMapping: {
+              gameId: 'nikud-castle',
+              storageKey: 'nikud-castle',
+              adaptiveKeys: ['s:בָּ', 's:מָ', 's:לָ', 's:שָׁ', 's:רָ', 's:נָ', 's:דָ', 's:תָ', 's:גָ', 's:סָ', 's:פָּ', 's:כָּ', 's:הָ', 's:יָ', 's:זָ', 's:צָ', 's:בַּ', 's:מַ', 's:לַ', 's:שַׁ', 's:רַ', 's:נַ', 's:דַ', 's:תַ', 's:גַ', 's:סַ', 's:פַּ', 's:כַּ', 's:הַ', 's:יַ', 's:זַ', 's:צַ'],
+            },
           },
           {
             level: 3,
