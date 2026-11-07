@@ -6,14 +6,23 @@
  *   keyboard — hear a syllable, press its letter on a Hebrew keyboard
  *   name   — hear a nikud's name, tap the mark
  *   picture— see a first syllable, tap the picture that starts with it
- *   word   — read a word, tap its picture
  * Plus a memory game matching written words to pictures.
  */
 const Game = (() => {
   const GAME_ID = 'nikud-castle';
   const SESSION_ROUNDS = 10;
   const ADVANCE_RATIO = 0.6;
-  const TYPE_WEIGHTS = { hear: 4, read: 3, picture: 3, word: 3, name: 2, keyboard: 2 };
+  const TYPE_WEIGHTS = { hear: 4, read: 3, picture: 3, name: 2, keyboard: 2 };
+
+  // Free practice: she picks the nikud and one challenge type (or a mix)
+  const PRACTICE_FORMATS = [
+    { id: 'mix', icon: '🎲', label: 'הכל ביחד' },
+    { id: 'hear', icon: '👂', label: 'שומעים ובוחרים' },
+    { id: 'picture', icon: '🖼️', label: 'תמונה מתאימה' },
+    { id: 'read', icon: '🔊', label: 'איך קוראים?' },
+    { id: 'keyboard', icon: '⌨️', label: 'מקלדת' },
+    { id: 'name', icon: '👑', label: 'שם הניקוד' },
+  ];
 
   const state = {
     screen: 'castle',
@@ -28,6 +37,9 @@ const Game = (() => {
     wrongThisRound: 0,
     inputLocked: false,
     selected: null,        // sound option picked in a "read" round, awaiting ✔
+    practice: null,        // { nikud, format } while a free-practice session runs
+    practiceNikud: [],     // last free-practice choices (saved)
+    practiceFormat: 'mix',
     roundStart: 0,
     introRoom: 0,
     roomOverride: false,   // ?room=N steering is never saved
@@ -62,6 +74,7 @@ const Game = (() => {
     els.screens = {
       castle: $('.castle-screen'),
       intro: $('.intro-screen'),
+      practice: $('.practice-screen'),
       game: $('.game-screen'),
       memory: $('.memory-screen'),
       end: $('.end-screen'),
@@ -70,6 +83,10 @@ const Game = (() => {
     els.coinCount = document.querySelectorAll('.coin-count');
     els.playBtn = $('.btn-play');
     els.memoryBtn = $('.btn-memory');
+    els.practiceBtn = $('.btn-practice');
+    els.practiceNikud = $('.practice-nikud');
+    els.practiceFormats = $('.practice-formats');
+    els.practiceGo = $('.btn-practice-go');
     els.introMarks = $('.intro-marks');
     els.introExamples = $('.intro-examples');
     els.introRoom = $('.intro-room');
@@ -96,6 +113,11 @@ const Game = (() => {
     document.addEventListener('click', () => { Audio.init(); unlockClips(); }, { once: true });
     els.playBtn.addEventListener('click', () => { Audio.SFX.tap(); startLessons(); });
     els.memoryBtn.addEventListener('click', () => { Audio.SFX.tap(); startMemory(); });
+    els.practiceBtn.addEventListener('click', () => { Audio.SFX.tap(); showPractice(); });
+    els.practiceGo.addEventListener('click', () => {
+      Audio.SFX.tap();
+      startSession({ nikud: [...state.practiceNikud], format: state.practiceFormat });
+    });
     els.introGo.addEventListener('click', () => { Audio.SFX.tap(); startSession(); });
     els.replayBtn.addEventListener('click', () => {
       const r = state.rounds[state.round];
@@ -126,7 +148,10 @@ const Game = (() => {
     }));
     els.endAgain.addEventListener('click', () => {
       Audio.SFX.tap();
-      if (els.endAgain.dataset.mode === 'memory') startMemory(); else startLessons();
+      const mode = els.endAgain.dataset.mode;
+      if (mode === 'memory') startMemory();
+      else if (mode === 'practice') startSession(state.practice);
+      else startLessons();
     });
   }
 
@@ -283,27 +308,89 @@ const Game = (() => {
     })();
   }
 
+  // ─── Free practice setup ─────────────────────────────────
+  function showPractice() {
+    els.practiceNikud.innerHTML = '';
+    Object.entries(NIKUD).forEach(([id, nk]) => {
+      const chip = document.createElement('button');
+      chip.className = 'nikud-chip';
+      chip.dataset.id = id;
+      chip.innerHTML = `<span class="nikud-chip-mark he">${nk.display}</span><span class="nikud-chip-name he">${nk.name}</span>`;
+      chip.addEventListener('click', () => {
+        Audio.SFX.tap();
+        const set = new Set(state.practiceNikud);
+        if (set.has(id)) set.delete(id); else set.add(id);
+        // Keep the data file's order so sessions are stable
+        state.practiceNikud = Object.keys(NIKUD).filter(n => set.has(n));
+        refreshPractice();
+      });
+      els.practiceNikud.appendChild(chip);
+    });
+
+    els.practiceFormats.innerHTML = '';
+    PRACTICE_FORMATS.forEach(f => {
+      const chip = document.createElement('button');
+      chip.className = 'format-chip';
+      chip.dataset.id = f.id;
+      chip.innerHTML = `<span class="format-chip-icon">${f.icon}</span><span class="format-chip-label">${f.label}</span>`;
+      chip.addEventListener('click', () => {
+        if (chip.disabled) return;
+        Audio.SFX.tap();
+        state.practiceFormat = f.id;
+        refreshPractice();
+      });
+      els.practiceFormats.appendChild(chip);
+    });
+
+    refreshPractice();
+    showScreen('practice');
+  }
+
+  /** Sync chip states; grey out challenge types her nikud choice can't support */
+  function refreshPractice() {
+    const ctx = buildContext(state.practiceNikud);
+    const canMix = Object.keys(TYPE_WEIGHTS).some(t => ctx.available[t]);
+    const usable = id => (id === 'mix' ? canMix : ctx.available[id]);
+    if (!usable(state.practiceFormat)) state.practiceFormat = 'mix';
+
+    [...els.practiceNikud.children].forEach(chip => {
+      chip.classList.toggle('selected', state.practiceNikud.includes(chip.dataset.id));
+    });
+    [...els.practiceFormats.children].forEach(chip => {
+      chip.disabled = !usable(chip.dataset.id);
+      chip.classList.toggle('selected', chip.dataset.id === state.practiceFormat);
+    });
+    els.practiceGo.disabled = !canMix;
+    saveProgress();
+  }
+
   // ─── Lessons session ─────────────────────────────────────
   function startLessons() {
     if (!state.introSeen[state.playRoom]) showIntro(state.playRoom);
     else startSession();
   }
 
-  function startSession() {
+  /**
+   * Start a 10-round session. Room play uses the room's nikud (and earlier rooms')
+   * with every challenge type; free practice uses her chosen nikud and type.
+   */
+  function startSession(practice = null) {
+    state.practice = practice;
     state.round = 0;
     state.firstTryCorrect = 0;
     state.sessionCoins = 0;
-    state.rounds = planRounds();
+    const nikudIds = practice ? practice.nikud : NikudData.unlockedNikud(state.playRoom);
+    const types = practice && practice.format !== 'mix' ? [practice.format] : Object.keys(TYPE_WEIGHTS);
+    state.rounds = planRounds(buildContext(nikudIds), types);
     preload(state.rounds.flatMap(r => [r.speech, r.reward, r.tapSpeech, ...r.options.map(o => o.speech)]).flat().filter(Boolean));
     const room = ROOMS[state.playRoom];
-    els.roomLabel.textContent = `${room.icon} ${room.name}`;
+    els.roomLabel.textContent = practice ? '🎯 תרגול' : `${room.icon} ${room.name}`;
     showScreen('game');
     showRound();
   }
 
-  function planRounds() {
-    const ctx = buildContext();
-    const types = Object.keys(TYPE_WEIGHTS).filter(t => ctx.available[t]);
+  function planRounds(ctx, allowedTypes) {
+    const types = allowedTypes.filter(t => ctx.available[t]);
     const used = new Set();
     const rounds = [];
     let lastType = null;
@@ -323,23 +410,20 @@ const Game = (() => {
     return rounds;
   }
 
-  function buildContext() {
-    const nikudIds = NikudData.unlockedNikud(state.playRoom);
-    const unlocked = new Set(nikudIds);
+  function buildContext(nikudIds) {
+    const chosen = new Set(nikudIds);
     const syllables = nikudIds.flatMap(id => NikudData.syllablesFor(id));
-    const readable = WORDS.filter(w => NikudData.wordNikud(w.word).every(id => unlocked.has(id)));
     const starters = WORDS
       .map(w => ({ ...w, first: NikudData.firstSyllable(w.word) }))
-      .filter(w => w.first && unlocked.has(w.first.nikud) && w.first.nikud !== 'shva');
+      .filter(w => w.first && chosen.has(w.first.nikud) && w.first.nikud !== 'shva');
     return {
-      nikudIds, syllables, readable, starters,
+      nikudIds, syllables, starters,
       available: {
-        hear: syllables.length >= 3,
+        hear: new Set(syllables.map(s => s.sound)).size >= 3,
         read: syllables.length >= 1,
         keyboard: syllables.length >= 1,
         name: nikudIds.length >= 2,
         picture: starters.length >= 1,
-        word: readable.length >= 1,
       },
     };
   }
@@ -437,26 +521,6 @@ const Game = (() => {
         // A lone syllable: tapping it (or its 🔊 badge) says how it sounds
         showcase: { text: target.first.text, cls: 'he tappable' },
         tapSpeech: target.first.spoken,
-        reward: target.word,
-        options: Utils.shuffle([target, ...distractors]).map(w => ({ label: w.emoji, cls: 'emoji', correct: w === target })),
-      };
-    },
-
-    word(ctx, used) {
-      const key = pickFresh(ctx.readable.map(w => `w:${w.word}`), used);
-      const target = ctx.readable.find(w => `w:${w.word}` === key);
-      // Prefer pictures whose words start with the same letter, so the whole word must be read
-      const firstLetter = NikudData.clusters(target.word)[0].letter;
-      const others = WORDS.filter(w => w.emoji !== target.emoji);
-      const sameStart = others.filter(w => NikudData.clusters(w.word)[0].letter === firstLetter);
-      const distractors = pickDistinct(Utils.shuffle(sameStart), 1, (a, b) => a.emoji === b.emoji);
-      distractors.push(...pickDistinct(others.filter(w => !distractors.includes(w)), 2 - distractors.length,
-        (a, b) => a.emoji === b.emoji, distractors));
-      return {
-        type: 'word', key,
-        prompt: SPEECH.word,
-        speech: SPEECH.word,
-        showcase: { text: target.word, cls: 'he word' },
         reward: target.word,
         options: Utils.shuffle([target, ...distractors]).map(w => ({ label: w.emoji, cls: 'emoji', correct: w === target })),
       };
@@ -560,10 +624,12 @@ const Game = (() => {
       els.princess.classList.add('cheer');
     }
 
-    // Reading rounds say the word back; listening rounds sometimes praise
+    // Picture rounds say the word back; others sometimes praise.
+    // A revealed syllable stays up long enough to look at.
+    const minPause = Utils.wait(r.reveal ? 1400 : 700);
     if (r.reward) await sayAndWait(r.reward);
     else if (Math.random() < 0.35) await sayAndWait(Utils.pickRandom(PRAISE, 1)[0]);
-    else await Utils.wait(700);
+    await minPause;
 
     state.round++;
     if (state.round >= SESSION_ROUNDS) finishSession();
@@ -578,8 +644,8 @@ const Game = (() => {
       state.sessionCoins += 3;
     }
     Energy.earnMinutes(2);
-    const unlocked = checkAdvance();
-    showEnd({ mode: 'lessons', stars, coins: state.sessionCoins, unlocked });
+    const unlocked = state.practice ? null : checkAdvance();
+    showEnd({ mode: state.practice ? 'practice' : 'lessons', stars, coins: state.sessionCoins, unlocked });
   }
 
   /**
@@ -710,12 +776,17 @@ const Game = (() => {
       Storage.save(GAME_ID, 'playRoom', state.playRoom);
     }
     Storage.save(GAME_ID, 'introSeen', state.introSeen);
+    Storage.save(GAME_ID, 'practiceNikud', state.practiceNikud);
+    Storage.save(GAME_ID, 'practiceFormat', state.practiceFormat);
   }
 
   function loadProgress() {
     state.room = Math.min(Storage.load(GAME_ID, 'room', 0), ROOMS.length - 1);
     state.playRoom = Math.min(Storage.load(GAME_ID, 'playRoom', state.room), ROOMS.length - 1);
     state.introSeen = Storage.load(GAME_ID, 'introSeen', {});
+    state.practiceNikud = Storage.load(GAME_ID, 'practiceNikud', NikudData.unlockedNikud(state.room))
+      .filter(id => NIKUD[id]);
+    state.practiceFormat = Storage.load(GAME_ID, 'practiceFormat', 'mix');
   }
 
   return { init };

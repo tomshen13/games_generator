@@ -78,7 +78,7 @@ const ROOMS = [
   { id: 10, name: 'חדר הכתר',      icon: '👑', nikud: ['hatafPatach', 'hatafSegol', 'hatafKamatz'] },
 ];
 
-/** Picture words for "read the word" and "which picture starts like this". */
+/** Picture words for the memory game and "which picture starts like this". */
 const WORDS = [
   // kamatz / patach
   { word: 'דָּג', emoji: '🐟' }, { word: 'יָד', emoji: '✋' }, { word: 'צָב', emoji: '🐢' },
@@ -128,7 +128,6 @@ const SPEECH = {
   hear: s => `אֵיפֹה כָּתוּב ${s.spoken}?`,
   name: id => `אֵיפֹה ${NIKUD[id].withHa}?`,
   picture: 'אֵיזוֹ תְּמוּנָה מַתְחִילָה כָּכָה?',
-  word: 'אֵיזוֹ תְּמוּנָה כְּתוּבָה כָּאן?',
   read: 'אֵיךְ קוֹרְאִים אֶת זֶה?',
   keyboard: 'אֵיזוֹ אוֹת שׁוֹמְעִים?',
   memory: 'מִצְאִי אֶת הַזּוּגוֹת: מִלָּה וּתְמוּנָה!',
@@ -282,7 +281,7 @@ const NikudData = (() => {
 
   /** Every phrase the game can speak (used by scripts/gen-nikud-audio.mjs) */
   function allPhrases() {
-    const set = new Set([SPEECH.picture, SPEECH.word, SPEECH.read, SPEECH.keyboard, SPEECH.memory, SPEECH.unlock, ...PRAISE]);
+    const set = new Set([SPEECH.picture, SPEECH.read, SPEECH.keyboard, SPEECH.memory, SPEECH.unlock, ...PRAISE]);
     Object.keys(NIKUD).forEach(id => {
       set.add(SPEECH.name(id));
       set.add(SPEECH.intro(id));
