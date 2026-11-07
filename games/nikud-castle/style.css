@@ -327,6 +327,30 @@
 }
 
 .option.he { font-weight: 700; }
+.option.sound { font-size: clamp(44px, 10vw, 72px); }
+
+/* Hebrew keyboard (alef-bet order, right to left) */
+.options.keyboard {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: clamp(4px, 1.2vw, 10px);
+  width: min(100%, 760px);
+}
+
+.option.key {
+  min-width: 0;
+  min-height: clamp(48px, 10vw, 72px);
+  padding: 0;
+  border-radius: var(--radius-md);
+  font-size: clamp(26px, 6vw, 44px);
+  line-height: 1.2;
+}
+
+.option.selected {
+  background: rgba(255, 209, 102, 0.25);
+  border-color: var(--royal-gold);
+  transform: scale(1.06);
+}
 .option.mark { font-size: clamp(64px, 15vw, 120px); }
 .option:active { transform: scale(0.94); }
 

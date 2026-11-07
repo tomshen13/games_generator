@@ -2,6 +2,8 @@
  * Nikud Castle — Core Game Logic
  * Each castle room teaches new nikud. A session is 10 mixed rounds:
  *   hear   — hear a syllable, tap it
+ *   read   — see a syllable, listen to the choices, pick how it's read
+ *   keyboard — hear a syllable, press its letter on a Hebrew keyboard
  *   name   — hear a nikud's name, tap the mark
  *   picture— see a first syllable, tap the picture that starts with it
  *   word   — read a word, tap its picture
@@ -11,7 +13,7 @@ const Game = (() => {
   const GAME_ID = 'nikud-castle';
   const SESSION_ROUNDS = 10;
   const ADVANCE_RATIO = 0.6;
-  const TYPE_WEIGHTS = { hear: 4, picture: 3, word: 3, name: 2 };
+  const TYPE_WEIGHTS = { hear: 4, read: 3, picture: 3, word: 3, name: 2, keyboard: 2 };
 
   const state = {
     screen: 'castle',
@@ -25,6 +27,7 @@ const Game = (() => {
     sessionCoins: 0,
     wrongThisRound: 0,
     inputLocked: false,
+    selected: null,        // sound option picked in a "read" round, awaiting ✔
     roundStart: 0,
     introRoom: 0,
     roomOverride: false,   // ?room=N steering is never saved
@@ -77,6 +80,7 @@ const Game = (() => {
     els.replayBtn = $('.btn-replay');
     els.showcase = $('.showcase');
     els.options = $('.options');
+    els.confirmBtn = $('.btn-confirm');
     els.princess = $('.game-screen .princess');
     els.memoryGrid = $('.memory-grid');
     els.memoryMoves = $('.memory-moves');
@@ -97,12 +101,24 @@ const Game = (() => {
       const r = state.rounds[state.round];
       if (r) say(r.speech);
     });
+    els.confirmBtn.addEventListener('click', () => {
+      if (state.selected) onAnswer(state.selected.btn, state.selected.opt);
+    });
     els.showcase.addEventListener('click', () => {
       const r = state.rounds[state.round];
       if (r && r.tapSpeech && state.screen === 'game') {
         say(r.tapSpeech);
         if (els.showcase.classList.contains('tappable')) sparkleAt(els.showcase);
       }
+    });
+    // A real keyboard set to Hebrew works too
+    document.addEventListener('keydown', e => {
+      const r = state.rounds[state.round];
+      if (state.screen !== 'game' || !r || r.type !== 'keyboard') return;
+      const finals = { 'ך': 'כ', 'ם': 'מ', 'ן': 'נ', 'ף': 'פ', 'ץ': 'צ' };
+      const ch = finals[e.key] || e.key;
+      const btn = [...els.options.children].find(b => b.textContent === ch);
+      if (btn) btn.click();
     });
     document.querySelectorAll('.btn-castle').forEach(b => b.addEventListener('click', () => {
       Audio.SFX.tap();
@@ -133,7 +149,21 @@ const Game = (() => {
     clipPlayer.play().then(() => clipPlayer.pause()).catch(() => {}).finally(() => { clipPlayer.muted = false; });
   }
 
-  function say(text) {
+  // say() takes one phrase or a list played in sequence (e.g. instruction + syllable);
+  // any newer say() call cuts off the rest of a sequence.
+  let sayGen = 0;
+
+  async function say(textOrList) {
+    const gen = ++sayGen;
+    const list = [].concat(textOrList);
+    for (let i = 0; i < list.length; i++) {
+      if (gen !== sayGen) return;
+      if (i > 0) await Utils.wait(150);
+      await sayOne(list[i]);
+    }
+  }
+
+  function sayOne(text) {
     const file = typeof AUDIO_CLIPS !== 'undefined' && AUDIO_CLIPS[text];
     if (clipDone) clipDone();
     clipPlayer.pause();
@@ -264,7 +294,7 @@ const Game = (() => {
     state.firstTryCorrect = 0;
     state.sessionCoins = 0;
     state.rounds = planRounds();
-    preload(state.rounds.flatMap(r => [r.speech, r.reward, r.tapSpeech].filter(Boolean)));
+    preload(state.rounds.flatMap(r => [r.speech, r.reward, r.tapSpeech, ...r.options.map(o => o.speech)]).flat().filter(Boolean));
     const room = ROOMS[state.playRoom];
     els.roomLabel.textContent = `${room.icon} ${room.name}`;
     showScreen('game');
@@ -305,6 +335,8 @@ const Game = (() => {
       nikudIds, syllables, readable, starters,
       available: {
         hear: syllables.length >= 3,
+        read: syllables.length >= 1,
+        keyboard: syllables.length >= 1,
         name: nikudIds.length >= 2,
         picture: starters.length >= 1,
         word: readable.length >= 1,
@@ -340,6 +372,40 @@ const Game = (() => {
         showcase: { text: '👂', cls: 'emoji' },
         tapSpeech: SPEECH.hear(target),
         options: Utils.shuffle(options).map(s => ({ label: s.text, cls: 'he', correct: s === target })),
+      };
+    },
+
+    read(ctx, used) {
+      const key = pickFresh(ctx.syllables.map(s => `r:${s.text}`), used);
+      const target = ctx.syllables.find(s => `r:${s.text}` === key);
+      // Same letter, other vowel sounds — only the nikud tells them apart
+      const others = Utils.shuffle(NikudData.soundsOfLetter(target.letter).filter(o => o.sound !== target.sound)).slice(0, 2);
+      return {
+        type: 'read', key,
+        prompt: SPEECH.read,
+        speech: SPEECH.read,
+        showcase: { text: target.text, cls: 'he' },
+        reward: target.spoken,
+        options: Utils.shuffle([target, ...others]).map(o => ({ label: '🔊', cls: 'sound', speech: o.spoken, correct: o === target })),
+      };
+    },
+
+    keyboard(ctx, used) {
+      const key = pickFresh(ctx.syllables.map(s => `k:${s.text}`), used);
+      const target = ctx.syllables.find(s => `k:${s.text}` === key);
+      const speech = [SPEECH.keyboard, target.spoken];
+      return {
+        type: 'keyboard', key,
+        prompt: SPEECH.keyboard,
+        speech,
+        showcase: { text: '👂', cls: 'emoji' },
+        tapSpeech: speech,
+        reveal: target.text,
+        reward: target.spoken,
+        // Any letter that makes the sound counts (ת or ט for "ta")
+        options: KEYBOARD_LETTERS.map(ch => ({
+          label: ch, cls: 'he key', correct: NikudData.letterSounds(ch).includes(target.consonant),
+        })),
       };
     },
 
@@ -427,15 +493,27 @@ const Game = (() => {
     els.showcase.classList.add('animate-pop-in');
 
     els.options.innerHTML = '';
+    els.options.classList.toggle('keyboard', r.type === 'keyboard');
+    els.confirmBtn.style.display = 'none';
+    state.selected = null;
     r.options.forEach(opt => {
       const b = document.createElement('button');
       b.className = `option ${opt.cls}`;
       b.textContent = opt.label;
-      b.addEventListener('click', () => onAnswer(b, opt));
+      // Sound options: tap to listen (and select), then ✔ to answer
+      b.addEventListener('click', () => (opt.speech ? selectSound(b, opt) : onAnswer(b, opt)));
       els.options.appendChild(b);
     });
     state.roundStart = Date.now();
     say(r.speech);
+  }
+
+  function selectSound(btn, opt) {
+    if (state.inputLocked || btn.classList.contains('wrong')) return;
+    say(opt.speech);
+    [...els.options.children].forEach(b => b.classList.toggle('selected', b === btn));
+    state.selected = { btn, opt };
+    els.confirmBtn.style.display = '';
   }
 
   async function onAnswer(btn, opt) {
@@ -448,16 +526,27 @@ const Game = (() => {
       state.wrongThisRound++;
       Audio.SFX.wrong();
       btn.classList.add('wrong', 'animate-wobble');
+      btn.classList.remove('selected');
+      if (state.selected && state.selected.btn === btn) {
+        state.selected = null;
+        els.confirmBtn.style.display = 'none';
+      }
       if (state.wrongThisRound >= 2) {
         // Gentle help: glow the right answer
         [...els.options.children].find((b, i) => r.options[i].correct).classList.add('hint');
       }
-      if (r.type === 'hear' || r.type === 'name') say(r.speech);
+      if (r.type === 'hear' || r.type === 'name' || r.type === 'keyboard') say(r.speech);
       return;
     }
 
     state.inputLocked = true;
+    els.confirmBtn.style.display = 'none';
     btn.classList.add('correct');
+    if (r.reveal) {
+      // Show what she heard: the letter with its nikud
+      els.showcase.textContent = r.reveal;
+      els.showcase.className = 'showcase he animate-pop-in';
+    }
     Audio.SFX.correct();
     sparkleAt(btn);
     if (state.wrongThisRound === 0) {
